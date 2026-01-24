@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>evilzeda</title>
+    <title>evilzeda | Personal Site</title>
     <link rel="icon" href="./images/logo_1_.png">
     
     <!--box icons-->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-
-
 
     <!-- custom css-->
     <link rel="stylesheet" href="./style.css">
@@ -19,25 +17,36 @@
 <body>
     <!--header design-->
     <header class="header">
-        <a href="#" class="logo">evilzeda's <span>personal site</span></a>
-
-        <i class='bx bx-menu' id="menu-icon"></i>
+        <a href="#" class="logo">evilzeda <span>site</span></a>
 
         <nav class="navbar">
-            <a href="#home" class="active">Home</a>
-            <a href="#about">About</a>
-            <a href="#services">Skills</a>
-            <a href="#portfolio">Portfolio</a>
-            <a href="#contact">Contact</a>
+            <a href="#home" class="active" data-i18n="nav_home">Home</a>
+            <a href="#about" data-i18n="nav_about">About</a>
+            <a href="#services" data-i18n="nav_skills">Skills</a>
+            <a href="#portfolio" data-i18n="nav_works">Works</a>
+            <a href="#contact" data-i18n="nav_contact">Contact</a>
         </nav>
+        
+        <div class="header-controls">
+            <select id="language-selector" aria-label="Select Language">
+                <option value="en">EN</option>
+                <option value="id">ID</option>
+                <option value="jp">JP</option>
+            </select>
+            <button id="theme-toggle" aria-label="Toggle Dark/Light Mode">
+                <i class='bx bx-moon'></i>
+            </button>
+        </div>
+
+        <i class='bx bx-menu' id="menu-icon"></i>
     </header>
 
     <!-- home section design -->
     <section class="home" id="home">
         <div class="home-content">
-            <h1><span class="multiple-text"></span></h1>
-            <h3>Welcome to my site :D</h3>
-            <p> I’m a data-crafter with various experience through different industry, specializing in building seamless data pipelines, automating analytics, and delivering insights that drive results.</p>
+            <h3 data-i18n="home_hello">Hello, I am</h3>
+            <h1 data-i18n="home_name">Ibrahim Atthariq</h1>
+            <p data-i18n="home_desc">Crafting data, systems, and insights with simplicity and precision.</p>
             <div class="social-media">
                 <a href="https://twitter.com/evilzeda" target="_blank"><i class='bx bxl-twitter' ></i></a>
                 <a href="https://www.linkedin.com/in/mochammad-ibrahim-atthariq" target="_blank"><i class='bx bxl-linkedin-square' ></i></a>
@@ -51,82 +60,75 @@
     <!-- about section design -->
     <section class="about" id="about">
         <div class="about-content">
-            <h2 class="heading">About <span>Me</span></h2>
-            <h3>Hi, I'm Ibrahim Atthariq</h3>
-            <p> but you can call me Thariq or Ibrahim. I am currently working as an analytics engineer. I come from an educational background in physics, transitioning from crafting numbers to become coders, and from studying natural sciences to exploring computer science. I am passionate about understanding the internal mechanisms of systems, particularly in distributed systems, data warehousing, and machine learning. I also enjoy exploring other domains, such as applied finance and economics.</p>
-            <a href="https://shorturl.at/DJaRj" class="btn">Download CV</a>
+            <h2 class="heading" data-i18n="about_heading">About <span>Me</span></h2>
+            <h3 data-i18n="about_role">Analytics Engineer & Developer</h3>
+            <p data-i18n="about_desc">I am Ibrahim Atthariq. Transitioning from the calculating nature phenomenon using laws of physics to the building logic of computer science, I find joy in understanding how things work. My focus is on distributed systems, data warehousing, and machine learning. I believe in clean code, clear thoughts, and continuous learning.</p>
+            <a href="https://shorturl.at/DJaRj" class="btn" data-i18n="about_cv">Download CV</a>
         </div>
     </section>
 
     <!-- service section design -->
     <section class="services" id="services">
-        <h2 class="heading">My <span>Skills</span></h2>
+        <h2 class="heading" data-i18n="skills_heading">My <span>Skills</span></h2>
 
         <div class="services-container">
             <div class="services-box">
                 <i class='bx bx-network-chart' ></i>
-                <h3>Data Preparation</h3>
-                <p>Transforming raw data into a suitable format for analysis. It involves cleaning, integrating, 
-                    transforming, and selecting relevant features. The data is split into training, validation, and 
-                    test sets, and formatted appropriately.</p>
-                <a href="#" class="btn">Read More</a>
+                <h3 data-i18n="skill_1_title">Data Pipeline</h3>
+                <p data-i18n="skill_1_desc">Architecting robust flows to transform raw chaotic data into structured, usable assets.</p>
             </div>
 
             <div class="services-box">
                 <i class='bx bxs-bar-chart-square' ></i>
-                <h3>Data Analysis</h3>
-                <p>Through careful examination, cleaning, and transformation, I extract meaningful patterns, trends, and outliers. 
-                    By applying statistical techniques, I gain a deeper understanding of the data, enabling me to make informed decisions and predictions.</p>
-                <a href="#" class="btn">Read More</a>
+                <h3 data-i18n="skill_2_title">Analysis</h3>
+                <p data-i18n="skill_2_desc">Uncovering patterns and trends to drive informed decision-making.</p>
             </div>
 
             <div class="services-box">
                 <i class='bx bxs-pie-chart-alt-2' ></i>
-                <h3>Data Visualization</h3>
-                <p>By transforming numbers and figures into charts, graphs, and maps, I unlock the power of visual communication.
-                     It allows me to reveal patterns, trends, and relationships with ease, making complex data accessible and engaging.</p>
-                <a href="#" class="btn">Read More</a>
+                <h3 data-i18n="skill_3_title">Visualization</h3>
+                <p data-i18n="skill_3_desc">Translating complex datasets into intuitive visual stories.</p>
             </div>
         </div>
     </section>
 
     <!-- portfolio section design -->
     <section class="portfolio" id="portfolio">
-        <h2 class="heading">Latest <span>Project</span></h2>
+        <h2 class="heading" data-i18n="works_heading">Selected <span>Works</span></h2>
 
         <div class="portfolio-container">
             <div class="portfolio-box">
-                <img src="./images/test-1.jpg" alt="" class="resized-image">
+                <img src="./images/test-1.jpg" alt="Project 1">
                 <div class="portfolio-layer">
-                    <h4>Data Collection</h4>
-                    <p>Collecting data from website using scrapping technique</p>
+                    <h4 data-i18n="work_1_title">Data Collection</h4>
+                    <p data-i18n="work_1_desc">Automated scraping & ingestion.</p>
                     <a href="#"><i class='bx bx-link-external' ></i></a>   
                 </div>
             </div>
 
             <div class="portfolio-box">
-                <img src="./images/test-2.jpg" alt="" class="resized-image">
+                <img src="./images/test-2.jpg" alt="Project 2">
                 <div class="portfolio-layer">
-                    <h4>Data Cleansing</h4>
-                    <p>Cleaning raw data from various source to make a insightful analysis</p>
+                    <h4 data-i18n="work_2_title">Data Cleansing</h4>
+                    <p data-i18n="work_2_desc">Ensuring data integrity.</p>
                     <a href="#"><i class='bx bx-link-external' ></i></a>   
                 </div>
             </div>
 
             <div class="portfolio-box">
-                <img src="./images/test-3.jpg" alt="" class="resized-image">
+                <img src="./images/test-3.jpg" alt="Project 3">
                 <div class="portfolio-layer">
-                    <h4>Data Analysis</h4>
-                    <p>Using statistical approach to look out the pattern from data</p>
+                    <h4 data-i18n="work_3_title">Analysis</h4>
+                    <p data-i18n="work_3_desc">Statistical modeling.</p>
                     <a href="#"><i class='bx bx-link-external' ></i></a>   
                 </div>
             </div>
 
             <div class="portfolio-box">
-                <img src="./images/test-4.jpg" alt="" class="resized-image">
+                <img src="./images/test-4.jpg" alt="Project 4">
                 <div class="portfolio-layer">
-                    <h4>Data Visualization</h4>
-                    <p>Visualize output from analysis like consultant did</p>
+                    <h4 data-i18n="work_4_title">Visualization</h4>
+                    <p data-i18n="work_4_desc">Dashboard creation.</p>
                     <a href="#"><i class='bx bx-link-external' ></i></a>   
                 </div>
             </div>
@@ -135,27 +137,16 @@
 
     <!-- contact section design -->
     <section class="contact" id="contact">
-        <h2 class="heading">Contact <span>Here</span></h2>
-        <form action=action="https://formsubmit.co/thariqibrahim1998@email.com" method="POST">
-            <div class="input-box">
-                <input type="hidden" name="_subject" value="New submission!">
-                <input type="text" placeholder="First Name" required>
-                <input type="text" placeholder="Last Name" required>
-                <input type="hidden" name="_next" value="https://devilclowngreek.github.io/personal-site/pages/greetings.html">
-            </div>
-            <div class="input-box">
-                <input type="email" placeholder="Email Address">
-                <input type="text" placeholder="Email Subject" required>
-            </div>
-            <textarea name="" id="" cols="30" rows="10" placeholder="Your Messages"></textarea>
-            <input type="submit" value="Send Message" class="btn">
-        </form>
+        <h2 class="heading" data-i18n="contact_heading">Contact <span>Me</span></h2>
+        <div class="contact-button-wrapper" style="text-align: center;">
+            <a href="mailto:thariqibrahim1998@gmail.com" class="btn" data-i18n="contact_btn">Send Message</a>
+        </div>
     </section>
 
     <!-- footer design -->
     <footer class="footer">
         <div class="footer-text">
-            <p>Copyright &copy; 2025 by Ibrahim Atthariq | All Rights Reserved.</p>
+            <p>&copy; 2025 Ibrahim Atthariq.</p>
         </div>
         <div class="footer-iconTop">
             <a href="#home"><i class='bx bx-up-arrow-alt'></i></a>
@@ -165,12 +156,7 @@
     <!-- scroll reveal -->
     <script src="https://unpkg.com/scrollreveal"></script>
 
-    <!-- typed js -->
-    <script src="https://unpkg.com/typed.js@2.0.16/dist/typed.umd.js"></script>
-
-    <!--custom js-->
+    <!-- custom js-->
     <script src="./script.js"></script>
 </body>
-
-
 </html>
