@@ -98,11 +98,11 @@ const translations = {
     home_hello: "Hello, I am",
     home_name: "Ibrahim Atthariq",
     home_desc:
-      "Crafting data, systems, and insights with simplicity and precision.",
+      "a person who crafting data, systems, and insights with simplicity and precision.",
     about_heading: "About <span>Me</span>",
     about_role: "Analytics Engineer & Developer",
     about_desc:
-      "I am Ibrahim Atthariq. Transitioning from the calculating nature phenomenon using laws of physics to the building logic of computer science, I find joy in understanding how things work.I am passionate about understanding the internal mechanisms of systems, particularly in distributed systems, data warehousing, and machine learning. I also enjoy exploring other domains, such as applied finance and economics.",
+      "I am Ibrahim Atthariq. Transitioning from the calculating nature phenomenon using laws of physics to the building logic of computer science, I find joy in understanding how things work. I am passionate about understanding the internal mechanisms of systems, particularly in distributed systems, data warehousing, and machine learning. I also enjoy exploring other domains, such as applied finance and economics.",
     about_cv: "Download CV",
     skills_heading: "My <span>Skills</span>",
     skill_1_title: "Data Architect & Pipeline",
@@ -134,7 +134,7 @@ const translations = {
     home_hello: "Halo, saya",
     home_name: "Ibrahim Atthariq",
     home_desc:
-      "Mengolah data, sistem, dan wawasan dengan kesederhanaan dan presisi.",
+      "Seseorang yang merancang data, sistem, dan wawasan dengan kesederhanaan dan ketelitian.",
     about_heading: "Tentang <span>Saya</span>",
     about_role: "Insinyur & Pengembang Analitik",
     about_desc:
@@ -170,8 +170,7 @@ const translations = {
     nav_contact: "コンタクト",
     home_hello: "こんにちは、私は",
     home_name: "イブラヒム・アッタリク",
-    home_desc:
-      "シンプルかつ正確に、データ、システム、インサイトを作り上げます。",
+    home_desc: "データ、システム、洞察をシンプルかつ正確に作成する人。",
     about_heading: "自己 <span>紹介</span>",
     about_role: "アナリティクスエンジニア",
     about_desc:
