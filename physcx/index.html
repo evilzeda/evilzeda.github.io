@@ -1,0 +1,2528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>physcx — Physics in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+:root{
+  --bg:#0b0d12; --ink:#ECECEC; --mute:#8b93a7; --faint:#5b6275;
+  --line:rgba(255,255,255,.08); --card:rgba(15,18,26,.74);
+  --accent:#58C4DD;
+  --serif:'Crimson Pro',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
+#labels{position:fixed;inset:0;pointer-events:none}
+.tex-label{font-size:18px;text-shadow:0 0 8px rgba(0,0,0,.9);white-space:nowrap;user-select:none}
+.ui{transition:opacity .45s ease}
+body.clean .ui{opacity:0;pointer-events:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* header */
+.brand{position:fixed;top:22px;left:26px;z-index:5;max-width:min(560px,calc(100vw - 380px))}
+.logo{font-family:var(--serif);font-size:20px;letter-spacing:.02em;color:var(--mute);display:flex;align-items:center;gap:8px}
+.logo b{font-weight:600;color:var(--ink)}
+.logo .d{color:var(--accent);font-style:italic;font-size:24px;transition:color .6s}
+.chapter{margin-top:14px;display:flex;align-items:baseline;gap:14px}
+.chapter .num{font-family:var(--mono);font-size:13px;color:var(--accent);transition:color .6s}
+.chapter h1{font-family:var(--serif);font-weight:500;font-size:34px;margin:0;line-height:1.05}
+.chapter p{font-family:var(--serif);font-style:italic;color:var(--mute);margin:6px 0 0 0;font-size:18px}
+
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);margin-top:12px}
+.tag b{color:var(--accent);font-weight:500;transition:color .6s}
+#refCard .rl{font-family:var(--mono);font-size:11px;color:var(--mute);margin-bottom:4px}
+#refCard .rt{font-family:var(--serif);font-size:20px;line-height:1.2}
+#refCard a.read{display:inline-flex;gap:6px;align-items:center;margin-top:12px;font-size:12.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;transition:background .2s}
+#refCard a.read:hover{background:rgba(255,255,255,.06)}
+#intro .vols{display:flex;gap:12px;justify-content:center;margin-bottom:26px;flex-wrap:wrap;padding:0 16px}
+#intro .vols{max-width:640px;margin-left:auto;margin-right:auto}
+#intro .vols button{flex:1 1 180px}
+#intro .vols button{border:1px solid rgba(255,255,255,.14);border-top:2px solid var(--tc);border-radius:10px;padding:11px 16px;text-align:left;min-width:180px;transition:border-color .2s,background .2s}
+#intro .vols button:hover{border-color:rgba(255,255,255,.42);background:rgba(255,255,255,.04)}
+#intro .vols b{display:block;font-family:var(--serif);font-weight:500;font-size:20px;margin-bottom:2px}
+#intro .vols span{font-size:12.5px;color:var(--mute)}
+
+/* left sidebar */
+#side{position:fixed;top:18px;left:18px;width:300px;max-height:calc(100vh - 36px);z-index:5;display:flex;flex-direction:column;
+  background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:14px;padding:16px 16px 12px}
+#side .srow{display:flex;align-items:center;justify-content:space-between}
+#side .logo{font-size:19px}
+#sideToggle{width:30px;height:30px;border-radius:8px;color:var(--mute);display:grid;place-items:center}
+#sideToggle:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+#side .tag{margin-top:12px}
+#side .chapter{margin-top:6px;gap:10px}
+#side .chapter h1{font-size:25px;line-height:1.12}
+#side .chapter p{font-size:15.5px;margin-top:4px}
+.chnav{display:flex;gap:6px;margin-top:12px}
+.chnav button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;color:var(--mute);transition:color .2s,background .2s}
+.chnav button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.chnav button:last-child{color:var(--ink)}
+#toc{margin-top:12px;border-top:1px solid var(--line);padding-top:4px;overflow-y:auto;flex:1 1 auto;min-height:0;scrollbar-width:thin;scrollbar-color:#2a3040 transparent}
+#toc .tg{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600;margin:12px 0 3px 2px}
+#toc .tg i{width:7px;height:7px;border-radius:2px;background:var(--tc)}
+#toc button{display:flex;gap:10px;width:100%;text-align:left;padding:6px 8px;border-radius:7px;font-size:13.5px;color:#aab1c2;line-height:1.3;transition:background .2s,color .2s}
+#toc button .n{font-family:var(--mono);font-size:11px;color:var(--faint);min-width:22px;padding-top:1px}
+#toc button:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+#toc button.on{background:rgba(255,255,255,.08);color:var(--ink);box-shadow:inset 2px 0 0 var(--tc)}
+#toc button.on .n{color:var(--tc)}
+#side .keys{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--faint);line-height:1.75}
+#side .keys kbd{font-family:var(--mono);font-size:10px;border:1px solid #2a3040;border-radius:4px;padding:0 4px;color:var(--mute)}
+body.side-collapsed #toc, body.side-collapsed #side .keys{display:none}
+@media (max-width:1250px){ #side{width:260px} #side .chapter h1{font-size:22px} }
+
+/* contents overlay */
+#contents{position:fixed;inset:0;z-index:15;background:rgba(8,10,15,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .3s ease;overflow-y:auto}
+body.contents-open #contents{opacity:1;pointer-events:auto}
+.cwrap{max-width:1180px;margin:0 auto;padding:44px 32px 60px}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:30px}
+.chead .ck{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.chead h2{font-family:var(--serif);font-weight:500;font-size:36px;margin:6px 0 0}
+.chead p{font-family:var(--serif);font-style:italic;color:var(--mute);font-size:18px;margin:4px 0 0}
+#closeContents{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);color:var(--mute);display:grid;place-items:center;flex:none}
+#closeContents:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+#topicGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px 22px}
+.topic{border-top:2px solid var(--tc);padding-top:12px}
+.topic .th{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.topic .tn{font-family:var(--mono);font-size:12px;color:var(--tc)}
+.topic h3{margin:0;font-family:var(--serif);font-weight:500;font-size:23px}
+.topic .tb{font-size:12.5px;color:var(--mute);margin:2px 0 12px}
+.cc{display:flex;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid transparent;margin-bottom:4px;transition:background .2s,border-color .2s}
+.cc:hover{background:rgba(255,255,255,.05);border-color:var(--line)}
+.cc.on{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14)}
+.cc .cn{font-family:var(--mono);font-size:11.5px;color:var(--faint);padding-top:3px;min-width:24px}
+.cc.on .cn{color:var(--tc)}
+.cc .ct{font-size:14.5px;font-weight:500;color:var(--ink)}
+.cc .cs{font-size:12.5px;color:var(--mute);margin-top:2px;line-height:1.35}
+.cc .cf{display:inline-block;margin-top:6px;font-family:var(--mono);font-size:10.5px;color:var(--mute);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+@media (max-width:1000px){ #topicGrid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:640px){ #topicGrid{grid-template-columns:1fr} .cwrap{padding:24px 16px 90px} .chead h2{font-size:28px} }
+
+/* scene list */
+#sceneList{position:fixed;left:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;z-index:5}
+#sceneList button{display:flex;align-items:center;gap:12px;padding:7px 10px;border-radius:10px;color:var(--faint);text-align:left;transition:color .25s,background .25s}
+#sceneList button .n{font-family:var(--mono);font-size:11px;width:18px}
+#sceneList .grp{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding:10px 10px 3px;white-space:nowrap;max-width:0;overflow:hidden;opacity:0;transition:max-width .35s ease,opacity .3s}
+#sceneList:hover .grp{max-width:220px;opacity:1}
+#sceneList button .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5;transition:transform .3s}
+#sceneList button .t{font-size:13px;max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .35s ease,opacity .3s}
+#sceneList:hover button .t{max-width:220px;opacity:1}
+#sceneList button:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+#sceneList button.on{color:var(--ink)}
+#sceneList button.on .dot{opacity:1;transform:scale(1.5);background:var(--c)}
+
+/* right panel */
+#panel{position:fixed;top:18px;right:18px;width:300px;max-height:calc(100vh - 110px);overflow:auto;display:flex;flex-direction:column;gap:10px;z-index:5;scrollbar-width:thin;scrollbar-color:#2a3040 transparent}
+.card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h3{margin:0 0 10px 0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+#eq{font-size:17px;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+#eq .katex-display{margin:4px 0}
+.param{margin:10px 0 14px}
+.param:last-child{margin-bottom:2px}
+.phead{display:flex;align-items:baseline;gap:8px;font-size:12.5px;margin-bottom:7px}
+.ptex{font-size:15px;color:var(--ink);min-width:22px}
+.pname{color:var(--mute);flex:1}
+.pval{font-family:var(--mono);font-size:12px;color:var(--accent)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--p,50%),#2a3040 var(--p,50%))}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:#2a3040}
+input[type=range]::-moz-range-progress{height:3px;border-radius:2px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ink);margin-top:-5.5px;box-shadow:0 0 0 4px rgba(255,255,255,.06);transition:transform .15s}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:var(--ink)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:3px}
+.seg button{flex:1;font-size:12px;padding:6px 8px;border-radius:6px;color:var(--mute);white-space:nowrap}
+.seg button.on{background:rgba(255,255,255,.09);color:var(--ink)}
+#readouts .row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:13px;border-bottom:1px dashed rgba(255,255,255,.05)}
+#readouts .row:last-child{border:0}
+#readouts .row span:last-child{font-family:var(--mono);font-size:12px;color:var(--ink)}
+#readouts .row span:first-child{color:var(--mute)}
+
+/* caption */
+#caption{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:min(760px,calc(100vw - 700px));min-width:320px;z-index:5;text-align:center}
+#capText{font-family:var(--serif);font-size:23px;line-height:1.42;color:var(--ink);text-shadow:0 1px 18px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.8);min-height:66px;transition:opacity .35s ease,transform .35s ease}
+#capText.out{opacity:0;transform:translateY(8px)}
+#capText .katex{font-size:1.02em}
+.capNav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px}
+.capNav button{width:30px;height:30px;border-radius:50%;color:var(--mute);display:grid;place-items:center;transition:color .2s,background .2s}
+.capNav button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+#dots{display:flex;gap:7px}
+#dots i{width:6px;height:6px;border-radius:50%;background:#353b4b;cursor:pointer;transition:background .3s,transform .3s}
+#dots i.on{background:var(--accent);transform:scale(1.35)}
+#dots i.seen{background:#5b6275}
+
+/* toolbar */
+#toolbar{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;border-radius:14px;background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);z-index:6}
+#toolbar button{height:34px;min-width:34px;padding:0 10px;border-radius:9px;color:var(--mute);display:flex;align-items:center;gap:6px;font-size:12.5px;transition:color .2s,background .2s}
+#toolbar button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+#toolbar button.on{color:var(--ink);background:rgba(255,255,255,.09)}
+#toolbar .lbl{font-size:12.5px}
+#toolbar .sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+#toolbar svg{width:16px;height:16px}
+#speed{font-family:var(--mono);font-size:12px;min-width:46px!important;justify-content:center}
+#panelBtn{display:none!important}
+
+.hint{position:fixed;right:22px;bottom:26px;font-size:11.5px;color:var(--faint);z-index:4;text-align:right;line-height:1.6}
+.hint kbd{font-family:var(--mono);font-size:10.5px;border:1px solid #2a3040;border-radius:4px;padding:0 4px;color:var(--mute)}
+
+#fade{position:fixed;inset:0;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .4s ease;z-index:8}
+#fade.on{opacity:1}
+
+#intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(ellipse at center,#121624 0%,var(--bg) 70%);cursor:pointer;transition:opacity .9s ease}
+#intro.gone{opacity:0;pointer-events:none}
+#intro .box{text-align:center}
+#intro h2{font-family:var(--serif);font-weight:500;font-size:clamp(56px,10vw,110px);margin:0;letter-spacing:.01em}
+#intro h2 span{color:#58C4DD;font-style:italic}
+#intro p{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--mute);margin:8px 0 34px}
+#intro .go{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{50%{color:var(--ink)}}
+#intro .bar{display:flex;gap:10px;justify-content:center;margin-bottom:30px}
+#intro .bar i{width:34px;height:3px;border-radius:2px;opacity:0;animation:grow .7s ease forwards}
+@keyframes grow{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+
+#err{position:fixed;inset:0;display:none;place-items:center;z-index:30;background:var(--bg);font-family:var(--serif);font-size:20px;color:var(--mute);text-align:center;padding:30px}
+
+@media (max-width:1100px){
+  #caption{width:min(720px,calc(100vw - 380px));min-width:0}
+  .hint{display:none}
+}
+@media (max-width:820px){
+  #side{left:12px;right:12px;top:12px;width:auto;max-height:none;background:none;border:0;padding:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #toc,#side .keys,#sideToggle,.chnav{display:none!important}
+  #side .chapter h1{font-size:23px}
+  .chapter h1{font-size:25px}
+  .chapter p{font-size:15px}
+  #sceneList{top:auto;bottom:128px;left:0;right:0;transform:none;flex-direction:row;justify-content:center;gap:0}
+  #sceneList button .t{display:none}
+  #sceneList .grp,#sceneList button.othervol{display:none}
+  .tag{font-size:10px;margin-top:8px}
+  #panel{top:auto;bottom:70px;right:10px;left:10px;width:auto;max-height:46vh;transform:translateY(calc(100% + 90px));transition:transform .35s ease}
+  body.panel-open #panel{transform:none}
+  #panelBtn{display:flex!important}
+  #caption{width:calc(100vw - 24px);bottom:150px}
+  #capText{font-size:18px;min-height:0}
+  .capNav{margin-top:6px}
+  #toolbar{bottom:12px;max-width:calc(100vw - 16px);overflow-x:auto}
+  #toolbar .wide{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="0"></canvas>
+
+<aside id="side" class="ui">
+  <div class="srow">
+    <div class="logo"><span class="d">∂</span><b>physcx</b></div>
+    <button id="sideToggle" title="Show / hide chapter list (L)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+  </div>
+  <div class="tag" id="sceneTag"></div>
+  <div class="chapter"><span class="num" id="chapNum">01</span><div><h1 id="sceneTitle"></h1><p id="sceneSub"></p></div></div>
+  <div class="chnav">
+    <button id="sPrev" title="Previous chapter ([)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg><span>Previous</span></button>
+    <button id="sNext" title="Next chapter (])"><span>Next chapter</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+  <nav id="toc"></nav>
+  <div class="keys"><kbd>[</kbd> <kbd>]</kbd> chapter &nbsp; <kbd>←</kbd> <kbd>→</kbd> step &nbsp; <kbd>H</kbd> hide UI</div>
+</aside>
+
+
+<aside id="panel" class="ui">
+  <section class="card" id="refCard"><h3 id="refHead">From the Feynman Lectures</h3><div class="rl" id="refLabel"></div><div class="rt" id="refTitle"></div><a class="read" id="refLink" target="_blank" rel="noopener">Read the lecture ↗</a></section>
+  <section class="card"><h3>Governing equations</h3><div id="eq"></div></section>
+  <section class="card"><h3>Parameters</h3><div id="params"></div></section>
+  <section class="card"><h3>Live</h3><div id="readouts"></div></section>
+</aside>
+
+<div id="caption" class="ui">
+  <div id="capText"></div>
+  <div class="capNav">
+    <button id="prevStep" title="Previous (←)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div id="dots"></div>
+    <button id="nextStep" title="Next (→)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+</div>
+
+<div id="toolbar" class="ui">
+  <button id="prevCh" title="Previous chapter ([)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+  <button id="contentsBtn" title="All chapters (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="lbl wide">Contents</span></button>
+  <button id="nextCh" title="Next chapter (])"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg></button>
+  <span class="sep"></span>
+  <button id="playBtn" title="Play / pause (Space)"></button>
+  <button id="speed" title="Simulation speed">1×</button>
+  <button id="resetBtn" title="Restart simulation (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+  <span class="sep"></span>
+  <button id="tourBtn" class="wide" title="Auto-advance the narration (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5l8 7-8 7z"/><path d="M13 19V5l8 7-8 7z"/></svg><span class="wide">Tour</span></button>
+  <button id="orbitBtn" title="Slowly orbit the camera (O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="4"/><circle cx="12" cy="12" r="2.2"/></svg><span class="wide">Orbit</span></button>
+  <button id="camBtn" class="wide" title="Reset the camera (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  <button id="cleanBtn" title="Hide the interface (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <button id="panelBtn" title="Parameters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+  <button id="fsBtn" class="wide" title="Fullscreen (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+
+
+<div id="contents">
+  <div class="cwrap">
+    <div class="chead">
+      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twelve interactive chapters in six topics, most of them built on a lecture from <i>The Feynman Lectures on Physics</i></p></div>
+      <button id="closeContents" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div id="topicGrid"></div>
+  </div>
+</div>
+<div id="fade"></div>
+<div id="intro">
+  <div class="box">
+    <div class="bar"><i style="background:#F0AC5F;animation-delay:.1s"></i><i style="background:#5CD0B3;animation-delay:.2s"></i><i style="background:#FFE066;animation-delay:.3s"></i><i style="background:#FC6255;animation-delay:.4s"></i><i style="background:#83C167;animation-delay:.5s"></i><i style="background:#D147BD;animation-delay:.6s"></i></div>
+    <h2><span>∂</span>physcx</h2>
+    <p>Twelve interactive chapters, inspired by the Feynman Lectures</p>
+    <div class="vols" id="introTopics"></div>
+    <div class="go">pick a topic, or click anywhere to begin</div>
+  </div>
+</div>
+<div id="err"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+/* =====================================================================
+   Palette (3Blue1Brown-inspired)
+   ===================================================================== */
+const C = {
+  blue:0x58C4DD, teal:0x5CD0B3, green:0x83C167, yellow:0xFFE066, gold:0xF0AC5F,
+  red:0xFC6255, maroon:0xC55F73, purple:0x9A72AC, pink:0xD147BD,
+  grey:0x6b7280, white:0xECECEC, bg:0x0b0d12,
+};
+const V3 = THREE.Vector3;
+const hexCss = c => '#' + new THREE.Color(c).getHexString();
+const PAL_COOL = [C.blue, C.teal, C.green, C.yellow, C.gold, C.red];
+function gradient(stops, t){
+  t = Math.min(Math.max(t,0),1) * (stops.length-1);
+  const i = Math.min(Math.floor(t), stops.length-2), f = t - i;
+  return new THREE.Color(stops[i]).lerp(new THREE.Color(stops[i+1]), f);
+}
+
+/* =====================================================================
+   KaTeX helpers
+   ===================================================================== */
+const tex = (s, display=false) => window.katex ? katex.renderToString(s, {throwOnError:false, displayMode:display}) : s;
+function rich(text){
+  return text.split(/(\$\$[^$]+\$\$|\$[^$]+\$)/g).map(part=>{
+    if (part.startsWith('$$')) return tex(part.slice(2,-2), true);
+    if (part.startsWith('$')) return tex(part.slice(1,-1));
+    return part;
+  }).join('');
+}
+
+/* =====================================================================
+   Renderer, camera, post-processing
+   ===================================================================== */
+const canvas = document.getElementById('c');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+} catch(e){
+  const el = document.getElementById('err'); el.style.display='grid';
+  el.textContent = 'WebGL is not available in this browser, so the simulations cannot run.';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(C.bg);
+scene.fog = new THREE.FogExp2(C.bg, 0.018);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.05, 400);
+camera.position.set(0, 4, 18);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.07;
+controls.autoRotateSpeed = 0.6;
+controls.minDistance = 1.5; controls.maxDistance = 60;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(5, 9, 6); scene.add(sun);
+const rim = new THREE.DirectionalLight(0x88aaff, 0.5); rim.position.set(-6, -2, -5); scene.add(rim);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.75, 0.45, 0.22);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+labelRenderer.domElement.id = 'labels';
+document.body.appendChild(labelRenderer.domElement);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+  labelRenderer.setSize(innerWidth, innerHeight);
+});
+
+/* =====================================================================
+   Tweens & easing (real time, independent of sim speed)
+   ===================================================================== */
+const ease = {
+  inOut: t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2,
+  out:   t => 1 - Math.pow(1-t, 3),
+  smooth:t => t*t*(3-2*t),
+  linear:t => t,
+};
+const tweens = new Set();
+function tween(duration, onUpdate, easing=ease.inOut){
+  return new Promise(res => tweens.add({t:0, duration:Math.max(duration,1e-4), onUpdate, easing, res}));
+}
+function updateTweens(dt){
+  for (const tw of tweens){
+    tw.t += dt;
+    const k = Math.min(tw.t/tw.duration, 1);
+    tw.onUpdate(tw.easing(k));
+    if (k >= 1){ tweens.delete(tw); tw.res(); }
+  }
+}
+let camTok = 0;
+function flyTo(pos, target, dur=1.8){
+  const tok = ++camTok;
+  const p0 = camera.position.clone(), t0 = controls.target.clone();
+  const p1 = new V3(...pos), t1 = new V3(...target);
+  const s0 = new THREE.Spherical().setFromVector3(p0.clone().sub(t0));
+  const s1 = new THREE.Spherical().setFromVector3(p1.clone().sub(t1));
+  let dTh = s1.theta - s0.theta;
+  dTh = Math.atan2(Math.sin(dTh), Math.cos(dTh));
+  const tgt = new V3(), sp = new THREE.Spherical();
+  return tween(dur, k => {
+    if (tok !== camTok) return;
+    tgt.lerpVectors(t0, t1, k);
+    sp.set(s0.radius + (s1.radius-s0.radius)*k, s0.phi + (s1.phi-s0.phi)*k, s0.theta + dTh*k);
+    camera.position.setFromSpherical(sp).add(tgt);
+    controls.target.copy(tgt);
+  });
+}
+canvas.addEventListener('pointerdown', () => { camTok++; }); // user grabs the camera → cancel flights
+
+/* =====================================================================
+   Drawing primitives
+   ===================================================================== */
+const Y_AXIS = new V3(0,1,0);
+function makeArrow(color, r=0.025, opacity=1){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color, transparent:true, opacity, depthWrite: opacity>=1});
+  const shaftGeo = new THREE.CylinderGeometry(r, r, 1, 10); shaftGeo.translate(0, .5, 0);
+  const headH = r*9, headGeo = new THREE.ConeGeometry(r*3.4, headH, 18); headGeo.translate(0, headH/2, 0);
+  const shaft = new THREE.Mesh(shaftGeo, mat), head = new THREE.Mesh(headGeo, mat);
+  g.add(shaft, head);
+  const dir = new V3();
+  g.userData.arrow = {
+    mat,
+    set(origin, vec){
+      const len = vec.length();
+      if (len < 1e-5){ g.visible = false; return; }
+      g.visible = true;
+      const hl = Math.min(headH, len*0.45);
+      shaft.scale.set(1, Math.max(len - hl, 1e-4), 1);
+      head.scale.setScalar(hl/headH);
+      head.position.y = len - hl;
+      g.position.copy(origin);
+      dir.copy(vec).divideScalar(len);
+      g.quaternion.setFromUnitVectors(Y_AXIS, dir);
+    },
+  };
+  return g;
+}
+function texLabel(str, color=C.white, size=18){
+  const el = document.createElement('div');
+  el.className = 'tex-label';
+  el.style.color = hexCss(color); el.style.fontSize = size+'px';
+  el.innerHTML = tex(str);
+  return new CSS2DObject(el);
+}
+function makeAxes(len=3, names=['x','y','z'], color=C.grey){
+  const g = new THREE.Group();
+  const dirs = [new V3(1,0,0), new V3(0,1,0), new V3(0,0,1)];
+  const tick = [];
+  dirs.forEach((d,i) => {
+    const a = makeArrow(color, 0.011, 0.9);
+    a.userData.arrow.set(d.clone().multiplyScalar(-len), d.clone().multiplyScalar(2*len));
+    g.add(a);
+    const lab = texLabel(names[i], 0x9aa3b5, 16);
+    lab.position.copy(d).multiplyScalar(len + 0.35); g.add(lab);
+    const perp = i === 1 ? new V3(0.06,0,0) : new V3(0,0.06,0);
+    for (let k = -Math.floor(len); k <= Math.floor(len); k++){
+      if (k === 0) continue;
+      const p = d.clone().multiplyScalar(k);
+      tick.push(p.x-perp.x, p.y-perp.y, p.z-perp.z, p.x+perp.x, p.y+perp.y, p.z+perp.z);
+    }
+  });
+  const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(tick, 3));
+  g.add(new THREE.LineSegments(tg, new THREE.LineBasicMaterial({color, transparent:true, opacity:.8})));
+  return g;
+}
+function glowDot(color, r=0.06){
+  return new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), new THREE.MeshBasicMaterial({color}));
+}
+let dotTex = null;
+function circleTexture(){
+  if (dotTex) return dotTex;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const g = cv.getContext('2d'), gr = g.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.35,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0,0,64,64);
+  dotTex = new THREE.CanvasTexture(cv); return dotTex;
+}
+function reveal(obj, dur=1.1, delay=0){
+  obj.scale.setScalar(1e-3);
+  setTimeout(() => tween(dur, k => obj.scale.setScalar(Math.max(k,1e-3)), ease.out), delay*1000);
+}
+
+/* Fading trail: additive line whose tail dissolves into the background */
+class Trail {
+  constructor(max, color, power=1.6){
+    this.max = max; this.count = 0; this.power = power;
+    this.col = new THREE.Color(color);
+    this.pos = new Float32Array(max*3); this.cols = new Float32Array(max*3);
+    this.geo = new THREE.BufferGeometry();
+    this.pa = new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage);
+    this.ca = new THREE.BufferAttribute(this.cols, 3).setUsage(THREE.DynamicDrawUsage);
+    this.geo.setAttribute('position', this.pa); this.geo.setAttribute('color', this.ca);
+    this.geo.setDrawRange(0, 0);
+    this.line = new THREE.Line(this.geo, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+    this.line.frustumCulled = false;
+  }
+  push(x, y, z){
+    if (this.count < this.max){
+      const i = this.count*3; this.pos[i]=x; this.pos[i+1]=y; this.pos[i+2]=z;
+      this.count++; this.recolor();
+    } else {
+      this.pos.copyWithin(0, 3);
+      const i = (this.max-1)*3; this.pos[i]=x; this.pos[i+1]=y; this.pos[i+2]=z;
+    }
+    this.pa.needsUpdate = true;
+    this.geo.setDrawRange(0, this.count);
+  }
+  recolor(){
+    const n = this.count, c = this.col;
+    for (let k = 0; k < n; k++){
+      const f = Math.pow((k+1)/n, this.power);
+      this.cols[k*3]=c.r*f; this.cols[k*3+1]=c.g*f; this.cols[k*3+2]=c.b*f;
+    }
+    this.ca.needsUpdate = true;
+  }
+  clear(){ this.count = 0; this.geo.setDrawRange(0,0); }
+}
+
+function disposeTree(obj){
+  obj.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m => m.dispose()); }
+    if (o.isCSS2DObject && o.element.parentNode) o.element.parentNode.removeChild(o.element);
+  });
+}
+function clearGroup(g){ [...g.children].forEach(ch => { disposeTree(ch); g.remove(ch); }); }
+
+/* RK4 for a 3-vector stored in an array */
+const _k1=[0,0,0],_k2=[0,0,0],_k3=[0,0,0],_k4=[0,0,0],_tmp=[0,0,0];
+function rk4(s, h, f){
+  f(s[0],s[1],s[2],_k1);
+  for (let i=0;i<3;i++) _tmp[i]=s[i]+h/2*_k1[i]; f(_tmp[0],_tmp[1],_tmp[2],_k2);
+  for (let i=0;i<3;i++) _tmp[i]=s[i]+h/2*_k2[i]; f(_tmp[0],_tmp[1],_tmp[2],_k3);
+  for (let i=0;i<3;i++) _tmp[i]=s[i]+h*_k3[i];   f(_tmp[0],_tmp[1],_tmp[2],_k4);
+  for (let i=0;i<3;i++) s[i] += h/6*(_k1[i]+2*_k2[i]+2*_k3[i]+_k4[i]);
+}
+
+/* =====================================================================
+   CHAPTER 1 — Lorenz attractor
+   ===================================================================== */
+const Lorenz = {
+  id:'lorenz', title:'The Lorenz Attractor', sub:'Deterministic chaos in three dimensions', accent:C.blue,
+  cam:{pos:[7.5, 2.4, 8.8], target:[0,0,0]},
+  eq:String.raw`\begin{aligned}\dot x &= \sigma\,(y - x)\\ \dot y &= x\,(\rho - z) - y\\ \dot z &= x\,y - \beta\, z\end{aligned}`,
+  params:[
+    {key:'sigma', tex:'\\sigma', label:'Prandtl number', min:1, max:20, step:0.1, value:10},
+    {key:'rho', tex:'\\rho', label:'Rayleigh number', min:1, max:50, step:0.1, value:28},
+    {key:'beta', tex:'\\beta', label:'geometry', min:0.5, max:5, step:0.01, value:8/3},
+    {key:'n', tex:'N', label:'particles', min:1, max:24, step:1, value:12, reset:true},
+    {key:'eps', tex:'\\delta_0', label:'initial spread', min:-6, max:-1, step:0.1, value:-3, reset:true, fmt:v=>'1e'+v.toFixed(1)},
+  ],
+  steps:[
+    {text:'In 1963 Edward Lorenz boiled atmospheric convection down to three coupled equations. The constants $\\sigma$, $\\rho$, $\\beta$ describe the fluid.'},
+    {text:'Release $N$ particles, each just $\\delta_0 = 10^{-3}$ apart. For a while they move as one.', run:c=>Lorenz.reset(c)},
+    {text:'But tiny differences grow exponentially, $|\\delta(t)| \\approx |\\delta_0|\\,e^{\\lambda t}$ with $\\lambda \\approx 0.9$ — the butterfly effect.', cam:[[3.5,1.2,6.5],[0,0,0]]},
+    {text:'Yet every trajectory is drawn onto the same butterfly-shaped set: a <i>strange attractor</i> with fractal dimension $\\approx 2.06$.', cam:[[0.2,9.5,2.5],[0,0,0]]},
+    {text:'Drop $\\rho$ below $24.74$ and the chaos dies — trajectories spiral into one of two fixed points. Drag the sliders and explore.', cam:[[7.5,2.4,8.8],[0,0,0]], run:c=>c.setParam('rho', 16, 2.5)},
+  ],
+  map(s){ const S=0.12; return [s[0]*S, (s[2]-25)*S, s[1]*S]; },
+  init(c){
+    const ax = makeAxes(3.4, ['x','z','y']); c.group.add(ax); reveal(ax);
+    c.data.layer = new THREE.Group(); c.group.add(c.data.layer);
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    clearGroup(d.layer); d.parts = []; d.t = 0;
+    const n = Math.round(P.n), eps = Math.pow(10, P.eps);
+    for (let i = 0; i < n; i++){
+      const col = gradient(PAL_COOL, n===1 ? 0 : i/(n-1));
+      const trail = new Trail(1400, col);
+      const head = glowDot(col, 0.05);
+      d.layer.add(trail.line, head);
+      d.parts.push({s:[-8 + i*eps, 8, 27], trail, head});
+    }
+  },
+  update(dt, c){
+    const d = c.data, P = c.params; if (dt <= 0) return;
+    const T = dt*0.55, steps = Math.max(1, Math.ceil(T/0.004)), h = T/steps;
+    const sg = P.sigma, r = P.rho, b = P.beta;
+    const f = (x,y,z,o) => { o[0]=sg*(y-x); o[1]=x*(r-z)-y; o[2]=x*y-b*z; };
+    for (const p of d.parts){
+      for (let k = 0; k < steps; k++){
+        rk4(p.s, h, f);
+        if (!isFinite(p.s[0])) p.s = [-8, 8, 27];
+        const w = this.map(p.s); p.trail.push(w[0], w[1], w[2]);
+      }
+      const w = this.map(p.s); p.head.position.set(w[0], w[1], w[2]);
+    }
+    d.t += T;
+  },
+  readouts(c){
+    const d = c.data; let sep = 0;
+    const a = d.parts[0].s;
+    for (const p of d.parts){ sep = Math.max(sep, Math.hypot(p.s[0]-a[0], p.s[1]-a[1], p.s[2]-a[2])); }
+    const lead = d.parts[0].s;
+    return [
+      ['time $t$', d.t.toFixed(2)],
+      ['spread $\\max|\\delta|$', sep.toExponential(2)],
+      ['lead $(x,y,z)$', `${lead[0].toFixed(1)}, ${lead[1].toFixed(1)}, ${lead[2].toFixed(1)}`],
+    ];
+  },
+};
+
+/* =====================================================================
+   CHAPTER 2 — Lorentz force
+   ===================================================================== */
+const Lorentz = {
+  id:'lorentz', title:'The Lorentz Force', sub:'Charges spiralling through electric and magnetic fields', accent:C.yellow,
+  cam:{pos:[8.5, 3.6, 9.5], target:[0,0,0]},
+  eq:String.raw`\vec F = q\left(\vec E + \vec v \times \vec B\right)`,
+  params:[
+    {key:'qm', tex:'q/m', label:'charge-to-mass', min:-2, max:2, step:0.05, value:1},
+    {key:'B', tex:'B', label:'magnetic field (along y)', min:-2, max:2, step:0.05, value:1},
+    {key:'vperp', tex:'v_\\perp', label:'speed across B', min:0, max:3, step:0.05, value:1.5, reset:true},
+    {key:'vpar', tex:'v_\\parallel', label:'speed along B', min:-1.5, max:1.5, step:0.05, value:0, reset:true},
+    {key:'Ex', tex:'E_x', label:'E across B', min:-1, max:1, step:0.02, value:0},
+    {key:'Ey', tex:'E_y', label:'E along B', min:-1, max:1, step:0.02, value:0},
+  ],
+  steps:[
+    {text:'A charge $q$ moving with velocity $\\vec v$ through a magnetic field $\\vec B$ feels the force $\\vec F = q\\,\\vec v \\times \\vec B$.', run:c=>{c.setParam('vpar',0,0); c.setParam('Ex',0,0); c.setParam('Ey',0,0); Lorentz.reset(c);}},
+    {text:'That force is always perpendicular to $\\vec v$, so it does no work: the speed never changes, and the path bends into a circle of radius $r_L = \\dfrac{m v_\\perp}{|q|B}$.', cam:[[0.5,10,0.8],[0,0,0]]},
+    {text:'Give the charge some velocity <i>along</i> $\\vec B$. That component feels no force at all — the circle stretches into a helix.', cam:[[8.5,3.6,9.5],[0,0,0]], run:c=>{c.setParam('vpar',0.55,0); Lorentz.reset(c);}},
+    {text:'Now add an electric field across $\\vec B$. The charge drifts sideways at $\\vec v_d = \\vec E\\times\\vec B / B^2$ — the same drift for any charge or mass!', cam:[[10,4,3],[0,0,0]], run:c=>{c.setParam('vpar',0,0); c.setParam('Ex',0.45,0); Lorentz.reset(c);}},
+    {text:'An electric field <i>along</i> $\\vec B$ simply accelerates the charge down the field lines, so the helix opens up. Try flipping the sign of $q/m$.', cam:[[8.5,3.6,9.5],[0,0,0]], run:c=>{c.setParam('Ex',0,0); c.setParam('Ey',0.12,0); c.setParam('vpar',0,0); Lorentz.reset(c);}},
+  ],
+  init(c){
+    const d = c.data;
+    const ax = makeAxes(5.5, ['x','y','z'], 0x3c4252); c.group.add(ax); reveal(ax, 1);
+    d.fields = new THREE.Group(); c.group.add(d.fields);
+    d.B = []; d.E = [];
+    for (const x of [-4,0,4]) for (const z of [-4,0,4]){
+      if (x===0 && z===0) continue;
+      const a = makeArrow(C.blue, 0.01, 0.3); a.userData.base = new V3(x, 0, z);
+      d.fields.add(a); d.B.push(a);
+    }
+    for (const x of [-3,3]) for (const z of [-3,3]) for (const y of [-3,0,3]){
+      const a = makeArrow(C.gold, 0.018, 0.6); a.userData.base = new V3(x, y, z);
+      d.fields.add(a); d.E.push(a);
+    }
+    d.Blab = texLabel('\\vec B', C.blue, 20); c.group.add(d.Blab);
+    d.Elab = texLabel('\\vec E', C.gold, 20); c.group.add(d.Elab);
+    d.trail = new Trail(3200, C.teal, 1.2); c.group.add(d.trail.line);
+    d.dot = glowDot(C.yellow, 0.11); c.group.add(d.dot);
+    d.vArrow = makeArrow(C.green, 0.03); d.fArrow = makeArrow(C.red, 0.03);
+    c.group.add(d.vArrow, d.fArrow);
+    d.vLab = texLabel('\\vec v', C.green, 19); d.fLab = texLabel('\\vec F', C.red, 19);
+    c.group.add(d.vLab, d.fLab);
+    reveal(d.fields, 1.2, 0.2);
+    this.refresh(c); this.reset(c);
+  },
+  onParam(key, c){ if (key==='B' || key==='Ex' || key==='Ey') this.refresh(c); },
+  refresh(c){
+    const d = c.data, P = c.params;
+    const bs = Math.abs(P.B), sgn = Math.sign(P.B) || 1;
+    for (const a of d.B){
+      const b = a.userData.base;
+      a.userData.arrow.set(new V3(b.x, -5.5*sgn, b.z), new V3(0, 11*sgn, 0));
+      a.userData.arrow.mat.opacity = 0.06 + 0.26*Math.min(bs/2,1);
+      a.visible = bs > 0.01;
+    }
+    d.Blab.position.set(4, 5.9*sgn, 4); d.Blab.visible = bs > 0.01;
+    const E = new V3(P.Ex, P.Ey, 0), el = E.length();
+    for (const a of d.E){
+      const b = a.userData.base;
+      a.userData.arrow.set(b.clone().addScaledVector(E, -1.4), E.clone().multiplyScalar(2.8));
+      a.visible = el > 0.01;
+    }
+    d.Elab.visible = el > 0.01;
+    d.Elab.position.set(3, 3, 3).addScaledVector(E, 1.9);
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    const w = P.qm*P.B;
+    let z0 = Math.abs(w) > 0.05 ? -P.vperp/w : 0;
+    if (Math.abs(P.Ex) > 0.01 && Math.abs(P.B) > 0.05) z0 -= 4*Math.sign(P.Ex/P.B);
+    z0 = Math.max(-6, Math.min(6, z0));
+    const dirY = Math.sign(P.vpar) || Math.sign(P.qm*P.Ey);
+    d.x = new V3(0, -4.6*dirY, z0);
+    d.v = new V3(P.vperp, P.vpar, 0);
+    d.t = 0; d.trail.clear();
+  },
+  accel(c, v, out){
+    const P = c.params; // a = (q/m)(E + v×B), B = (0,B,0)
+    const B = P.B;
+    out.set(P.qm*(P.Ex + (-v.z*B)), P.qm*(P.Ey), P.qm*(v.x*B));
+    return out;
+  },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){
+      const T = dt*2.4, steps = Math.max(1, Math.ceil(T/0.01)), h = T/steps;
+      const qm = P.qm, E = new V3(P.Ex, P.Ey, 0), t = new V3(0, qm*P.B*h/2, 0);
+      const s = t.clone().multiplyScalar(2/(1 + t.lengthSq()));
+      const vm = new V3(), vp = new V3(), tmp = new V3();
+      for (let k = 0; k < steps; k++){
+        // Boris pusher — exact energy conservation in pure magnetic fields
+        vm.copy(d.v).addScaledVector(E, qm*h/2);
+        vp.copy(vm).add(tmp.crossVectors(vm, t));
+        vm.add(tmp.crossVectors(vp, s));
+        d.v.copy(vm).addScaledVector(E, qm*h/2);
+        d.x.addScaledVector(d.v, h);
+        d.trail.push(d.x.x, d.x.y, d.x.z);
+        d.t += h;
+        if (Math.abs(d.x.x) > 7.5 || Math.abs(d.x.z) > 7.5 || Math.abs(d.x.y) > 6.2){ this.reset(c); break; }
+      }
+    }
+    d.dot.position.copy(d.x);
+    const v = d.v.clone().multiplyScalar(0.85);
+    d.vArrow.userData.arrow.set(d.x, v);
+    const a = this.accel(c, d.v, new V3()).multiplyScalar(0.85);
+    d.fArrow.userData.arrow.set(d.x, a);
+    d.vLab.position.copy(d.x).add(v).addScaledVector(v.clone().normalize(), 0.3);
+    d.fLab.position.copy(d.x).add(a).addScaledVector(a.lengthSq() > 1e-6 ? a.clone().normalize() : a, 0.3);
+    d.fLab.visible = a.lengthSq() > 1e-4;
+  },
+  readouts(c){
+    const d = c.data, P = c.params, v = d.v;
+    const vp = Math.hypot(v.x, v.z), wc = Math.abs(P.qm*P.B);
+    return [
+      ['speed $|\\vec v|$', v.length().toFixed(3)],
+      ['kinetic energy $\\tfrac12 m v^2$', (0.5*v.lengthSq()).toFixed(3)],
+      ['Larmor radius $r_L$', wc > 1e-3 ? (vp/wc).toFixed(3) : '∞'],
+      ['cyclotron period $T$', wc > 1e-3 ? (2*Math.PI/wc).toFixed(3) : '∞'],
+    ];
+  },
+};
+
+/* =====================================================================
+   CHAPTER 3 — Gravity on a rubber sheet
+   ===================================================================== */
+const Gravity = {
+  id:'gravity', title:'Orbits in a Gravity Well', sub:'Newtonian gravity pictured as a curved sheet', accent:C.gold,
+  cam:{pos:[0, 11, 15], target:[0,-1,0]},
+  eq:String.raw`\begin{aligned}\ddot{\vec r}_i &= -\sum_{j\ne i} \frac{G m_j\,(\vec r_i-\vec r_j)}{|\vec r_i-\vec r_j|^3}\\[4pt] \Phi(r) &= -\frac{GM}{r}\end{aligned}`,
+  params:[
+    {key:'mode', label:'system', type:'select', value:'solar', reset:true, options:[
+      {label:'Star + planets', value:'solar'}, {label:'Binary star', value:'binary'}, {label:'Figure-eight', value:'fig8'}]},
+    {key:'M', tex:'M', label:'total heavy mass', min:5, max:40, step:0.5, value:20, reset:true},
+    {key:'vf', tex:'v/v_c', label:'launch speed vs circular', min:0.5, max:1.4, step:0.01, value:1, reset:true},
+    {key:'depth', tex:'k', label:'sheet depth (visual only)', min:0.03, max:0.3, step:0.005, value:0.14},
+  ],
+  steps:[
+    {text:'Every mass attracts every other. Picture each mass as a dent in a stretched sheet: the depth is the gravitational potential $\\Phi = -GM/r$.', run:c=>{c.setParam('vf',1,0); c.setParam('mode','solar');}},
+    {text:'A planet launched at exactly $v_c = \\sqrt{GM/r}$ rolls around the well in a perfect circle.', cam:[[0,16,6],[0,-1,0]]},
+    {text:'Launch slower and the orbits become ellipses with the star at one focus — Kepler’s first law. Each still sweeps out equal areas in equal times.', cam:[[0,11,15],[0,-1,0]], run:c=>c.setParam('vf',0.75,0)},
+    {text:'Two stars can circle their common centre of mass, dragging the sheet with them while planets orbit the pair.', run:c=>{c.setParam('vf',1,0); c.setParam('mode','binary');}},
+    {text:'The three-body problem is famously chaotic — but three equal masses can chase each other forever along a figure-eight (Chenciner & Montgomery, 2000).', cam:[[0,13,9],[0,-1,0]], run:c=>c.setParam('mode','fig8')},
+  ],
+  init(c){
+    const d = c.data;
+    // sheet: grid of lines
+    const N = 45, M = 181, ext = 11;
+    const segs = 2*N*(M-1);
+    d.base = new Float32Array(segs*2*2); // x,z per vertex
+    const pos = new Float32Array(segs*2*3), col = new Float32Array(segs*2*3);
+    let v = 0;
+    for (let dir = 0; dir < 2; dir++) for (let i = 0; i < N; i++){
+      const a = -ext + 2*ext*i/(N-1);
+      for (let j = 0; j < M-1; j++){
+        for (const jj of [j, j+1]){
+          const b = -ext + 2*ext*jj/(M-1);
+          d.base[v*2] = dir ? a : b; d.base[v*2+1] = dir ? b : a; v++;
+        }
+      }
+    }
+    d.sheetGeo = new THREE.BufferGeometry();
+    d.sheetPos = new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage);
+    d.sheetCol = new THREE.BufferAttribute(col, 3).setUsage(THREE.DynamicDrawUsage);
+    d.sheetGeo.setAttribute('position', d.sheetPos); d.sheetGeo.setAttribute('color', d.sheetCol);
+    d.sheet = new THREE.LineSegments(d.sheetGeo, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+    d.sheet.frustumCulled = false;
+    c.group.add(d.sheet); reveal(d.sheet, 1.4);
+    d.layer = new THREE.Group(); c.group.add(d.layer);
+    d.light = new THREE.PointLight(0xffe0a0, 2.2, 0, 0); c.group.add(d.light);
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params; clearGroup(d.layer); d.bodies = []; d.t = 0;
+    const add = (m, x, z, vx, vz, color, r, heavy) => {
+      const mesh = heavy ? glowDot(color, r) : new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:.35, roughness:.5}));
+      const trail = new Trail(heavy ? 700 : 900, color, 1.3);
+      d.layer.add(mesh, trail.line);
+      d.bodies.push({m, x, z, vx, vz, ax:0, az:0, mesh, trail, heavy});
+    };
+    const M = P.M;
+    d.soft = 0.15;
+    if (P.mode === 'solar'){
+      add(M, 0, 0, 0, 0, C.gold, 0.42, true);
+      [[2.6, C.blue], [4.1, C.green], [5.7, C.red], [7.6, C.teal]].forEach(([r, col], i) => {
+        const v = Math.sqrt(M/r)*P.vf, th = i*1.9;
+        add(0.002, r*Math.cos(th), r*Math.sin(th), -v*Math.sin(th), v*Math.cos(th), col, 0.14 + i*0.02, false);
+      });
+    } else if (P.mode === 'binary'){
+      const m = M/2, a = 1.3, v = Math.sqrt(m/(4*a));
+      add(m,  a, 0, 0,  v, C.gold, 0.32, true);
+      add(m, -a, 0, 0, -v, C.yellow, 0.32, true);
+      [[5.2, C.blue], [7.8, C.teal]].forEach(([r, col], i) => {
+        const vv = Math.sqrt(M/r)*P.vf, th = i*2.3 + 0.6;
+        add(0.002, r*Math.cos(th), r*Math.sin(th), -vv*Math.sin(th), vv*Math.cos(th), col, 0.15, false);
+      });
+    } else {
+      d.soft = 0.01;
+      const m = M/3, L = 3.2, s = Math.sqrt(m/L);
+      const p1 = [0.97000436, -0.24308753], v3 = [-0.93240737, -0.86473146];
+      add(m,  p1[0]*L,  p1[1]*L, -v3[0]/2*s, -v3[1]/2*s, C.blue, 0.26, true);
+      add(m, -p1[0]*L, -p1[1]*L, -v3[0]/2*s, -v3[1]/2*s, C.red, 0.26, true);
+      add(m, 0, 0, v3[0]*s, v3[1]*s, C.yellow, 0.26, true);
+    }
+    this.accel(d); this.drawSheet(c); this.place(c);
+  },
+  accel(d){
+    const B = d.bodies, e2 = d.soft*d.soft;
+    for (const b of B){ b.ax = 0; b.az = 0; }
+    for (let i = 0; i < B.length; i++) for (let j = i+1; j < B.length; j++){
+      const a = B[i], b = B[j];
+      const dx = b.x - a.x, dz = b.z - a.z, r2 = dx*dx + dz*dz + e2, inv = 1/(r2*Math.sqrt(r2));
+      a.ax += b.m*dx*inv; a.az += b.m*dz*inv;
+      b.ax -= a.m*dx*inv; b.az -= a.m*dz*inv;
+    }
+  },
+  height(c, x, z){
+    let h = 0; const k = c.params.depth;
+    for (const b of c.data.bodies){ if (!b.heavy) continue; const dx = x-b.x, dz = z-b.z; h -= k*b.m/Math.sqrt(dx*dx + dz*dz + 0.5); }
+    return h;
+  },
+  drawSheet(c){
+    const d = c.data, pos = d.sheetPos.array, col = d.sheetCol.array, n = d.base.length/2;
+    const blue = new THREE.Color(C.blue), deep = new THREE.Color(C.gold);
+    const heavy = d.bodies.filter(b => b.heavy), k = c.params.depth;
+    for (let i = 0; i < n; i++){
+      const x = d.base[i*2], z = d.base[i*2+1];
+      let h = 0;
+      for (const b of heavy){ const dx = x-b.x, dz = z-b.z; h -= k*b.m/Math.sqrt(dx*dx + dz*dz + 0.5); }
+      pos[i*3] = x; pos[i*3+1] = h; pos[i*3+2] = z;
+      const dd = Math.min(-h/4, 1), r = Math.hypot(x, z), edge = Math.max(0, 1 - Math.max(0, r-7)/4);
+      const f = (0.10 + 0.45*dd)*edge;
+      col[i*3]   = (blue.r + (deep.r-blue.r)*dd*dd)*f;
+      col[i*3+1] = (blue.g + (deep.g-blue.g)*dd*dd)*f;
+      col[i*3+2] = (blue.b + (deep.b-blue.b)*dd*dd)*f;
+    }
+    d.sheetPos.needsUpdate = true; d.sheetCol.needsUpdate = true;
+  },
+  place(c){
+    const d = c.data;
+    for (const b of d.bodies){
+      const r = b.mesh.geometry.parameters.radius;
+      const y = this.height(c, b.x, b.z) + r*0.9;
+      b.mesh.position.set(b.x, y, b.z);
+    }
+    const s = d.bodies.find(b => b.heavy); if (s) d.light.position.copy(s.mesh.position).y += 0.6;
+  },
+  update(dt, c){
+    const d = c.data;
+    if (dt > 0){
+      const T = dt*1.6, steps = Math.max(1, Math.ceil(T/0.003)), h = T/steps;
+      for (let k = 0; k < steps; k++){
+        for (const b of d.bodies){ b.vx += b.ax*h/2; b.vz += b.az*h/2; b.x += b.vx*h; b.z += b.vz*h; }
+        this.accel(d);
+        for (const b of d.bodies){ b.vx += b.ax*h/2; b.vz += b.az*h/2; }
+      }
+      d.t += T;
+      for (const b of d.bodies){
+        const y = this.height(c, b.x, b.z) + 0.03;
+        if (Math.hypot(b.x, b.z) < 30) b.trail.push(b.x, y, b.z);
+      }
+    }
+    this.drawSheet(c); this.place(c);
+  },
+  onParam(key, c){ if (key === 'depth') { this.drawSheet(c); this.place(c); } },
+  readouts(c){
+    const B = c.data.bodies, e2 = c.data.soft**2; let K = 0, U = 0;
+    for (const b of B) K += 0.5*b.m*(b.vx*b.vx + b.vz*b.vz);
+    for (let i = 0; i < B.length; i++) for (let j = i+1; j < B.length; j++){
+      const dx = B[j].x-B[i].x, dz = B[j].z-B[i].z; U -= B[i].m*B[j].m/Math.sqrt(dx*dx + dz*dz + e2);
+    }
+    const p = B.find(b => !b.heavy);
+    return [
+      ['time $t$', c.data.t.toFixed(2)],
+      ['total energy $K+U$', (K+U).toFixed(4)],
+      ['bodies', String(B.length)],
+      [p ? 'inner planet $r$' : 'mass each', p ? Math.hypot(p.x, p.z).toFixed(3) : (c.params.M/3).toFixed(2)],
+    ];
+  },
+};
+
+/* =====================================================================
+   CHAPTER 4 — Wave superposition (GPU)
+   ===================================================================== */
+const WAVE_GLSL = `
+uniform float uTime, uK, uOmega, uAmp, uDamp;
+uniform vec2 uSrc[4]; uniform float uPhase[4]; uniform int uN;
+float H(vec2 p){
+  float h = 0.0;
+  for (int i = 0; i < 4; i++){
+    if (i >= uN) break;
+    float r = length(p - uSrc[i]);
+    h += uAmp * sin(uK*r - uOmega*uTime + uPhase[i]) / sqrt(1.0 + uDamp*r);
+  }
+  return h;
+}`;
+const Waves = {
+  id:'waves', bloom:0.28, title:'Superposition of Waves', sub:'Interference, nodal lines and phased arrays', accent:C.teal,
+  cam:{pos:[0, 7.5, 11], target:[0,-0.5,0]},
+  eq:String.raw`\begin{aligned}\psi(\vec r,t) &= \textstyle\sum_i \psi_i\\[2pt] \psi_i &= \frac{A\,\sin\!\big(k r_i - \omega t + \varphi_i\big)}{\sqrt{1+\gamma r_i}}\end{aligned}`,
+  params:[
+    {key:'n', label:'sources', type:'select', value:1, reset:true, options:[{label:'1',value:1},{label:'2',value:2},{label:'3',value:3},{label:'4',value:4}]},
+    {key:'lambda', tex:'\\lambda', label:'wavelength', min:0.4, max:3, step:0.01, value:1.2},
+    {key:'f', tex:'f', label:'frequency', min:0.1, max:2, step:0.01, value:0.6},
+    {key:'d', tex:'d', label:'source spacing', min:0.3, max:6, step:0.05, value:3},
+    {key:'dphi', tex:'\\Delta\\varphi', label:'phase step', min:0, max:6.283, step:0.01, value:0, fmt:v=>(v/Math.PI).toFixed(2)+'π'},
+    {key:'A', tex:'A', label:'amplitude', min:0.05, max:0.8, step:0.01, value:0.32},
+    {key:'nodes', label:'highlight nodal lines', type:'select', value:0, options:[{label:'Off',value:0},{label:'On',value:1}]},
+  ],
+  steps:[
+    {text:'A single point source sends out circular ripples, $\\psi = A\\sin(kr - \\omega t)$, with wavenumber $k = 2\\pi/\\lambda$.', run:c=>{c.setParam('n',1); c.setParam('nodes',0); c.setParam('dphi',0,0);}},
+    {text:'Add a second source. Waves simply add, $\\psi = \\psi_1 + \\psi_2$: crest on crest doubles, crest on trough cancels.', run:c=>{c.setParam('n',2); c.setParam('d',3,1);}},
+    {text:'The cancellation runs along hyperbolas where the path difference is a half-wavelength off, $|r_1 - r_2| = (m+\\tfrac12)\\lambda$ — the nodal lines.', cam:[[0,15,1.5],[0,0,0]], run:c=>c.setParam('nodes',1)},
+    {text:'Shrink $\\lambda$ and the fringes crowd together. This is exactly Young’s double-slit pattern, the evidence that light is a wave.', run:c=>c.setParam('lambda',0.7,2)},
+    {text:'Four sources with a steady phase step $\\Delta\\varphi$ between neighbours emit a steerable beam — the trick behind phased-array radar and 5G antennas.', cam:[[0,9,10],[0,-0.5,0]], run:c=>{c.setParam('nodes',0); c.setParam('n',4); c.setParam('lambda',1.0,0.8); c.setParam('d',0.55,1.2); c.setParam('dphi',1.4,4);}},
+  ],
+  init(c){
+    const d = c.data;
+    const geo = new THREE.PlaneGeometry(18, 18, 320, 320); geo.rotateX(-Math.PI/2);
+    d.uni = {
+      uTime:{value:0}, uK:{value:1}, uOmega:{value:1}, uAmp:{value:0.3}, uDamp:{value:0.35},
+      uSrc:{value:[new THREE.Vector2(),new THREE.Vector2(),new THREE.Vector2(),new THREE.Vector2()]},
+      uPhase:{value:[0,0,0,0]}, uN:{value:1}, uShowNodes:{value:0},
+      uPos:{value:new THREE.Color(C.yellow)}, uNeg:{value:new THREE.Color(C.blue)}, uMid:{value:new THREE.Color(0x141b28)},
+      uNode:{value:new THREE.Color(C.red)}, uBg:{value:new THREE.Color(C.bg)}, uCam:{value:new V3()},
+    };
+    const mat = new THREE.ShaderMaterial({
+      uniforms:d.uni, side:THREE.DoubleSide,
+      vertexShader: WAVE_GLSL + `
+        varying float vH; varying vec3 vNrm; varying vec2 vP; varying vec3 vW;
+        void main(){
+          vec2 p = position.xz; float h = H(p), e = 0.03;
+          float hx = H(p + vec2(e,0.0)), hz = H(p + vec2(0.0,e));
+          vNrm = normalize(vec3(-(hx-h)/e, 1.0, -(hz-h)/e));
+          vH = h; vP = p;
+          vec4 w = modelMatrix * vec4(position.x, h, position.z, 1.0); vW = w.xyz;
+          gl_Position = projectionMatrix * viewMatrix * w;
+        }`,
+      fragmentShader: `
+        uniform float uTime, uK, uOmega, uAmp, uDamp, uShowNodes;
+        uniform vec2 uSrc[4]; uniform float uPhase[4]; uniform int uN;
+        uniform vec3 uPos, uNeg, uMid, uNode, uBg, uCam;
+        varying float vH; varying vec3 vNrm; varying vec2 vP; varying vec3 vW;
+        void main(){
+          vec3 n = normalize(vNrm); if (!gl_FrontFacing) n = -n;
+          float ref = float(uN) * uAmp * 0.9;
+          float t = clamp(vH / max(ref, 1e-3), -1.0, 1.0);
+          vec3 col = t > 0.0 ? mix(uMid, uPos, pow(t, 0.8)) : mix(uMid, uNeg, pow(-t, 0.8));
+          vec3 L = normalize(vec3(0.35, 1.0, 0.25));
+          vec3 V = normalize(uCam - vW), Hh = normalize(L + V);
+          float dif = max(dot(n, L), 0.0), sp = pow(max(dot(n, Hh), 0.0), 60.0);
+          col = col * (0.22 + 0.62*dif) + sp * 0.18;
+          vec2 g = abs(fract(vP - 0.5) - 0.5) / fwidth(vP);
+          col += (1.0 - min(min(g.x, g.y), 1.0)) * 0.05;
+          if (uShowNodes > 0.5){
+            vec2 s = vec2(0.0);
+            for (int i = 0; i < 4; i++){
+              if (i >= uN) break;
+              float r = length(vP - uSrc[i]); float a = uK*r + uPhase[i];
+              s += vec2(cos(a), sin(a)) / sqrt(1.0 + uDamp*r);
+            }
+            float rr = length(vP);
+            float env = length(s) / (float(uN) / sqrt(1.0 + uDamp*rr));
+            float nn = 1.0 - smoothstep(0.03, 0.16, env);
+            col = mix(col, uNode, nn * 0.9);
+          }
+          float fade = 1.0 - smoothstep(6.0, 8.6, length(vP));
+          gl_FragColor = vec4(mix(uBg, col, fade), 1.0);
+        }`,
+    });
+    d.surf = new THREE.Mesh(geo, mat); c.group.add(d.surf);
+    d.surf.scale.set(1, 0.001, 1);
+    tween(1.6, k => d.surf.scale.set(1, Math.max(k, 0.001), 1), ease.out);
+    d.srcs = new THREE.Group(); c.group.add(d.srcs);
+    d.t = 0;
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data; clearGroup(d.srcs); d.markers = [];
+    for (let i = 0; i < c.params.n; i++){
+      const m = glowDot(C.white, 0.09); d.srcs.add(m); d.markers.push(m);
+    }
+    this.sync(c);
+  },
+  sync(c){
+    const d = c.data, P = c.params, u = d.uni, n = P.n;
+    u.uN.value = n; u.uK.value = 2*Math.PI/P.lambda; u.uOmega.value = 2*Math.PI*P.f; u.uAmp.value = P.A;
+    u.uShowNodes.value = P.nodes;
+    for (let i = 0; i < 4; i++){
+      const x = (i - (n-1)/2)*P.d;
+      u.uSrc.value[i].set(i < n ? x : 999, 0);
+      u.uPhase.value[i] = i*P.dphi;
+    }
+  },
+  H(c, x, z){
+    const u = c.data.uni; let h = 0;
+    for (let i = 0; i < u.uN.value; i++){
+      const s = u.uSrc.value[i], r = Math.hypot(x - s.x, z - s.y);
+      h += u.uAmp.value*Math.sin(u.uK.value*r - u.uOmega.value*u.uTime.value + u.uPhase.value[i])/Math.sqrt(1 + u.uDamp.value*r);
+    }
+    return h;
+  },
+  onParam(k, c){ this.sync(c); },
+  update(dt, c){
+    const d = c.data; d.t += dt; d.uni.uTime.value = d.t;
+    d.uni.uCam.value.copy(camera.position);
+    this.sync(c);
+    d.markers.forEach((m, i) => { const s = d.uni.uSrc.value[i]; m.position.set(s.x, this.H(c, s.x, s.y) + 0.06, s.y); });
+  },
+  readouts(c){
+    const P = c.params, k = 2*Math.PI/P.lambda;
+    const sinth = P.n > 1 ? P.dphi/(k*P.d) : 0;
+    return [
+      ['wavenumber $k$', k.toFixed(3)],
+      ['wave speed $v = f\\lambda$', (P.f*P.lambda).toFixed(3)],
+      ['period $T = 1/f$', (1/P.f).toFixed(2)],
+      ['beam angle $\\theta$', P.n > 1 && Math.abs(sinth) <= 1 ? (Math.asin(sinth)*180/Math.PI).toFixed(1)+'°' : '—'],
+    ];
+  },
+};
+
+/* =====================================================================
+   CHAPTER 5 — Electric field lines
+   ===================================================================== */
+const EField = {
+  id:'efield', title:'Electric Field Lines', sub:'Coulomb’s law and Gauss’s law made visible', accent:C.red,
+  cam:{pos:[3.5, 3.2, 9.5], target:[0,0,0]},
+  eq:String.raw`\begin{aligned}\vec E(\vec r) &= \sum_i \frac{k\,q_i}{|\vec r-\vec r_i|^2}\,\hat{r}_i\\[4pt] \nabla\!\cdot\!\vec E &= \frac{\rho}{\varepsilon_0}\end{aligned}`,
+  params:[
+    {key:'config', label:'charges', type:'select', value:'dipole', reset:true, options:[
+      {label:'Dipole', value:'dipole'}, {label:'Like pair', value:'like'}, {label:'Quadrupole', value:'quad'}]},
+    {key:'ratio', tex:'q_2/q_1', label:'second charge size', min:1, max:3, step:0.05, value:1, reset:true},
+    {key:'density', tex:'n', label:'lines per unit charge', min:6, max:32, step:1, value:18, reset:true},
+    {key:'spin', label:'rotate the charges', type:'select', value:0, options:[{label:'Off',value:0},{label:'On',value:1}]},
+  ],
+  steps:[
+    {text:'Charges fill space with an electric field. Field lines follow $\\vec E$, and how densely they crowd shows how strong it is.', run:c=>{c.setParam('ratio',1,0); c.setParam('spin',0); c.setParam('config','dipole');}},
+    {text:'Lines begin on positive charges and end on negative ones. Their number is fixed by the charge — Gauss’s law, $\\oint \\vec E\\cdot d\\vec A = q/\\varepsilon_0$.', cam:[[0.4,9.5,1.2],[0,0,0]]},
+    {text:'Two like charges repel: their lines bend away from each other, leaving a neutral point midway where $\\vec E = 0$.', cam:[[3.5,3.2,9.5],[0,0,0]], run:c=>c.setParam('config','like')},
+    {text:'Make the negative charge twice as strong. Only half of its lines can come from the positive charge — the rest arrive from infinity.', run:c=>{c.setParam('config','dipole'); c.setParam('ratio',2,0); c.reset();}},
+    {text:'Four alternating charges form a quadrupole. Far away their fields nearly cancel, falling off as $1/r^4$ instead of $1/r^2$.', cam:[[5,4,8],[0,0,0]], run:c=>{c.setParam('ratio',1,0); c.setParam('config','quad'); c.setParam('spin',1);}},
+  ],
+  init(c){
+    const d = c.data; d.theta = 0; d.layer = new THREE.Group(); c.group.add(d.layer);
+    this.reset(c);
+    reveal(d.layer, 1.3);
+  },
+  baseCharges(P){
+    if (P.config === 'dipole') return [{q:1, p:[-1.7,0,0]}, {q:-P.ratio, p:[1.7,0,0]}];
+    if (P.config === 'like')   return [{q:1, p:[-1.7,0,0]}, {q:P.ratio, p:[1.7,0,0]}];
+    return [{q:1,p:[1.4,1.4,0]},{q:-1,p:[-1.4,1.4,0]},{q:1,p:[-1.4,-1.4,0]},{q:-1,p:[1.4,-1.4,0]}];
+  },
+  charges(c){
+    const th = c.data.theta, cs = Math.cos(th), sn = Math.sin(th);
+    return this.baseCharges(c.params).map(ch => ({q:ch.q, x:ch.p[0]*cs + ch.p[2]*sn, y:ch.p[1], z:-ch.p[0]*sn + ch.p[2]*cs}));
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    clearGroup(d.layer);
+    const ch = this.charges(c);
+    d.meshes = ch.map(q => {
+      const m = glowDot(q.q > 0 ? C.red : C.blue, 0.13*Math.sqrt(Math.abs(q.q)));
+      const s = q.q > 0 ? '+' : '-', mag = Math.abs(q.q);
+      const lab = texLabel(`${s}${mag === 1 ? '' : +mag.toFixed(2)}q`, q.q > 0 ? C.red : C.blue, 17);
+      lab.position.set(0, 0.42, 0); m.add(lab);
+      d.layer.add(m); return m;
+    });
+    // seed directions (Fibonacci sphere), forward from + charges and backward from − charges if − dominates
+    const qp = ch.filter(q => q.q > 0).reduce((a,q) => a + q.q, 0);
+    const qn = -ch.filter(q => q.q < 0).reduce((a,q) => a + q.q, 0);
+    d.seeds = [];
+    ch.forEach((q, ci) => {
+      const fwd = q.q > 0; if (!fwd && qn <= qp + 1e-6) return;
+      const count = Math.round(P.density*Math.abs(q.q));
+      for (let i = 0; i < count; i++){
+        const y = 1 - 2*(i+0.5)/count, r = Math.sqrt(1 - y*y), phi = i*2.399963;
+        d.seeds.push({ci, dir:[r*Math.cos(phi), y, r*Math.sin(phi)], sign:fwd ? 1 : -1});
+      }
+    });
+    const MAXP = 520;
+    d.lines = d.seeds.map(() => {
+      const pos = new Float32Array(MAXP*3), col = new Float32Array(MAXP*3);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3).setUsage(THREE.DynamicDrawUsage));
+      const line = new THREE.Line(g, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:.85, blending:THREE.AdditiveBlending, depthWrite:false}));
+      line.frustumCulled = false; d.layer.add(line);
+      return {line, pos, col, n:0, len:0, keep:true};
+    });
+    const K = 3, nd = d.lines.length*K;
+    d.dotPos = new Float32Array(nd*3); d.dotU = new Float32Array(nd);
+    for (let i = 0; i < nd; i++) d.dotU[i] = (i % K)/K + Math.random()*0.15;
+    const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(d.dotPos, 3).setUsage(THREE.DynamicDrawUsage));
+    d.dots = new THREE.Points(dg, new THREE.PointsMaterial({size:0.13, map:circleTexture(), color:0xfff4d0, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+    d.dots.frustumCulled = false; d.layer.add(d.dots);
+    d.K = K;
+    this.trace(c);
+  },
+  trace(c){
+    const d = c.data, ch = this.charges(c), h = 0.045, MAXP = 520;
+    const th = d.theta, cs = Math.cos(th), sn = Math.sin(th);
+    const Ef = (x, y, z, o) => {
+      let ex = 0, ey = 0, ez = 0;
+      for (const q of ch){ const dx = x-q.x, dy = y-q.y, dz = z-q.z, r2 = dx*dx+dy*dy+dz*dz+1e-9, inv = q.q/(r2*Math.sqrt(r2)); ex += dx*inv; ey += dy*inv; ez += dz*inv; }
+      o[0] = ex; o[1] = ey; o[2] = ez; return Math.hypot(ex, ey, ez);
+    };
+    const k1=[0,0,0],k2=[0,0,0],k3=[0,0,0],k4=[0,0,0],e=[0,0,0];
+    const unit = (x,y,z,o,s) => { const m = Ef(x,y,z,o); const f = m > 1e-12 ? s/m : 0; o[0]*=f; o[1]*=f; o[2]*=f; return m; };
+    d.seeds.forEach((sd, li) => {
+      const L = d.lines[li], q = ch[sd.ci], s = sd.sign;
+      const dx = sd.dir[0]*cs + sd.dir[2]*sn, dz = -sd.dir[0]*sn + sd.dir[2]*cs;
+      let x = q.x + dx*0.16, y = q.y + sd.dir[1]*0.16, z = q.z + dz*0.16;
+      let n = 0, end = 'inf';
+      const put = (x,y,z) => {
+        L.pos[n*3]=x; L.pos[n*3+1]=y; L.pos[n*3+2]=z;
+        const m = Ef(x,y,z,e), t = Math.min(Math.max((Math.log10(m)+1.6)/2.6, 0), 1);
+        const cc = gradient([C.blue, C.teal, C.green, C.yellow, C.gold], t);
+        L.col[n*3]=cc.r*.9; L.col[n*3+1]=cc.g*.9; L.col[n*3+2]=cc.b*.9; n++;
+      };
+      put(q.x, q.y, q.z); put(x, y, z);
+      for (let i = 0; i < MAXP-3; i++){
+        if (unit(x,y,z,k1,s) < 1e-7){ end = 'null'; break; }
+        unit(x+h/2*k1[0], y+h/2*k1[1], z+h/2*k1[2], k2, s);
+        unit(x+h/2*k2[0], y+h/2*k2[1], z+h/2*k2[2], k3, s);
+        unit(x+h*k3[0], y+h*k3[1], z+h*k3[2], k4, s);
+        x += h/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]); y += h/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]); z += h/6*(k1[2]+2*k2[2]+2*k3[2]+k4[2]);
+        let hit = null;
+        for (const o of ch){ if (Math.sign(o.q) === -s && (x-o.x)**2 + (y-o.y)**2 + (z-o.z)**2 < 0.13*0.13){ hit = o; break; } }
+        if (hit){ put(hit.x, hit.y, hit.z); end = s > 0 ? 'neg' : 'pos'; break; }
+        put(x, y, z);
+        if (x*x + y*y + z*z > 121) break;
+      }
+      L.keep = !(s < 0 && end === 'pos');   // backward lines that land on + are duplicates
+      L.n = L.keep ? n : 0; L.len = n*h; L.dir = s;
+      L.line.geometry.setDrawRange(0, L.n);
+      L.line.geometry.attributes.position.needsUpdate = true;
+      L.line.geometry.attributes.color.needsUpdate = true;
+    });
+    ch.forEach((q, i) => d.meshes[i].position.set(q.x, q.y, q.z));
+  },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (P.spin && dt > 0){ d.theta += dt*0.35; this.trace(c); }
+    const K = d.K;
+    d.lines.forEach((L, li) => {
+      for (let j = 0; j < K; j++){
+        const idx = li*K + j;
+        if (L.n < 3){ d.dotPos[idx*3+1] = 999; continue; }
+        d.dotU[idx] = (d.dotU[idx] + dt*0.9/Math.max(L.len, 0.5)) % 1;
+        const u = L.dir > 0 ? d.dotU[idx] : 1 - d.dotU[idx];
+        const f = u*(L.n-1), i0 = Math.floor(f), i1 = Math.min(i0+1, L.n-1), w = f - i0;
+        for (let a = 0; a < 3; a++) d.dotPos[idx*3+a] = L.pos[i0*3+a]*(1-w) + L.pos[i1*3+a]*w;
+      }
+    });
+    d.dots.geometry.attributes.position.needsUpdate = true;
+  },
+  readouts(c){
+    const ch = this.charges(c), net = ch.reduce((a,q) => a + q.q, 0);
+    const shown = c.data.lines.filter(l => l.n > 0).length;
+    let E0 = [0,0,0];
+    for (const q of ch){ const r2 = q.x*q.x + q.y*q.y + q.z*q.z, inv = q.q/(r2*Math.sqrt(r2)); E0[0] -= q.x*inv; E0[1] -= q.y*inv; E0[2] -= q.z*inv; }
+    return [
+      ['net charge $\\sum q_i$', (net >= 0 ? '+' : '') + net.toFixed(2) + 'q'],
+      ['field lines drawn', String(shown)],
+      ['$|\\vec E|$ at origin', Math.hypot(...E0).toFixed(4)],
+    ];
+  },
+};
+
+/* =====================================================================
+   CHAPTER 6 — Tennis-racket theorem (rigid body)
+   ===================================================================== */
+const Rigid = {
+  id:'rigid', bloom:0.5, title:'The Tennis-Racket Theorem', sub:'Why a spinning object flips about its middle axis', accent:C.purple,
+  cam:{pos:[6, 3.4, 7], target:[0,0,0]},
+  eq:String.raw`\begin{aligned} I_1\dot\omega_1 &= (I_2 - I_3)\,\omega_2\omega_3\\ I_2\dot\omega_2 &= (I_3 - I_1)\,\omega_3\omega_1\\ I_3\dot\omega_3 &= (I_1 - I_2)\,\omega_1\omega_2 \end{aligned}`,
+  params:[
+    {key:'axis', label:'spin about', type:'select', value:1, reset:true, options:[
+      {label:'Long axis (I₁)', value:0}, {label:'Middle (I₂)', value:1}, {label:'Short (I₃)', value:2}]},
+    {key:'w0', tex:'\\omega_0', label:'spin rate (rad/s)', min:1, max:10, step:0.1, value:5, reset:true},
+    {key:'eps', tex:'\\epsilon', label:'initial wobble', min:-5, max:-0.5, step:0.1, value:-2.5, reset:true, fmt:v=>'1e'+v.toFixed(1)},
+  ],
+  steps:[
+    {text:'Spin a phone about its long axis, the one with the smallest moment of inertia $I_1$. It spins steadily — the motion is stable.', run:c=>c.setParam('axis',0)},
+    {text:'Spin it about the axis through its face — the largest moment $I_3$ — and again the rotation is stable.', run:c=>c.setParam('axis',2)},
+    {text:'But spin it about the <i>middle</i> axis $I_2$ and the tiniest wobble grows until the whole body flips over, again and again. This is the Dzhanibekov effect.', run:c=>c.setParam('axis',1)},
+    {text:'Linearise Euler’s equations near axis 2: $\\ddot\\omega_1 = \\dfrac{(I_2-I_3)(I_1-I_2)}{I_1 I_3}\\,\\omega_2^2\\,\\omega_1$. Both brackets are negative, so the coefficient is positive and the wobble grows exponentially.', cam:[[3,6.5,6],[0,0,0]]},
+    {text:'Through every flip the angular momentum $\\vec L$ (white) never moves, and the energy stays constant. The body just tumbles around a fixed $\\vec L$.', cam:[[6,3.4,7],[0,0,0]]},
+  ],
+  I:[3.4, 9.16, 12.24], // box 3 × 1.8 × 0.4 (moments ∝ b²+c²)
+  init(c){
+    const d = c.data;
+    const body = new THREE.Group();
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(3, 1.8, 0.4),
+      new THREE.MeshStandardMaterial({color:0x1d2433, roughness:.35, metalness:.4}));
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(slab.geometry), new THREE.LineBasicMaterial({color:C.purple}));
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 1.5), new THREE.MeshStandardMaterial({color:0x0b1020, roughness:.15, metalness:.2, emissive:0x101830}));
+    screen.position.z = 0.205;
+    const cam = new THREE.Mesh(new THREE.CircleGeometry(0.12, 24), new THREE.MeshBasicMaterial({color:C.gold}));
+    cam.position.set(-1.15, 0.55, -0.205); cam.rotation.y = Math.PI;
+    body.add(slab, edges, screen, cam);
+    const axCols = [C.blue, C.yellow, C.red], axLen = [2.3, 1.75, 1.15];
+    d.axisArrows = axCols.map((col, i) => {
+      const a = makeArrow(col, 0.022); const v = new V3(); v.setComponent(i, axLen[i]);
+      a.userData.arrow.set(new V3(), v); body.add(a);
+      const lab = texLabel(`I_${i+1}`, col, 16); lab.position.copy(v).multiplyScalar(1.12); body.add(lab);
+      return a;
+    });
+    d.body = body; c.group.add(body); reveal(body, 1.2);
+    d.L = makeArrow(0xb8c0d0, 0.024); d.W = makeArrow(C.green, 0.025);
+    c.group.add(d.L, d.W);
+    d.Llab = texLabel('\\vec L', C.white, 20); d.Wlab = texLabel('\\vec\\omega', C.green, 19);
+    c.group.add(d.Llab, d.Wlab);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.42, 128), new THREE.MeshBasicMaterial({color:0x2a3040, side:THREE.DoubleSide}));
+    ring.rotation.x = -Math.PI/2; ring.position.y = -2.4; c.group.add(ring);
+    d.trail = null;
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params, ax = P.axis, e = Math.pow(10, P.eps);
+    d.w = [e*P.w0, e*P.w0, e*P.w0]; d.w[ax] = P.w0;
+    d.q = new THREE.Quaternion();
+    d.t = 0; d.flips = 0; d.lastSign = 1;
+    if (d.trail){ c.group.remove(d.trail.line); disposeTree(d.trail.line); }
+    d.trail = new Trail(900, [C.blue, C.yellow, C.red][ax], 1.4);
+    c.group.add(d.trail.line);
+    d.body.quaternion.copy(d.q);
+  },
+  update(dt, c){
+    const d = c.data, I = this.I, ax = c.params.axis;
+    if (dt > 0){
+      const steps = Math.max(1, Math.ceil(dt/0.002)), h = dt/steps;
+      const f = (a, b, cc, o) => { o[0] = (I[1]-I[2])*b*cc/I[0]; o[1] = (I[2]-I[0])*cc*a/I[1]; o[2] = (I[0]-I[1])*a*b/I[2]; };
+      const dq = new THREE.Quaternion(), axv = new V3();
+      for (let k = 0; k < steps; k++){
+        const w0 = d.w.slice();
+        rk4(d.w, h, f);
+        const wm = [(w0[0]+d.w[0])/2, (w0[1]+d.w[1])/2, (w0[2]+d.w[2])/2];
+        const m = Math.hypot(wm[0], wm[1], wm[2]);
+        if (m > 1e-9){ axv.set(wm[0]/m, wm[1]/m, wm[2]/m); dq.setFromAxisAngle(axv, m*h); d.q.multiply(dq); }
+      }
+      d.q.normalize(); d.t += dt;
+      const sgn = Math.sign(d.w[ax]) || 1; if (sgn !== d.lastSign){ d.flips++; d.lastSign = sgn; }
+      const tip = new V3(); tip.setComponent(ax, [2.3, 1.75, 1.15][ax]); tip.applyQuaternion(d.q);
+      d.trail.push(tip.x, tip.y, tip.z);
+    }
+    d.body.quaternion.copy(d.q);
+    const Lb = new V3(I[0]*d.w[0], I[1]*d.w[1], I[2]*d.w[2]).applyQuaternion(d.q);
+    const Ld = Lb.clone().normalize().multiplyScalar(3.1);
+    d.L.userData.arrow.set(new V3(), Ld); d.Llab.position.copy(Ld).multiplyScalar(1.1);
+    const W = new V3(...d.w).applyQuaternion(d.q).multiplyScalar(2.4/c.params.w0);
+    d.W.userData.arrow.set(new V3(), W); d.Wlab.position.copy(W).multiplyScalar(1.12);
+  },
+  readouts(c){
+    const d = c.data, I = this.I, w = d.w;
+    const E = 0.5*(I[0]*w[0]*w[0] + I[1]*w[1]*w[1] + I[2]*w[2]*w[2]);
+    const L = Math.hypot(I[0]*w[0], I[1]*w[1], I[2]*w[2]);
+    return [
+      ['$\\omega_1,\\ \\omega_2,\\ \\omega_3$', w.map(x => (x >= 0 ? '+' : '') + x.toFixed(2)).join(' ')],
+      ['energy $\\tfrac12\\sum I_i\\omega_i^2$', E.toFixed(3)],
+      ['$|\\vec L|$', L.toFixed(3)],
+      ['flips', String(d.flips)],
+    ];
+  },
+};
+
+/* =====================================================================
+   FEYNMAN LECTURES VOLUME
+   ===================================================================== */
+function rk4n(s, h, f){
+  const n = s.length, t = new Array(n);
+  const k1 = f(s); for (let i=0;i<n;i++) t[i] = s[i] + h/2*k1[i];
+  const k2 = f(t); for (let i=0;i<n;i++) t[i] = s[i] + h/2*k2[i];
+  const k3 = f(t); for (let i=0;i<n;i++) t[i] = s[i] + h*k3[i];
+  const k4 = f(t); for (let i=0;i<n;i++) s[i] += h/6*(k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
+}
+function cylBetween(mesh, a, b){
+  const v = new V3().subVectors(b, a), len = Math.max(v.length(), 1e-4);
+  mesh.position.copy(a).addScaledVector(v, 0.5);
+  mesh.scale.set(1, len, 1);
+  mesh.quaternion.setFromUnitVectors(Y_AXIS, v.divideScalar(len));
+}
+const sgnf = (v, d=3) => (v >= 0 ? '+' : '') + v.toFixed(d);
+function gauss(){ let u = 0, v = 0; while (u === 0) u = Math.random(); v = Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+/* ---------------------------------------------------------------------
+   F1 — Vol. I, Ch. 9: Newton's laws, solved numerically
+   --------------------------------------------------------------------- */
+const FeynOrbit = {
+  id:'f-orbit', vol:'feynman', bloom:0.7, title:'Planetary Motion by Hand', sub:'Solving F = ma with nothing but arithmetic', accent:C.gold,
+  ref:{label:'Vol. I · Ch. 9', title:'Newton’s Laws of Dynamics', url:'https://www.feynmanlectures.caltech.edu/I_09.html'},
+  cam:{pos:[0.4, 8.6, 7.2], target:[-0.8, 0, 0.2]},
+  eq:String.raw`\begin{aligned} \vec a(t) &= -\frac{GM\,\vec r(t)}{r^3}\\ \vec v\big(t+\tfrac{\epsilon}{2}\big) &= \vec v\big(t-\tfrac{\epsilon}{2}\big) + \epsilon\,\vec a(t)\\ \vec r(t+\epsilon) &= \vec r(t) + \epsilon\,\vec v\big(t+\tfrac{\epsilon}{2}\big)\end{aligned}`,
+  params:[
+    {key:'method', label:'integration scheme', type:'select', value:'half', reset:true, options:[{label:'Half-step (Feynman)', value:'half'}, {label:'Naive Euler', value:'euler'}]},
+    {key:'eps', tex:'\\epsilon', label:'time step', min:0.01, max:0.3, step:0.01, value:0.1, reset:true},
+    {key:'v0', tex:'v_0', label:'launch speed', min:1.0, max:1.8, step:0.01, value:1.63, reset:true},
+    {key:'rate', tex:'n/\\mathrm{s}', label:'steps per second', min:1, max:120, step:1, value:6},
+  ],
+  steps:[
+    {text:'Newton’s law doesn’t hand you the orbit. It only says how the velocity changes in the next instant, $\\vec a = \\vec F/m$. Feynman’s point: that is already enough — you can just <i>compute</i>.', run:c=>{c.setParam('method','half'); c.setParam('rate',3,0);}},
+    {text:'Set $GM = 1$ and start the planet at $x = 0.5$ moving up at $v_y = 1.63$, as in the lecture’s table. Each tick: find $\\vec a$ (red), nudge $\\vec v$ (green), then move by $\\vec v\\,\\epsilon$.', cam:[[0.4,10.5,1.5],[-0.8,0,0]]},
+    {text:'The trick is to use the velocity at the <i>middle</i> of each interval, $\\vec v(t+\\epsilon/2)$. With steps of $\\epsilon = 0.1$ the dots already close into a respectable ellipse.', run:c=>c.setParam('rate',14,0)},
+    {text:'Do it the naive way — velocity from the start of each step — and the planet gains a little energy every lap and spirals outward. Watch the energy drift readout.', cam:[[0.4,8.6,7.2],[-0.8,0,0.2]], run:c=>{c.setParam('method','euler'); c.setParam('rate',40,0);}},
+    {text:'Back to half-steps and shrink $\\epsilon$: the dots slide onto Kepler’s exact ellipse (dashed). A planetary orbit from a few lines of arithmetic.', run:c=>{c.setParam('method','half'); c.setParam('eps',0.02,0); c.reset(); c.setParam('rate',120,0);}},
+  ],
+  S:3.2,
+  w(x, y){ return new V3(x*this.S, 0, -y*this.S); },
+  acc(x, y){ const r = Math.hypot(x, y), r3 = r*r*r; return [-x/r3, -y/r3]; },
+  init(c){
+    const d = c.data;
+    const grid = new THREE.PolarGridHelper(6.5, 12, 7, 96, 0x2a3348, 0x1a2030);
+    c.group.add(grid); reveal(grid, 1.2);
+    const sun = glowDot(C.gold, 0.22); c.group.add(sun);
+    const sl = texLabel('M', C.gold, 18); sl.position.set(0, 0.5, 0); c.group.add(sl);
+    d.ell = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineDashedMaterial({color:0x9aa3b5, dashSize:0.12, gapSize:0.09, transparent:true, opacity:.5}));
+    c.group.add(d.ell);
+    d.trail = new Trail(2400, C.gold, 0.45); c.group.add(d.trail.line);
+    d.pts = new THREE.Points(d.trail.geo, new THREE.PointsMaterial({size:0.12, map:circleTexture(), vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.pts.frustumCulled = false; c.group.add(d.pts);
+    d.planet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 16), new THREE.MeshStandardMaterial({color:C.blue, emissive:C.blue, emissiveIntensity:.45, roughness:.4}));
+    c.group.add(d.planet);
+    d.vA = makeArrow(C.green, 0.028); d.aA = makeArrow(C.red, 0.028); c.group.add(d.vA, d.aA);
+    d.vL = texLabel('\\vec v', C.green, 18); d.aL = texLabel('\\vec a', C.red, 18); c.group.add(d.vL, d.aL);
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    d.x = 0.5; d.y = 0; d.vx = 0; d.vy = P.v0; d.t = 0; d.n = 0; d.clock = 0; d.dead = 0;
+    [d.ax, d.ay] = this.acc(d.x, d.y);
+    d.hx = d.vx + d.ax*P.eps/2; d.hy = d.vy + d.ay*P.eps/2;
+    d.E0 = 0.5*P.v0*P.v0 - 1/0.5;
+    d.trail.clear(); const p = this.w(d.x, d.y); d.trail.push(p.x, p.y, p.z);
+    // exact Kepler conic through the same initial conditions (r0 = 0.5 is an apsis)
+    const h = 0.5*P.v0, pp = h*h, e = pp/0.5 - 1, pts = [];
+    for (let i = 0; i <= 360; i++){
+      const th = i/360*2*Math.PI, r = pp/(1 + e*Math.cos(th));
+      pts.push(this.w(r*Math.cos(th), r*Math.sin(th)));
+    }
+    d.ell.geometry.dispose(); d.ell.geometry = new THREE.BufferGeometry().setFromPoints(pts); d.ell.computeLineDistances();
+  },
+  step(c){
+    const d = c.data, P = c.params, e = P.eps;
+    if (P.method === 'half'){
+      d.x += e*d.hx; d.y += e*d.hy;
+      [d.ax, d.ay] = this.acc(d.x, d.y);
+      d.vx = d.hx + d.ax*e/2; d.vy = d.hy + d.ay*e/2;
+      d.hx += e*d.ax; d.hy += e*d.ay;
+    } else {
+      d.x += e*d.vx; d.y += e*d.vy;
+      d.vx += e*d.ax; d.vy += e*d.ay;
+      [d.ax, d.ay] = this.acc(d.x, d.y);
+    }
+    d.t += e; d.n++;
+    const p = this.w(d.x, d.y); d.trail.push(p.x, p.y, p.z);
+  },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){
+      if (d.dead > 0){ d.dead -= dt; if (d.dead <= 0) this.reset(c); }
+      else {
+        d.clock += dt*P.rate; let k = 0;
+        while (d.clock >= 1 && k < 200){
+          this.step(c); d.clock -= 1; k++;
+          const r = Math.hypot(d.x, d.y);
+          if (!(r > 0.06 && r < 3.2)){ d.dead = 1.5; break; }
+        }
+      }
+    }
+    const p = this.w(d.x, d.y); d.planet.position.copy(p);
+    const v = new V3(d.vx, 0, -d.vy).multiplyScalar(this.S*0.45), a = new V3(d.ax, 0, -d.ay).multiplyScalar(this.S*0.11);
+    d.vA.userData.arrow.set(p, v); d.aA.userData.arrow.set(p, a);
+    d.vL.position.copy(p).add(v).add(new V3(0, 0.28, 0));
+    d.aL.position.copy(p).add(a).add(new V3(0, 0.28, 0));
+  },
+  readouts(c){
+    const d = c.data, E = 0.5*(d.vx*d.vx + d.vy*d.vy) - 1/Math.hypot(d.x, d.y);
+    return [
+      ['step $n$', String(d.n)],
+      ['time $t$', d.t.toFixed(3)],
+      ['$(x,\\ y)$', `${sgnf(d.x)}, ${sgnf(d.y)}`],
+      ['$(v_x,\\ v_y)$', `${sgnf(d.vx)}, ${sgnf(d.vy)}`],
+      ['$(a_x,\\ a_y)$', `${sgnf(d.ax)}, ${sgnf(d.ay)}`],
+      ['energy drift $\\Delta E/|E_0|$', sgnf(100*(E - d.E0)/Math.abs(d.E0), 2) + '%'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   F2 — Vol. I, Ch. 20: the spinning top (heavy symmetric top)
+   --------------------------------------------------------------------- */
+const Q_MAP = new THREE.Quaternion().setFromAxisAngle(new V3(1,0,0), -Math.PI/2); // physics z-up → world y-up
+const _qz = a => new THREE.Quaternion().setFromAxisAngle(new V3(0,0,1), a);
+const _qx = a => new THREE.Quaternion().setFromAxisAngle(new V3(1,0,0), a);
+const FeynTop = {
+  id:'f-top', vol:'feynman', bloom:0.45, title:'The Spinning Top', sub:'Torque swings angular momentum sideways', accent:C.teal,
+  ref:{label:'Vol. I · Ch. 20', title:'Rotation in Space', url:'https://www.feynmanlectures.caltech.edu/I_20.html'},
+  cam:{pos:[6.2, 4.2, 6.8], target:[0, 0.9, 0]},
+  eq:String.raw`\begin{aligned}\vec\tau &= \frac{d\vec L}{dt}\\[2pt] \vec\tau &= \vec r\times M\vec g\\[2pt] \Omega &\approx \frac{Mg\ell}{I_3\,\omega}\end{aligned}`,
+  params:[
+    {key:'launch', label:'how it is released', type:'select', value:'rest', reset:true, options:[{label:'From rest', value:'rest'}, {label:'Just right', value:'steady'}, {label:'Pushed back', value:'back'}]},
+    {key:'w', tex:'\\omega', label:'spin rate', min:6, max:40, step:0.5, value:22, reset:true},
+    {key:'tilt', tex:'\\theta_0', label:'initial tilt (degrees)', min:10, max:75, step:1, value:35, reset:true},
+    {key:'mgl', tex:'Mg\\ell', label:'gravity torque', min:0.5, max:4, step:0.05, value:2, reset:true},
+  ],
+  steps:[
+    {text:'Torque and angular momentum are both vectors, related by $\\vec\\tau = d\\vec L/dt$. A fast top carries a big $\\vec L$ (yellow) along its axis.', run:c=>{c.setParam('w',22,0); c.setParam('launch','steady');}},
+    {text:'Gravity pulls the top down, but its torque $\\vec\\tau = \\vec r\\times M\\vec g$ (red) points <i>sideways</i>. So $\\vec L$ swings sideways instead of falling: the axis precesses at $\\Omega \\approx Mg\\ell/I_3\\omega$.', cam:[[1.2,8.5,3.5],[0,0.9,0]]},
+    {text:'Let go from rest and the top first dips a little before it starts to swing round. The tip traces cusps. That small dip is where the sideways angular momentum comes from.', cam:[[6.2,4.2,6.8],[0,0.9,0]], run:c=>c.setParam('launch','rest')},
+    {text:'Give it exactly the right sideways push as you let go and the bobbing (nutation) disappears: smooth, steady precession.', run:c=>c.setParam('launch','steady')},
+    {text:'Push it the wrong way and the tip draws loops. Slow the spin and everything gets wobblier, because $\\Omega \\propto 1/\\omega$.', run:c=>{c.setParam('launch','back'); c.setParam('w',13,0); c.reset();}},
+  ],
+  I1:1, I3:0.5, ARM:1.25, AX:2.1,
+  axisW(th, ph){ return new V3(Math.sin(th)*Math.sin(ph), Math.cos(th), Math.sin(th)*Math.cos(ph)); },
+  init(c){
+    const d = c.data;
+    const ground = new THREE.GridHelper(16, 32, 0x2a3348, 0x161b27); ground.position.y = -1.6; c.group.add(ground);
+    const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.14, 1.6, 20), new THREE.MeshStandardMaterial({color:0x3a4256, roughness:.45, metalness:.6}));
+    ped.position.y = -0.8; c.group.add(ped);
+    const top = new THREE.Group(), body = new THREE.Group(); body.rotation.x = Math.PI/2; top.add(body);
+    const metal = new THREE.MeshStandardMaterial({color:0x2a3446, roughness:.3, metalness:.75});
+    const tipG = new THREE.ConeGeometry(0.16, 0.5, 24); tipG.rotateX(Math.PI); tipG.translate(0, 0.25, 0);
+    const shaftG = new THREE.CylinderGeometry(0.045, 0.045, this.AX, 12); shaftG.translate(0, this.AX/2, 0);
+    const diskG = new THREE.CylinderGeometry(0.85, 0.85, 0.2, 64); diskG.translate(0, this.ARM, 0);
+    body.add(new THREE.Mesh(tipG, metal), new THREE.Mesh(shaftG, metal), new THREE.Mesh(diskG, metal));
+    for (const yy of [this.ARM - 0.1, this.ARM + 0.1]){
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.025, 8, 80), new THREE.MeshBasicMaterial({color:C.teal}));
+      rim.rotation.x = Math.PI/2; rim.position.y = yy; body.add(rim);
+    }
+    const cols = [C.yellow, C.red, C.blue, C.green, C.gold, C.purple];
+    cols.forEach((col, i) => {
+      const a = i/cols.length*Math.PI*2;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 0.12), new THREE.MeshBasicMaterial({color:col}));
+      m.position.set(0.6*Math.cos(a), this.ARM + 0.115, 0.6*Math.sin(a)); m.rotation.y = -a; body.add(m);
+    });
+    d.top = top; c.group.add(top); reveal(top, 1.1);
+    d.trail = new Trail(2600, C.teal, 0.9); c.group.add(d.trail.line);
+    d.tipDot = glowDot(C.teal, 0.05); c.group.add(d.tipDot);
+    d.LA = makeArrow(C.yellow, 0.03); d.TA = makeArrow(C.red, 0.03); d.GA = makeArrow(C.blue, 0.025);
+    c.group.add(d.LA, d.TA, d.GA);
+    d.LL = texLabel('\\vec L', C.yellow, 20); d.TL = texLabel('\\vec\\tau', C.red, 20); d.GL = texLabel('M\\vec g', C.blue, 17);
+    c.group.add(d.LL, d.TL, d.GL);
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params, I1 = this.I1, I3 = this.I3;
+    const th = P.tilt*Math.PI/180, cs = Math.cos(th), w = P.w;
+    const disc = (I3*w)**2 - 4*I1*P.mgl*cs;
+    const steady = disc > 0 ? (I3*w - Math.sqrt(disc))/(2*I1*cs) : P.mgl/(I3*w);
+    let pd = 0; if (P.launch === 'steady') pd = steady; else if (P.launch === 'back') pd = -1.1*steady;
+    d.w3 = w; d.pphi = I1*pd*Math.sin(th)**2 + I3*w*cs;
+    d.s = [th, 0, 0, 0]; d.t = 0;
+    d.trail.clear();
+    this.place(c);
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, I1 = this.I1, I3 = this.I3, w3 = d.w3, pphi = d.pphi, mgl = P.mgl;
+    if (dt > 0){
+      const f = s => {
+        const sn = Math.sin(s[0]), cs = Math.cos(s[0]), pd = (pphi - I3*w3*cs)/(I1*Math.max(sn*sn, 1e-6));
+        return [s[1], (I1*pd*pd*sn*cs - I3*w3*pd*sn + mgl*sn)/I1, pd, w3 - pd*cs];
+      };
+      const n = Math.max(1, Math.ceil(dt/0.0015)), h = dt/n;
+      for (let k = 0; k < n; k++){
+        rk4n(d.s, h, f);
+        if (k % 3 === 0){ const t = this.axisW(d.s[0], d.s[2]).multiplyScalar(this.AX); d.trail.push(t.x, t.y, t.z); }
+      }
+      d.t += dt;
+    }
+    this.place(c);
+  },
+  place(c){
+    const d = c.data, P = c.params, [th, thd, ph, ps] = d.s, I1 = this.I1, I3 = this.I3;
+    d.top.quaternion.copy(Q_MAP).multiply(_qz(ph)).multiply(_qx(th)).multiply(_qz(ps));
+    const n = this.axisW(th, ph), sn = Math.sin(th), cs = Math.cos(th);
+    d.tipDot.position.copy(n).multiplyScalar(this.AX);
+    const pd = (d.pphi - I3*d.w3*cs)/(I1*Math.max(sn*sn, 1e-6)); d.phidot = pd;
+    const NW = new V3(Math.cos(ph), 0, -Math.sin(ph));
+    const wperp = new V3(0, 1, 0).addScaledVector(n, -cs).multiplyScalar(pd).addScaledVector(NW, thd);
+    const L = n.clone().multiplyScalar(I3*d.w3).addScaledVector(wperp, I1).multiplyScalar(2.9/(I3*d.w3));
+    const O = new V3();
+    d.LA.userData.arrow.set(O, L); d.LL.position.copy(L).multiplyScalar(1.1);
+    const r = n.clone().multiplyScalar(this.ARM);
+    const tau = new V3().crossVectors(r, new V3(0, -P.mgl, 0)).multiplyScalar(0.55);
+    d.TA.userData.arrow.set(O, tau); d.TL.position.copy(tau).multiplyScalar(1.25).add(new V3(0, 0.15, 0));
+    d.GA.userData.arrow.set(r, new V3(0, -0.85, 0)); d.GL.position.copy(r).add(new V3(0.3, -0.9, 0));
+  },
+  readouts(c){
+    const d = c.data, P = c.params, [th, thd] = d.s, I1 = this.I1, I3 = this.I3, sn = Math.sin(th);
+    const E = 0.5*I1*(thd*thd + d.phidot*d.phidot*sn*sn) + 0.5*I3*d.w3*d.w3 + P.mgl*Math.cos(th);
+    return [
+      ['tilt $\\theta$', (th*180/Math.PI).toFixed(1) + '°'],
+      ['precession rate $\\dot\\varphi$', sgnf(d.phidot, 3)],
+      ['estimate $Mg\\ell/I_3\\omega$', (P.mgl/(I3*d.w3)).toFixed(3)],
+      ['energy $E$', E.toFixed(4)],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   F3 — Vol. I, Ch. 26: the principle of least time
+   --------------------------------------------------------------------- */
+const FeynLight = {
+  id:'f-light', vol:'feynman', bloom:0.4, title:'The Principle of Least Time', sub:'Fermat’s rule: light takes the quickest route', accent:C.yellow,
+  ref:{label:'Vol. I · Ch. 26', title:'Optics: The Principle of Least Time', url:'https://www.feynmanlectures.caltech.edu/I_26.html'},
+  cam:{pos:[0.8, 3.4, 12.5], target:[-0.2, -0.1, 0]},
+  eq:String.raw`\begin{aligned} t(P) &= \frac{\overline{AP}}{v_1} + \frac{\overline{PB}}{v_2}\\[2pt] v_i &= c/n_i\\[2pt] n_1\sin\theta_1 &= n_2\sin\theta_2 \end{aligned}`,
+  params:[
+    {key:'mode', label:'surface', type:'select', value:'refract', reset:true, options:[{label:'Water / glass', value:'refract'}, {label:'Mirror', value:'mirror'}]},
+    {key:'n', tex:'n_2', label:'refractive index below', min:1, max:2.4, step:0.01, value:1.33},
+    {key:'rate', tex:'c', label:'race speed', min:0.5, max:6, step:0.1, value:2.5},
+  ],
+  steps:[
+    {text:'Light leaves $A$ and ends up at $B$, on the other side of a surface. Of all the routes it could take, which is the real one? Fermat’s answer: the one that takes the <b>least time</b>.', run:c=>{c.setParam('mode','refract'); c.setParam('n',1.33,0);}},
+    {text:'Light is slower in water or glass, $v = c/n$. The floor is colored by the total travel time through each possible crossing point $P$: a valley with one lowest spot.', cam:[[0.3,11.5,4.5],[0,0,0]]},
+    {text:'Race them: a photon runs down every path at once. The winner bends at the surface to spend less time in the slow medium, like a lifeguard who runs further along the beach before swimming.', cam:[[0.8,3.4,12.5],[-0.2,-0.1,0]]},
+    {text:'The winning path obeys $n_1\\sin\\theta_1 = n_2\\sin\\theta_2$: Snell’s law falls out of the least-time rule. Raise $n_2$ and it bends more.', run:c=>c.setParam('n',2.0,2.5)},
+    {text:'For a mirror, the same rule gives equal angles in and out. The valley is flat at the bottom, so nearby paths take almost the same time. Feynman shows later that the deeper reason is quantum mechanical.', run:c=>c.setParam('mode','mirror')},
+  ],
+  A:new V3(-3.6, 2.6, 0),
+  init(c){
+    const d = c.data;
+    d.uni = {
+      uA:{value:this.A.clone()}, uB:{value:new V3()}, uN:{value:1.33}, uTmin:{value:0}, uTspan:{value:1}, uMirror:{value:0},
+      uC0:{value:new THREE.Color(C.yellow)}, uC1:{value:new THREE.Color(C.gold)}, uC2:{value:new THREE.Color(C.maroon)}, uC3:{value:new THREE.Color(0x2a3a6a)},
+    };
+    const geo = new THREE.PlaneGeometry(12, 7, 1, 1); geo.rotateX(-Math.PI/2);
+    d.floor = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+      uniforms:d.uni, transparent:true, depthWrite:false, side:THREE.DoubleSide,
+      vertexShader:`varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
+      fragmentShader:`
+        uniform vec3 uA, uB, uC0, uC1, uC2, uC3; uniform float uN, uTmin, uTspan, uMirror; varying vec3 vW;
+        void main(){
+          float t = length(vW - uA) + length(uB - vW)*(uMirror > 0.5 ? 1.0 : uN);
+          float k = clamp((t - uTmin)/uTspan, 0.0, 1.0);
+          vec3 col = k < 0.33 ? mix(uC0, uC1, k/0.33) : (k < 0.66 ? mix(uC1, uC2, (k-0.33)/0.33) : mix(uC2, uC3, (k-0.66)/0.34));
+          float f = (t - uTmin)/uTspan*14.0, w = fwidth(f);
+          float line = 1.0 - smoothstep(0.0, 1.5*w, min(fract(f), 1.0 - fract(f)));
+          col = col*0.17 + line*0.13;
+          vec2 q = abs(vW.xz)/vec2(6.0, 3.5);
+          float fade = 1.0 - smoothstep(0.82, 1.0, max(q.x, q.y));
+          gl_FragColor = vec4(col, 0.92*fade);
+        }`,
+    }));
+    c.group.add(d.floor);
+    d.water = new THREE.Mesh(new THREE.BoxGeometry(12, 3.4, 7), new THREE.MeshBasicMaterial({color:C.blue, transparent:true, opacity:.06, depthWrite:false}));
+    d.water.position.y = -1.72; c.group.add(d.water);
+    d.waterEdge = new THREE.LineSegments(new THREE.EdgesGeometry(d.water.geometry), new THREE.LineBasicMaterial({color:0x2c4a63, transparent:true, opacity:.6}));
+    d.waterEdge.position.copy(d.water.position); c.group.add(d.waterEdge);
+    d.mirror = new THREE.Mesh(new THREE.BoxGeometry(12, 0.06, 7), new THREE.MeshStandardMaterial({color:0x9fb3d1, metalness:.9, roughness:.15, transparent:true, opacity:.3, depthWrite:false}));
+    d.mirror.position.y = -0.04; c.group.add(d.mirror);
+    d.n1L = texLabel('n_1 = 1', 0x9aa3b5, 16); d.n1L.position.set(-5.2, 0.45, 3.0);
+    d.n2L = texLabel('n_2', C.blue, 16); d.n2L.position.set(-5.2, -0.55, 3.0);
+    c.group.add(d.n1L, d.n2L);
+    d.Adot = glowDot(C.white, 0.1); d.Adot.position.copy(this.A);
+    d.Bdot = glowDot(C.teal, 0.1);
+    const AL = texLabel('A', C.white, 20); AL.position.copy(this.A).add(new V3(-0.35, 0.3, 0));
+    d.BL = texLabel('B', C.teal, 20);
+    c.group.add(d.Adot, d.Bdot, AL, d.BL);
+    d.cross = [];
+    for (let i = 0; i < 13; i++) for (const z of [-2.8, -1.4, 0, 1.4, 2.8]) d.cross.push(new V3(-5.4 + i*0.9, 0, z));
+    d.lines = [...d.cross, null].map(() => {
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3));
+      const l = new THREE.Line(g, new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:.2, depthWrite:false}));
+      l.frustumCulled = false; c.group.add(l); return l;
+    });
+    const bm = new THREE.MeshBasicMaterial({color:C.yellow});
+    d.best1 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 1, 10), bm);
+    d.best2 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 1, 10), bm);
+    c.group.add(d.best1, d.best2);
+    d.normal = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(0, -2.2, 0), new V3(0, 2.2, 0)]), new THREE.LineDashedMaterial({color:0xcfd6e4, dashSize:0.1, gapSize:0.08, transparent:true, opacity:.6}));
+    d.normal.computeLineDistances(); c.group.add(d.normal);
+    d.th1L = texLabel('\\theta_1', C.yellow, 17); d.th2L = texLabel('\\theta_2', C.yellow, 17); d.thrL = texLabel('\\theta_r', C.yellow, 17);
+    c.group.add(d.th1L, d.th2L, d.thrL);
+    const np = d.lines.length;
+    d.phPos = new Float32Array(np*3); d.phCol = new Float32Array(np*3);
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.BufferAttribute(d.phPos, 3).setUsage(THREE.DynamicDrawUsage));
+    pg.setAttribute('color', new THREE.BufferAttribute(d.phCol, 3));
+    d.photons = new THREE.Points(pg, new THREE.PointsMaterial({size:0.2, map:circleTexture(), vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.photons.frustumCulled = false; c.group.add(d.photons);
+    d.tau = 0; d.flash = 0;
+    reveal(d.floor, 1.2);
+    this.reset(c);
+  },
+  reset(c){ this.recompute(c); c.data.tau = 0; },
+  onParam(k, c){ if (k !== 'rate') this.recompute(c); },
+  recompute(c){
+    const d = c.data, P = c.params, A = this.A, mirror = P.mode === 'mirror', n = mirror ? 1 : P.n;
+    const B = mirror ? new V3(3.0, 1.9, 0) : new V3(3.2, -2.6, 0);
+    d.B = B; d.n = n; d.mirror_ = mirror;
+    d.Bdot.position.copy(B); d.BL.position.copy(B).add(new V3(0.35, 0.3, 0));
+    d.water.visible = d.waterEdge.visible = !mirror; d.mirror.visible = mirror;
+    d.n1L.visible = d.n2L.visible = !mirror;
+    d.n2L.element.innerHTML = tex(`n_2 = ${n.toFixed(2)}`);
+    const T = p => A.distanceTo(p) + B.distanceTo(p)*n;
+    let lo = -6, hi = 6;
+    for (let i = 0; i < 90; i++){
+      const m1 = lo + (hi-lo)*0.382, m2 = lo + (hi-lo)*0.618;
+      if (T(new V3(m1, 0, 0)) < T(new V3(m2, 0, 0))) hi = m2; else lo = m1;
+    }
+    d.Pbest = new V3((lo+hi)/2, 0, 0); d.Tbest = T(d.Pbest);
+    d.paths = [...d.cross, d.Pbest].map((p, i) => ({P:p, L1:A.distanceTo(p), L2:B.distanceTo(p), best:i === d.cross.length}));
+    d.paths.forEach(q => q.T = q.L1 + q.L2*n);
+    d.Tmax = Math.max(...d.paths.map(q => q.T));
+    d.paths.forEach((q, i) => {
+      const k = (q.T - d.Tbest)/(d.Tmax - d.Tbest + 1e-9);
+      const col = q.best ? new THREE.Color(C.yellow) : gradient([C.yellow, C.gold, C.red, C.purple, 0x3a5aa0], k);
+      const pos = d.lines[i].geometry.attributes.position.array;
+      pos.set([A.x, A.y, A.z, q.P.x, q.P.y, q.P.z, B.x, B.y, B.z]);
+      d.lines[i].geometry.attributes.position.needsUpdate = true;
+      d.lines[i].material.color.copy(col);
+      d.lines[i].visible = !q.best;
+      d.phCol.set([col.r, col.g, col.b], i*3);
+    });
+    d.photons.geometry.attributes.color.needsUpdate = true;
+    cylBetween(d.best1, A, d.Pbest); cylBetween(d.best2, d.Pbest, B);
+    d.normal.position.x = d.Pbest.x;
+    d.th1L.position.copy(d.Pbest).add(new V3(-0.4, 1.05, 0));
+    d.th2L.position.copy(d.Pbest).add(new V3(0.4, -1.05, 0)); d.th2L.visible = !mirror;
+    d.thrL.position.copy(d.Pbest).add(new V3(0.42, 1.05, 0)); d.thrL.visible = mirror;
+    let tmax = 0;
+    for (let i = 0; i <= 24; i++) for (let j = 0; j <= 14; j++) tmax = Math.max(tmax, T(new V3(-6 + i*0.5, 0, -3.5 + j*0.5)));
+    const u = d.uni; u.uB.value.copy(B); u.uN.value = n; u.uMirror.value = mirror ? 1 : 0;
+    u.uTmin.value = d.Tbest; u.uTspan.value = Math.max(tmax - d.Tbest, 1e-3);
+    d.th1 = Math.atan2(Math.abs(d.Pbest.x - A.x), A.y);
+    d.th2 = Math.atan2(Math.abs(B.x - d.Pbest.x), Math.abs(B.y));
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, A = this.A, B = d.B, n = d.n;
+    if (dt > 0){
+      const prev = d.tau; d.tau += dt*P.rate;
+      if (prev < d.Tbest && d.tau >= d.Tbest) d.flash = 1;
+      if (d.tau > d.Tmax + 2.2) d.tau = 0;
+      d.flash = Math.max(0, d.flash - dt*1.4);
+    }
+    const s = d.tau;
+    d.paths.forEach((q, i) => {
+      let x, y, z;
+      if (s < q.L1){ const u = s/q.L1; x = A.x + (q.P.x - A.x)*u; y = A.y + (q.P.y - A.y)*u; z = A.z + (q.P.z - A.z)*u; }
+      else if (s < q.T){ const u = (s - q.L1)/(q.L2*n); x = q.P.x + (B.x - q.P.x)*u; y = q.P.y + (B.y - q.P.y)*u; z = q.P.z + (B.z - q.P.z)*u; }
+      else { x = 0; y = 999; z = 0; }
+      d.phPos[i*3] = x; d.phPos[i*3+1] = y; d.phPos[i*3+2] = z;
+    });
+    d.photons.geometry.attributes.position.needsUpdate = true;
+    d.Bdot.scale.setScalar(1 + 2.8*d.flash);
+  },
+  readouts(c){
+    const d = c.data, deg = v => (v*180/Math.PI).toFixed(1) + '°';
+    if (d.mirror_) return [
+      ['angle in $\\theta_1$', deg(d.th1)], ['angle out $\\theta_r$', deg(d.th2)], ['least time $t_{\\min}$', d.Tbest.toFixed(3)],
+    ];
+    return [
+      ['$\\theta_1$', deg(d.th1)], ['$\\theta_2$', deg(d.th2)],
+      ['$n_1\\sin\\theta_1$', Math.sin(d.th1).toFixed(4)], ['$n_2\\sin\\theta_2$', (d.n*Math.sin(d.th2)).toFixed(4)],
+      ['least time $t_{\\min}$', d.Tbest.toFixed(3)],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   F4 — Vol. I, Ch. 39: kinetic theory of gases
+   --------------------------------------------------------------------- */
+const FeynGas = {
+  id:'f-gas', vol:'feynman', bloom:0.4, title:'The Kinetic Theory of Gases', sub:'Pressure and temperature from bouncing atoms', accent:C.green,
+  ref:{label:'Vol. I · Ch. 39', title:'The Kinetic Theory of Gases', url:'https://www.feynmanlectures.caltech.edu/I_39.html'},
+  cam:{pos:[2.4, 5.4, 12.2], target:[2.2, 1.6, 0]},
+  eq:String.raw`\begin{aligned} PV &= \tfrac23\,N\,\big\langle \tfrac12 m v^2 \big\rangle\\[2pt] \big\langle \tfrac12 m v^2 \big\rangle &= \tfrac32\,kT \end{aligned}`,
+  params:[
+    {key:'init', label:'starting speeds', type:'select', value:'maxwell', reset:true, options:[{label:'Random', value:'maxwell'}, {label:'All equal', value:'same'}]},
+    {key:'N', tex:'N', label:'atoms', min:50, max:400, step:10, value:250, reset:true},
+    {key:'H', tex:'h', label:'piston height', min:1.2, max:4.5, step:0.01, value:3.6},
+    {key:'kT', tex:'kT', label:'set temperature', min:0.3, max:3, step:0.05, value:1.2},
+  ],
+  steps:[
+    {text:'A gas is just atoms flying around and bouncing off each other and the walls. Pressure is the momentum they hand to the walls every second.', run:c=>{c.setParam('init','maxwell'); c.setParam('H',3.6,1.2);}},
+    {text:'Add it up and you get $P = \\tfrac23\\,\\tfrac{N}{V}\\,\\langle\\tfrac12 m v^2\\rangle$. The live panel compares the measured push on the walls with this formula.'},
+    {text:'Start every atom at exactly the same speed. Collisions share the energy around until the speeds settle into Maxwell’s distribution (the curve).', run:c=>c.setParam('init','same')},
+    {text:'Push the piston down. Atoms bounce off a wall that is moving toward them and come back faster, so compressing a gas heats it up.', run:c=>c.setParam('H',1.6,5)},
+    {text:'Pull it back out and the gas cools. Temperature is nothing but average kinetic energy: $\\langle\\tfrac12 m v^2\\rangle = \\tfrac32 kT$. With no heat added, $PV^{5/3}$ stays fixed.', run:c=>c.setParam('H',4.2,5)},
+  ],
+  W:1.8, R:0.075, RC:0.095, BINS:28, HX0:2.9, HW:4.0,
+  init(c){
+    const d = c.data, W = this.W;
+    d.mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(this.R, 12, 8), new THREE.MeshStandardMaterial({roughness:.35, metalness:.1}), 400);
+    d.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); d.mesh.frustumCulled = false;
+    for (let i = 0; i < 400; i++) d.mesh.setColorAt(i, new THREE.Color(C.teal));
+    c.group.add(d.mesh);
+    d.box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)), new THREE.LineBasicMaterial({color:0x5b6275}));
+    c.group.add(d.box);
+    d.glass = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color:C.blue, transparent:true, opacity:.035, side:THREE.BackSide, depthWrite:false}));
+    c.group.add(d.glass);
+    d.piston = new THREE.Mesh(new THREE.BoxGeometry(2*W, 0.1, 2*W), new THREE.MeshStandardMaterial({color:C.gold, metalness:.6, roughness:.35, transparent:true, opacity:.55}));
+    d.rod = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 3, 16), new THREE.MeshStandardMaterial({color:0x8b93a7, metalness:.8, roughness:.3}));
+    c.group.add(d.piston, d.rod);
+    const floor = new THREE.GridHelper(2*W, 6, 0x2a3348, 0x2a3348); c.group.add(floor);
+    // histogram
+    const bw = this.HW/this.BINS;
+    d.bars = new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color:C.green, emissive:C.green, emissiveIntensity:.25, roughness:.5}), this.BINS);
+    d.bars.frustumCulled = false; c.group.add(d.bars);
+    d.curve = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:C.gold}));
+    c.group.add(d.curve);
+    const ax = makeArrow(0x6b7280, 0.012, 0.9); ax.userData.arrow.set(new V3(this.HX0 - 0.1, 0, 0), new V3(this.HW + 0.5, 0, 0)); c.group.add(ax);
+    const vl = texLabel('v', 0x9aa3b5, 16); vl.position.set(this.HX0 + this.HW + 0.65, 0, 0); c.group.add(vl);
+    const fl = texLabel('\\text{speeds}', 0x9aa3b5, 14); fl.position.set(this.HX0 + this.HW/2, 3.05, 0); c.group.add(fl);
+    d.bw = bw; d.dummy = new THREE.Object3D();
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params, W = this.W, R = this.R, n = Math.round(P.N);
+    d.n = n; d.H = P.H; d.pos = new Float32Array(n*3); d.vel = new Float32Array(n*3);
+    for (let i = 0; i < n; i++){
+      let ok = false, tries = 0, x, y, z;
+      while (!ok && tries < 60){
+        x = (Math.random()*2 - 1)*(W - R); z = (Math.random()*2 - 1)*(W - R); y = R + Math.random()*(d.H - 2*R);
+        ok = true;
+        for (let j = 0; j < i && ok; j++){ const dx = d.pos[j*3]-x, dy = d.pos[j*3+1]-y, dz = d.pos[j*3+2]-z; if (dx*dx+dy*dy+dz*dz < (2*this.RC)**2) ok = false; }
+        tries++;
+      }
+      d.pos.set([x, y, z], i*3);
+      if (P.init === 'same'){
+        const s = Math.sqrt(3*P.kT), u = Math.random()*2 - 1, ph = Math.random()*2*Math.PI, r = Math.sqrt(1 - u*u);
+        d.vel.set([s*r*Math.cos(ph), s*u, s*r*Math.sin(ph)], i*3);
+      } else {
+        const s = Math.sqrt(P.kT); d.vel.set([s*gauss(), s*gauss(), s*gauss()], i*3);
+      }
+    }
+    d.mesh.count = n;
+    d.imp = 0; d.impT = 0; d.Pm = null; d.hist = new Float32Array(this.BINS); d.histInit = false;
+    this.draw(c);
+  },
+  onParam(key, c){
+    if (key !== 'kT') return;
+    const d = c.data, kT = this.kT(d); if (kT <= 0) return;
+    const f = Math.sqrt(c.params.kT/kT); for (let i = 0; i < d.n*3; i++) d.vel[i] *= f;
+  },
+  kT(d){ let s = 0; for (let i = 0; i < d.n*3; i++) s += d.vel[i]*d.vel[i]; return s/(3*d.n); },
+  update(dt, c){
+    const d = c.data, P = c.params, W = this.W, R = this.R, n = d.n, p = d.pos, v = d.vel;
+    if (dt > 0){
+      const maxv = 1.0, dH = Math.max(-maxv*dt, Math.min(maxv*dt, P.H - d.H)), u = dH/dt, H0 = d.H;
+      const sub = Math.min(12, Math.max(1, Math.ceil(dt/0.004))), h = dt/sub, rc2 = (2*this.RC)**2;
+      let imp = 0;
+      for (let s = 0; s < sub; s++){
+        const Hs = H0 + dH*(s+1)/sub;
+        for (let i = 0; i < n; i++){
+          const k = i*3;
+          p[k] += v[k]*h; p[k+1] += v[k+1]*h; p[k+2] += v[k+2]*h;
+          if (p[k] < -W+R){ p[k] = -W+R; if (v[k] < 0){ imp -= 2*v[k]; v[k] = -v[k]; } }
+          else if (p[k] > W-R){ p[k] = W-R; if (v[k] > 0){ imp += 2*v[k]; v[k] = -v[k]; } }
+          if (p[k+2] < -W+R){ p[k+2] = -W+R; if (v[k+2] < 0){ imp -= 2*v[k+2]; v[k+2] = -v[k+2]; } }
+          else if (p[k+2] > W-R){ p[k+2] = W-R; if (v[k+2] > 0){ imp += 2*v[k+2]; v[k+2] = -v[k+2]; } }
+          if (p[k+1] < R){ p[k+1] = R; if (v[k+1] < 0){ imp -= 2*v[k+1]; v[k+1] = -v[k+1]; } }
+          else if (p[k+1] > Hs - R){ p[k+1] = Math.max(R, Hs - R); if (v[k+1] > u){ imp += 2*(v[k+1] - u); v[k+1] = 2*u - v[k+1]; } }
+        }
+        for (let i = 0; i < n; i++){
+          const a = i*3;
+          for (let j = i+1; j < n; j++){
+            const b = j*3, dx = p[b]-p[a]; if (dx > 0.19 || dx < -0.19) continue;
+            const dy = p[b+1]-p[a+1], dz = p[b+2]-p[a+2], d2 = dx*dx + dy*dy + dz*dz;
+            if (d2 >= rc2 || d2 < 1e-12) continue;
+            const dist = Math.sqrt(d2), nx = dx/dist, ny = dy/dist, nz = dz/dist;
+            const dvn = (v[b]-v[a])*nx + (v[b+1]-v[a+1])*ny + (v[b+2]-v[a+2])*nz;
+            if (dvn < 0){ v[a] += dvn*nx; v[a+1] += dvn*ny; v[a+2] += dvn*nz; v[b] -= dvn*nx; v[b+1] -= dvn*ny; v[b+2] -= dvn*nz; }
+            const ov = (2*this.RC - dist)/2;
+            p[a] -= ov*nx; p[a+1] -= ov*ny; p[a+2] -= ov*nz; p[b] += ov*nx; p[b+1] += ov*ny; p[b+2] += ov*nz;
+          }
+        }
+      }
+      d.H = H0 + dH;
+      d.imp += imp; d.impT += dt;
+      if (d.impT > 0.5){
+        const area = 2*(2*W)**2 + 4*(2*W)*d.H, Pm = d.imp/(d.impT*area);
+        d.Pm = d.Pm == null ? Pm : d.Pm*0.6 + Pm*0.4; d.imp = 0; d.impT = 0;
+      }
+    }
+    this.draw(c);
+  },
+  draw(c){
+    const d = c.data, W = this.W, n = d.n, p = d.pos, v = d.vel, m = new THREE.Matrix4(), col = new THREE.Color();
+    const kT = this.kT(d), vs = Math.sqrt(kT);
+    const counts = new Float32Array(this.BINS), vmax = 4*vs;
+    for (let i = 0; i < n; i++){
+      const k = i*3, sp = Math.hypot(v[k], v[k+1], v[k+2]);
+      m.makeTranslation(p[k], p[k+1], p[k+2]); d.mesh.setMatrixAt(i, m);
+      d.mesh.setColorAt(i, gradient([C.blue, C.teal, C.green, C.yellow, C.red], sp/(3.2*vs)));
+      const b = Math.floor(sp/vmax*this.BINS); if (b < this.BINS) counts[b]++;
+    }
+    d.mesh.instanceMatrix.needsUpdate = true; if (d.mesh.instanceColor) d.mesh.instanceColor.needsUpdate = true;
+    d.box.scale.set(2*W, d.H, 2*W); d.box.position.y = d.H/2;
+    d.glass.scale.copy(d.box.scale); d.glass.position.copy(d.box.position);
+    d.piston.position.y = d.H + 0.05; d.rod.position.y = d.H + 1.6;
+    // histogram vs Maxwell
+    if (!d.histInit){ d.hist.set(counts); d.histInit = true; }
+    else for (let i = 0; i < this.BINS; i++) d.hist[i] = d.hist[i]*0.85 + counts[i]*0.15;
+    const dv = vmax/this.BINS, fpk = 4*Math.PI*Math.pow(2*Math.PI*kT, -1.5)*2*kT*Math.exp(-1), sc = 2.6/(n*fpk*dv);
+    for (let i = 0; i < this.BINS; i++){
+      const hgt = Math.min(Math.max(d.hist[i]*sc, 0.002), 3.4);
+      d.dummy.position.set(this.HX0 + (i + 0.5)*d.bw, hgt/2, 0); d.dummy.scale.set(d.bw*0.82, hgt, 0.12); d.dummy.updateMatrix();
+      d.bars.setMatrixAt(i, d.dummy.matrix);
+    }
+    d.bars.instanceMatrix.needsUpdate = true;
+    const pts = [];
+    for (let i = 0; i <= 120; i++){
+      const vv = i/120*vmax, f = 4*Math.PI*Math.pow(2*Math.PI*kT, -1.5)*vv*vv*Math.exp(-vv*vv/(2*kT));
+      pts.push(new V3(this.HX0 + vv/vmax*this.HW, f*n*dv*sc, 0.08));
+    }
+    d.curve.geometry.dispose(); d.curve.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+    d.kTm = kT;
+  },
+  readouts(c){
+    const d = c.data, W = this.W, V = (2*W)**2*d.H, kT = d.kTm ?? this.kT(d), Veff = (2*W - 2*this.R)**2*(d.H - 2*this.R), Pp = d.n*kT/Veff;
+    return [
+      ['temperature $kT$', kT.toFixed(3)],
+      ['measured pressure', d.Pm == null ? '…' : d.Pm.toFixed(3)],
+      ['predicted $\\tfrac{N}{V}kT$', Pp.toFixed(3)],
+      ['volume $V$', V.toFixed(2)],
+      ['$PV^{5/3}$', (Pp*Math.pow(V, 5/3)).toFixed(1)],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   F5 — Vol. II, Ch. 19: the principle of least action
+   --------------------------------------------------------------------- */
+const FeynAction = {
+  id:'f-action', vol:'feynman', bloom:0.55, title:'The Principle of Least Action', sub:'The true path minimizes kinetic minus potential energy', accent:C.blue,
+  ref:{label:'Vol. II · Ch. 19', title:'The Principle of Least Action', url:'https://www.feynmanlectures.caltech.edu/II_19.html'},
+  cam:{pos:[0.2, 5.4, 14.6], target:[0.2, 0.3, 0]},
+  eq:String.raw`\begin{aligned} S[x] &= \int_{t_1}^{t_2}\!\Big(\tfrac12 m\dot x^2 - mgx\Big)\,dt\\[2pt] \delta S &= 0 \;\Longleftrightarrow\; m\ddot x = -mg \end{aligned}`,
+  params:[
+    {key:'mode', label:'explore', type:'select', value:'manual', options:[{label:'Sliders', value:'manual'}, {label:'Wander', value:'wander'}, {label:'Slide downhill', value:'descend'}]},
+    {key:'a1', tex:'a_1', label:'one-hump wiggle', min:-1, max:1, step:0.01, value:0},
+    {key:'a2', tex:'a_2', label:'two-hump wiggle', min:-1, max:1, step:0.01, value:0},
+    {key:'T', tex:'T', label:'flight time (s)', min:1, max:3, step:0.05, value:2, reset:true},
+  ],
+  steps:[
+    {text:'Throw a ball straight up and catch it $T$ seconds later. Plot height against time and you get a parabola (gold). That is what $F = ma$ predicts.', run:c=>{c.setParam('mode','manual'); c.setParam('a1',0,1); c.setParam('a2',0,1);}},
+    {text:'Feynman’s special lecture tells the story differently. Take <i>any</i> path with the same start and end, and add up kinetic minus potential energy along it. That total is the action, $S$.', run:c=>{c.setParam('mode','manual'); c.setParam('a1',0.7,1.6); c.setParam('a2',-0.45,1.6);}},
+    {text:'Every wiggled path is a point on the floor of the bowl (right), and the bowl’s height is that path’s action. Wander around: every detour costs extra action.', cam:[[4.5,6.5,11],[1.5,0.2,0]], run:c=>c.setParam('mode','wander')},
+    {text:'Let the path slide downhill in action and it relaxes onto the parabola. The real path is the one with the <b>least action</b>.', cam:[[0.2,5.4,14.6],[0.2,0.3,0]], run:c=>c.setParam('mode','descend')},
+    {cam:[[0.2,5.4,14.6],[0.2,0.3,0]], text:'At the bottom the bowl is flat: a small change in the path changes $S$ only to second order, so $\\delta S = 0$. That stationary condition is exactly equivalent to Newton’s law.'},
+  ],
+  g:9.8, BX0:-6.9, BW:5.6, BC:2.9, BR:2.25,
+  hb(a1, a2){ return -1.5 + 3.3*(a1*a1 + 4*a2*a2)/5; },
+  init(c){
+    const d = c.data;
+    // board
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 5.2), new THREE.MeshBasicMaterial({color:0x10141d, transparent:true, opacity:.65, depthWrite:false}));
+    board.position.set(this.BX0 + this.BW/2, 1.0, -0.05); c.group.add(board);
+    const tAx = makeArrow(0x6b7280, 0.012, 0.9); tAx.userData.arrow.set(new V3(this.BX0 - 0.2, 0, 0), new V3(this.BW + 0.6, 0, 0));
+    const xAx = makeArrow(0x6b7280, 0.012, 0.9); xAx.userData.arrow.set(new V3(this.BX0, -1.2, 0), new V3(0, 4.6, 0));
+    c.group.add(tAx, xAx);
+    const tl = texLabel('t', 0x9aa3b5, 17); tl.position.set(this.BX0 + this.BW + 0.6, -0.25, 0);
+    const xl = texLabel('x(t)', 0x9aa3b5, 17); xl.position.set(this.BX0 - 0.45, 3.4, 0);
+    c.group.add(tl, xl);
+    for (const [xx, s] of [[this.BX0, 't_1'], [this.BX0 + this.BW, 't_2']]){
+      const dot = glowDot(C.white, 0.07); dot.position.set(xx, 0, 0); c.group.add(dot);
+      const l = texLabel(s, 0xcfd6e4, 15); l.position.set(xx, -0.35, 0); c.group.add(l);
+    }
+    d.trueLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:C.gold}));
+    d.trialPos = new Float32Array(161*3);
+    const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(d.trialPos, 3).setUsage(THREE.DynamicDrawUsage));
+    d.trialLine = new THREE.Line(tg, new THREE.LineBasicMaterial({color:C.blue})); d.trialLine.frustumCulled = false;
+    c.group.add(d.trueLine, d.trialLine);
+    d.ball = new THREE.Mesh(new THREE.SphereGeometry(0.15, 24, 16), new THREE.MeshStandardMaterial({color:C.blue, emissive:C.blue, emissiveIntensity:.5}));
+    d.ghost = glowDot(C.gold, 0.08);
+    c.group.add(d.ball, d.ghost);
+    // action bowl
+    const N = 48, geo = new THREE.PlaneGeometry(2, 2, N, N); geo.rotateX(-Math.PI/2);
+    const pa = geo.attributes.position, cols = new Float32Array(pa.count*3);
+    for (let i = 0; i < pa.count; i++){
+      const a1 = pa.getX(i), a2 = pa.getZ(i), y = this.hb(a1, a2);
+      pa.setXYZ(i, this.BC + a1*this.BR, y, a2*this.BR);
+      const cc = gradient([C.blue, C.teal, C.green, C.yellow, C.gold], (y + 1.5)/3.3);
+      cols.set([cc.r*.8, cc.g*.8, cc.b*.8], i*3);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3)); geo.computeVertexNormals();
+    d.bowl = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({vertexColors:true, transparent:true, opacity:.5, side:THREE.DoubleSide, roughness:.7, depthWrite:false}));
+    c.group.add(d.bowl);
+    const wire = [];
+    for (let i = 0; i <= 8; i++){
+      const u = -1 + i/4;
+      for (let k = 0; k < 40; k++){
+        const s0 = -1 + k/20, s1 = -1 + (k+1)/20;
+        wire.push(this.BC + u*this.BR, this.hb(u, s0), s0*this.BR, this.BC + u*this.BR, this.hb(u, s1), s1*this.BR);
+        wire.push(this.BC + s0*this.BR, this.hb(s0, u), u*this.BR, this.BC + s1*this.BR, this.hb(s1, u), u*this.BR);
+      }
+    }
+    const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wire, 3));
+    c.group.add(new THREE.LineSegments(wg, new THREE.LineBasicMaterial({color:0x8b93a7, transparent:true, opacity:.28})));
+    const l1 = texLabel('a_1', 0x9aa3b5, 16); l1.position.set(this.BC + this.BR + 0.4, -1.5, 0);
+    const l2 = texLabel('a_2', 0x9aa3b5, 16); l2.position.set(this.BC, -1.5, this.BR + 0.4);
+    const ls = texLabel('S - S_0', 0x9aa3b5, 16); ls.position.set(this.BC - this.BR - 0.2, 2.1, -this.BR);
+    c.group.add(l1, l2, ls);
+    const bottom = glowDot(C.gold, 0.07); bottom.position.set(this.BC, this.hb(0,0) + 0.02, 0); c.group.add(bottom);
+    d.marker = glowDot(C.blue, 0.11); c.group.add(d.marker);
+    d.mtrail = new Trail(500, C.blue, 1.2); c.group.add(d.mtrail.line);
+    d.phase = 0; d.wt = 0; d.rest = 0;
+    reveal(d.bowl, 1.2);
+    this.reset(c);
+  },
+  pathAt(c, t, a1, a2){
+    const P = c.params, T = P.T, g = this.g, A = this.A;
+    return g/2*t*(T - t) + A*(a1*Math.sin(Math.PI*t/T) + a2*Math.sin(2*Math.PI*t/T));
+  },
+  action(c, a1, a2){
+    const T = c.params.T, g = this.g, A = this.A, N = 400, dt = T/N; let S = 0;
+    for (let i = 0; i <= N; i++){
+      const t = i*dt, x = this.pathAt(c, t, a1, a2);
+      const v = g/2*(T - 2*t) + A*(a1*Math.PI/T*Math.cos(Math.PI*t/T) + a2*2*Math.PI/T*Math.cos(2*Math.PI*t/T));
+      const L = 0.5*v*v - g*x; S += (i === 0 || i === N ? 0.5 : 1)*L*dt;
+    }
+    return S;
+  },
+  reset(c){
+    const d = c.data, P = c.params, T = P.T;
+    this.peak = this.g*T*T/8; this.A = 0.75*this.peak; this.ys = 2.6/this.peak;
+    const pts = [];
+    for (let i = 0; i <= 160; i++){ const t = i/160*T; pts.push(new V3(this.BX0 + this.BW*i/160, this.pathAt(c, t, 0, 0)*this.ys, 0)); }
+    d.trueLine.geometry.dispose(); d.trueLine.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+    d.S0 = this.action(c, 0, 0);
+    d.mtrail.clear();
+    this.draw(c);
+  },
+  onParam(key, c){
+    if ((key === 'a1' || key === 'a2') && c.params.mode !== 'manual' && !this._internal){ c.params.mode = 'manual'; c.ui.mode?.sync(); }
+  },
+  setA(c, a1, a2){ c.params.a1 = a1; c.params.a2 = a2; c.ui.a1?.sync(); c.ui.a2?.sync(); },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){
+      if (P.mode === 'wander'){ d.wt += dt; this.setA(c, 0.85*Math.sin(0.55*d.wt), 0.55*Math.sin(0.83*d.wt + 1.1)); }
+      else if (P.mode === 'descend'){
+        let a1 = P.a1*Math.exp(-1.6*dt), a2 = P.a2*Math.exp(-6.4*dt);
+        if (Math.hypot(a1, a2) < 0.012){
+          d.rest += dt;
+          if (d.rest > 1.4){ d.rest = 0; const th = Math.random()*2*Math.PI; a1 = 0.95*Math.cos(th); a2 = 0.7*Math.sin(th); d.mtrail.clear(); }
+        }
+        this.setA(c, a1, a2);
+      }
+      d.phase = (d.phase + dt/(1.1 + 0.5*P.T)) % 1;
+    }
+    this.draw(c);
+  },
+  draw(c){
+    const d = c.data, P = c.params, T = P.T;
+    for (let i = 0; i <= 160; i++){
+      const t = i/160*T;
+      d.trialPos[i*3] = this.BX0 + this.BW*i/160; d.trialPos[i*3+1] = this.pathAt(c, t, P.a1, P.a2)*this.ys; d.trialPos[i*3+2] = 0.01;
+    }
+    d.trialLine.geometry.attributes.position.needsUpdate = true;
+    const t = d.phase*T, bx = this.BX0 + this.BW*d.phase;
+    d.ball.position.set(bx, this.pathAt(c, t, P.a1, P.a2)*this.ys, 0.05);
+    d.ghost.position.set(bx, this.pathAt(c, t, 0, 0)*this.ys, 0.03);
+    d.S = this.action(c, P.a1, P.a2);
+    const mp = new V3(this.BC + P.a1*this.BR, this.hb(P.a1, P.a2) + 0.04, P.a2*this.BR);
+    if (!d.lastM || d.lastM.distanceToSquared(mp) > 1e-5){ d.mtrail.push(mp.x, mp.y, mp.z); d.lastM = mp.clone(); }
+    d.marker.position.copy(mp);
+  },
+  readouts(c){
+    const d = c.data, P = c.params;
+    return [
+      ['action of this path $S$', d.S.toFixed(3)],
+      ['action of true path $S_0$', d.S0.toFixed(3)],
+      ['extra action $S - S_0$', sgnf(d.S - d.S0, 3)],
+      ['$a_1,\\ a_2$', `${sgnf(P.a1, 2)}, ${sgnf(P.a2, 2)}`],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   F6 — Vol. III, Ch. 1: quantum behavior (electrons, two slits)
+   --------------------------------------------------------------------- */
+const FeynQuantum = {
+  id:'f-quantum', vol:'feynman', bloom:0.7, title:'Electrons Through Two Slits', sub:'Probabilities don’t add — amplitudes do', accent:C.pink,
+  ref:{label:'Vol. III · Ch. 1', title:'Quantum Behavior', url:'https://www.feynmanlectures.caltech.edu/III_01.html'},
+  cam:{pos:[-10.5, 8.2, 9.2], target:[2.2, -0.3, 0]},
+  eq:String.raw`\begin{aligned} P_k &= |\phi_k|^2\\ P_{12} &= |\phi_1 + \phi_2|^2 \;\ne\; P_1 + P_2 \end{aligned}`,
+  params:[
+    {key:'mode', label:'slits open', type:'select', value:'both', reset:true, options:[{label:'Both', value:'both'}, {label:'Only 1', value:'s1'}, {label:'Only 2', value:'s2'}]},
+    {key:'watch', tex:'f', label:'fraction seen by the light', min:0, max:1, step:0.01, value:0, reset:true},
+    {key:'d', tex:'d', label:'slit separation', min:0.6, max:2.4, step:0.01, value:1.4, reset:true},
+    {key:'lam', tex:'\\lambda', label:'electron wavelength', min:0.12, max:0.6, step:0.01, value:0.3, reset:true},
+    {key:'rate', tex:'\\dot N', label:'electrons per second', min:1, max:400, step:1, value:5},
+  ],
+  steps:[
+    {text:'Fire electrons at a wall with two slits, one at a time. Each one lands on the detector as a single click — a whole electron, never a fraction.', run:c=>{c.setParam('watch',0,0); c.setParam('mode','both'); c.setParam('rate',4,0);}},
+    {text:'Close slit 2 and the clicks build one broad hump, $P_1 = |\\phi_1|^2$. With slit 1 closed instead you would get its mirror image, $P_2$.', run:c=>{c.setParam('watch',0,0); c.setParam('mode','s1'); c.setParam('rate',150,0);}},
+    {text:'Open both slits. The result is <i>not</i> $P_1 + P_2$: stripes appear, with places the electrons now avoid. It is the amplitudes that add, $P_{12} = |\\phi_1 + \\phi_2|^2$.', run:c=>{c.setParam('mode','both'); c.setParam('rate',180,0);}},
+    {text:'Shine a light by the slits to see which one each electron uses (gold clicks). Every electron is seen at one slit or the other, and the stripes are gone: $P = P_1 + P_2$.', run:c=>c.setParam('watch',1,0)},
+    {text:'Dim the light so only some electrons are seen. The ones we catch (gold) show no stripes, while the ones we miss (blue) still interfere. Feynman treats this experiment as the heart of quantum mechanics.', run:c=>c.setParam('watch',0.5,0)},
+  ],
+  L:6, ZR:4.8, NB:600, HB:120, WS:0.32, MAXH:40000, SPEED:11,
+  init(c){
+    const d = c.data;
+    d.wall = new THREE.Group(); c.group.add(d.wall);
+    const gun = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.32, 1.0, 24), new THREE.MeshStandardMaterial({color:0x3a4256, metalness:.7, roughness:.35}));
+    gun.rotation.z = Math.PI/2; gun.position.set(-6.5, 0, 0); c.group.add(gun);
+    const muzzle = glowDot(C.teal, 0.09); muzzle.position.set(-6, 0, 0); c.group.add(muzzle);
+    const gl = texLabel('\\text{electron gun}', 0x9aa3b5, 14); gl.position.set(-6.5, 0.6, 0); c.group.add(gl);
+    const scr = new THREE.PlaneGeometry(2*this.ZR + 0.4, 4); scr.rotateY(-Math.PI/2);
+    d.screen = new THREE.Mesh(scr, new THREE.MeshBasicMaterial({color:0x0f131c, side:THREE.DoubleSide, transparent:true, opacity:.92}));
+    d.screen.position.x = this.L; c.group.add(d.screen);
+    const se = new THREE.LineSegments(new THREE.EdgesGeometry(scr), new THREE.LineBasicMaterial({color:0x3c4252}));
+    se.position.x = this.L; c.group.add(se);
+    const dl = texLabel('\\text{detector}', 0x9aa3b5, 14); dl.position.set(this.L, -2.35, this.ZR - 0.6); c.group.add(dl);
+    // hits
+    d.hitPos = new Float32Array(this.MAXH*3); d.hitCol = new Float32Array(this.MAXH*3);
+    const hg = new THREE.BufferGeometry();
+    hg.setAttribute('position', new THREE.BufferAttribute(d.hitPos, 3).setUsage(THREE.DynamicDrawUsage));
+    hg.setAttribute('color', new THREE.BufferAttribute(d.hitCol, 3).setUsage(THREE.DynamicDrawUsage));
+    d.hits = new THREE.Points(hg, new THREE.PointsMaterial({size:0.07, vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.hits.frustumCulled = false; c.group.add(d.hits);
+    // histogram on top of the screen
+    d.bars = new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color:0xffffff, roughness:.5}), this.HB);
+    d.bars.frustumCulled = false;
+    for (let i = 0; i < this.HB; i++) d.bars.setColorAt(i, new THREE.Color(C.teal));
+    c.group.add(d.bars);
+    d.curvePos = new Float32Array(this.NB*3);
+    const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.BufferAttribute(d.curvePos, 3).setUsage(THREE.DynamicDrawUsage));
+    d.curve = new THREE.Line(cg, new THREE.LineBasicMaterial({color:C.gold, transparent:true, opacity:.9})); d.curve.frustumCulled = false;
+    c.group.add(d.curve);
+    // light for watching
+    d.lamp = glowDot(C.yellow, 0.12); d.lamp.position.set(0.9, 2.5, 0); c.group.add(d.lamp);
+    d.lampL = texLabel('\\text{light}', C.yellow, 14); d.lampL.position.set(0.9, 2.95, 0); c.group.add(d.lampL);
+    d.glow = new THREE.Sprite(new THREE.SpriteMaterial({map:circleTexture(), color:C.yellow, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false}));
+    d.glow.position.set(0.35, 0, 0); c.group.add(d.glow);
+    // sprite pool
+    d.pool = [];
+    for (let i = 0; i < 140; i++){
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({map:circleTexture(), color:C.teal, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+      s.visible = false; c.group.add(s); d.pool.push(s);
+    }
+    d.flights = []; d.flashes = [];
+    d.dummy = new THREE.Object3D();
+    this.reset(c);
+  },
+  take(c, color, opacity=1){ const s = c.data.pool.pop(); if (!s) return null; s.visible = true; s.material.color.set(color); s.material.opacity = opacity; s.scale.setScalar(0.25); return s; },
+  give(c, s){ if (s){ s.visible = false; c.data.pool.push(s); } },
+  buildWall(c){
+    const d = c.data, P = c.params, h = P.d/2, w = this.WS, Z = this.ZR + 0.2, th = 0.14;
+    clearGroup(d.wall);
+    const mat = new THREE.MeshStandardMaterial({color:0x232a3a, metalness:.5, roughness:.5, transparent:true, opacity:.78});
+    const box = (y0, y1, z0, z1, m=mat) => {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(th, y1 - y0, z1 - z0), m);
+      b.position.set(0, (y0 + y1)/2, (z0 + z1)/2); d.wall.add(b);
+      const e = new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry), new THREE.LineBasicMaterial({color:0x3c4560}));
+      e.position.copy(b.position); d.wall.add(e);
+    };
+    box(0.9, 2, -Z, Z); box(-2, -0.9, -Z, Z);
+    box(-0.9, 0.9, -Z, -h - w/2); box(-0.9, 0.9, -h + w/2, h - w/2); box(-0.9, 0.9, h + w/2, Z);
+    const cover = new THREE.MeshStandardMaterial({color:0x5a2a35, metalness:.4, roughness:.5});
+    if (P.mode === 's1') box(-0.9, 0.9, -h - w/2, -h + w/2, cover);
+    if (P.mode === 's2') box(-0.9, 0.9, h - w/2, h + w/2, cover);
+    const l1 = texLabel('1', 0xcfd6e4, 16); l1.position.set(-0.15, 1.15, h); d.wall.add(l1);
+    const l2 = texLabel('2', 0xcfd6e4, 16); l2.position.set(-0.15, 1.15, -h); d.wall.add(l2);
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    this.buildWall(c);
+    for (const f of d.flights){ this.give(c, f.a); this.give(c, f.b); }
+    for (const f of d.flashes) this.give(c, f.s);
+    d.flights = []; d.flashes = [];
+    d.hn = 0; d.nw = 0; d.emit = 0; d.hist = new Float32Array(this.HB);
+    d.hits.geometry.setDrawRange(0, 0);
+    // amplitudes on the detector
+    const k = 2*Math.PI/P.lam, NB = this.NB, dz = 2*this.ZR/NB, zs = [P.d/2, -P.d/2];
+    const P1 = new Float64Array(NB), P2 = new Float64Array(NB), P12 = new Float64Array(NB);
+    for (let i = 0; i < NB; i++){
+      const z = -this.ZR + (i + 0.5)*dz, amps = zs.map(z0 => {
+        const r = Math.hypot(this.L, z - z0), s = (z - z0)/r, x = Math.PI*this.WS*s/P.lam;
+        const env = Math.abs(x) < 1e-6 ? 1 : Math.sin(x)/x, a = env/Math.sqrt(r);
+        return [a*Math.cos(k*r), a*Math.sin(k*r)];
+      });
+      P1[i] = amps[0][0]**2 + amps[0][1]**2; P2[i] = amps[1][0]**2 + amps[1][1]**2;
+      P12[i] = (amps[0][0] + amps[1][0])**2 + (amps[0][1] + amps[1][1])**2;
+    }
+    const norm = a => { let s = 0; for (const v of a) s += v*dz; return a.map(v => v/s); };
+    d.D1 = norm(P1); d.D2 = norm(P2); d.D12 = norm(P12);
+    const cdf = a => { const o = new Float64Array(NB); let s = 0; for (let i = 0; i < NB; i++){ s += a[i]*dz; o[i] = s; } return o; };
+    d.C1 = cdf(d.D1); d.C2 = cdf(d.D2); d.C12 = cdf(d.D12);
+    const f = P.watch;
+    d.dens = P.mode === 's1' ? d.D1 : P.mode === 's2' ? d.D2 : d.D12.map((v, i) => f*0.5*(d.D1[i] + d.D2[i]) + (1 - f)*v);
+    this.drawHist(c);
+  },
+  sample(cdf){
+    const u = Math.random()*cdf[cdf.length-1]; let lo = 0, hi = cdf.length - 1;
+    while (lo < hi){ const m = (lo + hi) >> 1; if (cdf[m] < u) lo = m + 1; else hi = m; }
+    return -this.ZR + (lo + Math.random())*2*this.ZR/this.NB;
+  },
+  spawn(c){
+    const d = c.data, P = c.params;
+    let kind, slit = 0, z;
+    if (P.mode === 's1'){ kind = 'single'; slit = 1; z = this.sample(d.C1); }
+    else if (P.mode === 's2'){ kind = 'single'; slit = 2; z = this.sample(d.C2); }
+    else if (Math.random() < P.watch){ kind = 'watched'; slit = Math.random() < 0.5 ? 1 : 2; z = this.sample(slit === 1 ? d.C1 : d.C2); }
+    else { kind = 'wave'; z = this.sample(d.C12); }
+    const y = (Math.random()*2 - 1)*0.8;
+    const waves = d.flights.reduce((a, f) => a + (f.kind === 'wave'), 0);
+    if (d.flights.length < 40 && d.pool.length > 4 && (kind !== 'wave' || waves < 8)){
+      const fl = {kind, slit, z, y, s:0, flashed:false};
+      fl.a = this.take(c, C.teal, kind === 'wave' ? 0.35 : 1);
+      fl.b = kind === 'wave' ? this.take(c, C.teal, 0.3) : null;
+      if (fl.b) fl.b.visible = false;
+      d.flights.push(fl);
+    } else this.addHit(c, z, y, kind);
+  },
+  addHit(c, z, y, kind){
+    const d = c.data, i = d.hn % this.MAXH;
+    d.hitPos.set([this.L - 0.03, y, z], i*3);
+    const col = new THREE.Color(kind === 'watched' ? C.gold : kind === 'single' ? C.teal : C.blue);
+    d.hitCol.set([col.r, col.g, col.b], i*3);
+    d.hn++; if (kind === 'watched') d.nw++;
+    const b = Math.floor((z + this.ZR)/(2*this.ZR)*this.HB); if (b >= 0 && b < this.HB) d.hist[b]++;
+    d.hitsDirty = true;
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, L = this.L, half = P.d/2;
+    if (dt > 0){
+      d.emit += dt*P.rate;
+      let k = 0; while (d.emit >= 1 && k < 400){ this.spawn(c); d.emit -= 1; k++; }
+      const ds = dt*this.SPEED;
+      for (let i = d.flights.length - 1; i >= 0; i--){
+        const f = d.flights[i]; f.s += ds; const s = f.s;
+        if (f.kind === 'wave'){
+          if (s < 6){ f.a.position.set(-6 + s, 0, 0); f.a.scale.setScalar(0.3 + (s/6)*(P.d + 0.4)); f.a.material.opacity = 0.2; }
+          else if (s < 12){
+            const u = (s - 6)/6, dz = half*(1 + 1.4*u), sc = 0.45 + 1.5*u, op = 0.16*(1 - 0.7*u);
+            f.b.visible = true;
+            f.a.position.set(s - 6, 0, dz); f.b.position.set(s - 6, 0, -dz);
+            f.a.scale.setScalar(sc); f.b.scale.setScalar(sc); f.a.material.opacity = op; f.b.material.opacity = op;
+          }
+        } else {
+          const zs = f.slit === 1 ? half : -half, ys = f.y*0.5;
+          if (s < 6){ const u = s/6; f.a.position.set(-6 + s, ys*u, zs*u); }
+          else if (s < 12){
+            if (!f.flashed){
+              f.flashed = true;
+              if (f.kind === 'watched'){ const fs = this.take(c, C.yellow, 1); if (fs){ fs.position.set(0.12, ys, zs); fs.material.opacity = 0.6; fs.scale.setScalar(0.4); d.flashes.push({s:fs, t:0, dur:0.3, s0:0.4, o0:0.6}); } }
+            }
+            const u = (s - 6)/6; f.a.position.set(s - 6, ys + (f.y - ys)*u, zs + (f.z - zs)*u);
+          }
+        }
+        if (s >= 12){
+          this.addHit(c, f.z, f.y, f.kind);
+          const hs = this.take(c, f.kind === 'watched' ? C.gold : 0xffffff, 1);
+          if (hs){ hs.position.set(L - 0.05, f.y, f.z); hs.scale.setScalar(0.45); d.flashes.push({s:hs, t:0, dur:0.25, s0:0.45}); }
+          this.give(c, f.a); this.give(c, f.b); d.flights.splice(i, 1);
+        }
+      }
+      for (let i = d.flashes.length - 1; i >= 0; i--){
+        const f = d.flashes[i]; f.t += dt; const u = f.t/f.dur;
+        if (u >= 1){ this.give(c, f.s); d.flashes.splice(i, 1); continue; }
+        f.s.material.opacity = (f.o0 ?? 1)*(1 - u); f.s.scale.setScalar(f.s0*(1 + 0.6*u));
+      }
+    }
+    const on = P.mode === 'both' && P.watch > 0;
+    d.lamp.visible = d.lampL.visible = on;
+    d.glow.material.opacity = on ? 0.18*P.watch : 0; d.glow.scale.setScalar(P.d + 1.8);
+    if (d.hitsDirty){
+      d.hits.geometry.setDrawRange(0, Math.min(d.hn, this.MAXH));
+      d.hits.geometry.attributes.position.needsUpdate = true; d.hits.geometry.attributes.color.needsUpdate = true;
+      d.hitsDirty = false;
+      this.drawHist(c);
+    }
+  },
+  drawHist(c){
+    const d = c.data, HB = this.HB, bz = 2*this.ZR/HB, H = 2.3, y0 = 2.08;
+    let mx = 0; for (const v of d.hist) mx = Math.max(mx, v);
+    // expected counts per bin from the theory curve
+    let dmax = 0; for (const v of d.dens) dmax = Math.max(dmax, v);
+    const expMax = d.hn*dmax*bz, ref = Math.max(mx, expMax, 1);
+    for (let i = 0; i < HB; i++){
+      const h = Math.max(d.hist[i]/ref*H, 0.002);
+      d.dummy.position.set(this.L, y0 + h/2, -this.ZR + (i + 0.5)*bz); d.dummy.scale.set(0.08, h, bz*0.82); d.dummy.updateMatrix();
+      d.bars.setMatrixAt(i, d.dummy.matrix);
+      d.bars.setColorAt(i, gradient([C.blue, C.teal, C.green, C.yellow], h/H));
+    }
+    d.bars.instanceMatrix.needsUpdate = true; if (d.bars.instanceColor) d.bars.instanceColor.needsUpdate = true;
+    const sc = d.hn < 25 ? H/Math.max(dmax, 1e-9) : d.hn*bz/ref*H, dzf = 2*this.ZR/this.NB;
+    for (let i = 0; i < this.NB; i++){
+      d.curvePos[i*3] = this.L + 0.07; d.curvePos[i*3+1] = y0 + d.dens[i]*sc; d.curvePos[i*3+2] = -this.ZR + (i + 0.5)*dzf;
+    }
+    d.curve.geometry.attributes.position.needsUpdate = true;
+    d.curve.material.opacity = d.hn < 25 ? 0.4 : 0.9;
+  },
+  readouts(c){
+    const d = c.data, P = c.params;
+    return [
+      ['electrons detected', String(d.hn)],
+      ['seen at a slit', String(d.nw)],
+      ['fringe spacing $\\lambda L/d$', (P.lam*this.L/P.d).toFixed(2)],
+      ['in flight', String(d.flights.length)],
+    ];
+  },
+};
+
+// related lectures for the chapters not built directly on one
+const FL = 'https://www.feynmanlectures.caltech.edu/';
+Gravity.ref = {label:'Vol. I · Ch. 7', title:'The Theory of Gravitation', url:FL + 'I_07.html', related:true};
+Rigid.ref   = {label:'Vol. I · Ch. 20', title:'Rotation in Space', url:FL + 'I_20.html', related:true};
+Waves.ref   = {label:'Vol. I · Ch. 29', title:'Interference', url:FL + 'I_29.html', related:true};
+EField.ref  = {label:'Vol. II · Ch. 4', title:'Electrostatics', url:FL + 'II_04.html', related:true};
+Lorentz.ref = {label:'Vol. II · Ch. 29', title:'The Motion of Charges in Electric and Magnetic Fields', url:FL + 'II_29.html', related:true};
+
+const TOPICS = [
+  {id:'mech',    name:'Mechanics',        color:C.gold,   blurb:'Forces, orbits, and the paths nature chooses', chapters:[FeynOrbit, Gravity, FeynAction, Lorenz]},
+  {id:'rot',     name:'Rotation',         color:C.teal,   blurb:'Torque, angular momentum, tumbling bodies',     chapters:[FeynTop, Rigid]},
+  {id:'waves',   name:'Waves & Optics',   color:C.yellow, blurb:'Interference and the principle of least time',   chapters:[Waves, FeynLight]},
+  {id:'em',      name:'Electromagnetism', color:C.red,    blurb:'Fields, charges, and the Lorentz force',          chapters:[EField, Lorentz]},
+  {id:'heat',    name:'Heat',             color:C.green,  blurb:'Temperature and pressure from moving atoms',      chapters:[FeynGas]},
+  {id:'quantum', name:'Quantum',          color:C.pink,   blurb:'Amplitudes, interference, and measurement',       chapters:[FeynQuantum]},
+];
+const CHAPTERS = [];
+TOPICS.forEach((t, ti) => t.chapters.forEach((ch, k) => { ch.topic = t; ch.num = `${ti+1}.${k+1}`; CHAPTERS.push(ch); }));
+const chapLabel = i => CHAPTERS[i].num;
+
+/* =====================================================================
+   App state, UI and scene management
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const state = { idx:-1, step:0, playing:true, speed:1, tour:false, tourT:0, ctx:null, seen:new Set() };
+const SPEEDS = [0.25, 0.5, 1, 2, 4];
+
+function makeCtx(def){
+  const group = new THREE.Group(); scene.add(group);
+  const ctx = {
+    def, group, data:{}, params:{}, ui:{}, alive:true, _tok:{},
+    reset(){ def.reset?.(ctx); },
+    setParam(key, val, dur=1.0){
+      const p = def.params.find(q => q.key === key); if (!p || !ctx.alive) return;
+      if (p.type === 'select' || dur <= 0 || ctx.params[key] === val){
+        const changed = ctx.params[key] !== val;
+        ctx.params[key] = val; ctx.ui[key]?.sync();
+        if (changed || p.type === 'select'){ if (p.reset) def.reset(ctx); else def.onParam?.(key, ctx); }
+        return;
+      }
+      const from = ctx.params[key], tok = {}; ctx._tok[key] = tok;
+      return tween(dur, k => {
+        if (ctx._tok[key] !== tok || !ctx.alive) return;
+        ctx.params[key] = from + (val - from)*k; ctx.ui[key]?.sync();
+        if (!p.reset) def.onParam?.(key, ctx);
+      }).then(() => { if (ctx._tok[key] === tok && ctx.alive && p.reset) def.reset(ctx); });
+    },
+  };
+  def.params.forEach(p => ctx.params[p.key] = p.value);
+  return ctx;
+}
+
+function fmtVal(p, v){
+  if (p.fmt) return p.fmt(v);
+  const dec = Math.max(0, (String(p.step).split('.')[1] || '').length);
+  return Number(v).toFixed(dec);
+}
+
+function buildParams(ctx){
+  const host = $('params'); host.innerHTML = '';
+  ctx.def.params.forEach(p => {
+    const row = document.createElement('div'); row.className = 'param';
+    const head = `<div class="phead">${p.tex ? `<span class="ptex">${tex(p.tex)}</span>` : ''}<span class="pname">${p.label || ''}</span>${p.type === 'select' ? '' : '<span class="pval"></span>'}</div>`;
+    if (p.type === 'select'){
+      row.innerHTML = head + '<div class="seg"></div>';
+      const seg = row.querySelector('.seg');
+      const btns = p.options.map(o => {
+        const b = document.createElement('button'); b.textContent = o.label;
+        b.onclick = () => ctx.setParam(p.key, o.value);
+        seg.appendChild(b); return [b, o.value];
+      });
+      ctx.ui[p.key] = { sync(){ btns.forEach(([b, v]) => b.classList.toggle('on', v === ctx.params[p.key])); } };
+    } else {
+      row.innerHTML = head + `<input type="range" min="${p.min}" max="${p.max}" step="${p.step}">`;
+      const inp = row.querySelector('input'), val = row.querySelector('.pval');
+      inp.addEventListener('input', () => {
+        ctx._tok[p.key] = null;
+        ctx.params[p.key] = parseFloat(inp.value); ctx.ui[p.key].sync(true);
+        if (!p.reset) ctx.def.onParam?.(p.key, ctx);
+      });
+      inp.addEventListener('change', () => { if (p.reset) ctx.def.reset(ctx); });
+      ctx.ui[p.key] = { sync(fromInput){
+        const v = ctx.params[p.key];
+        if (!fromInput) inp.value = v;
+        val.textContent = fmtVal(p, v);
+        inp.style.setProperty('--p', ((v - p.min)/(p.max - p.min)*100) + '%');
+      }};
+    }
+    host.appendChild(row);
+    ctx.ui[p.key].sync();
+  });
+}
+
+let readoutCells = null, readoutT = 0;
+function buildReadouts(ctx){
+  const host = $('readouts'); host.innerHTML = '';
+  const rows = ctx.def.readouts(ctx); readoutKey = rows.map(x => x[0]).join('|');
+  readoutCells = rows.map(([label, v]) => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<span>${rich(label)}</span><span></span>`;
+    host.appendChild(row);
+    const cell = row.lastChild; cell.textContent = v; return cell;
+  });
+}
+let readoutKey = '';
+function updateReadouts(ctx){
+  const r = ctx.def.readouts(ctx);
+  const key = r.map(x => x[0]).join('|');
+  if (key !== readoutKey){ buildReadouts(ctx); return; }
+  r.forEach(([, v], i) => { if (readoutCells[i]) readoutCells[i].textContent = v; });
+}
+
+function buildNav(){
+  const grid = $('topicGrid'), intro = $('introTopics');
+  TOPICS.forEach((t, ti) => {
+    const sec = document.createElement('section'); sec.className = 'topic'; sec.style.setProperty('--tc', hexCss(t.color));
+    sec.innerHTML = `<div class="th"><span class="tn">${ti+1}</span><h3>${t.name}</h3></div><div class="tb">${t.blurb}</div>`;
+    t.chapters.forEach(ch => {
+      const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
+      b.className = 'cc'; b.dataset.i = i;
+      const badge = ch.ref ? `<span class="cf">Feynman ${ch.ref.label.replace(' · ', ', ')}${ch.ref.related ? ' (related)' : ''}</span>` : '';
+      b.innerHTML = `<span class="cn">${ch.num}</span><span><div class="ct">${ch.title}</div><div class="cs">${ch.sub}</div>${badge}</span>`;
+      b.onclick = () => { closeContents(); goScene(i); };
+      sec.appendChild(b);
+    });
+    grid.appendChild(sec);
+    const ib = document.createElement('button'); ib.style.setProperty('--tc', hexCss(t.color));
+    ib.innerHTML = `<b>${t.name}</b><span>${t.chapters.length} chapter${t.chapters.length > 1 ? 's' : ''}</span>`;
+    ib.addEventListener('click', e => { e.stopPropagation(); startApp(); const i = CHAPTERS.indexOf(t.chapters[0]); if (i !== state.idx) goScene(i); });
+    intro.appendChild(ib);
+  });
+}
+function buildToc(){
+  const toc = $('toc');
+  TOPICS.forEach((t, ti) => {
+    const g = document.createElement('div'); g.className = 'tg'; g.style.setProperty('--tc', hexCss(t.color));
+    g.innerHTML = `<i></i>${ti+1} · ${t.name}`; toc.appendChild(g);
+    t.chapters.forEach(ch => {
+      const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
+      b.dataset.i = i; b.style.setProperty('--tc', hexCss(t.color));
+      b.innerHTML = `<span class="n">${ch.num}</span><span>${ch.title}</span>`;
+      b.onclick = () => goScene(i);
+      toc.appendChild(b);
+    });
+  });
+}
+function openContents(){ document.body.classList.add('contents-open'); }
+function closeContents(){ document.body.classList.remove('contents-open'); }
+function toggleContents(){ document.body.classList.toggle('contents-open'); }
+
+let switching = false;
+async function goScene(i, first=false){
+  if (switching || i === state.idx) return;
+  switching = true;
+  const fade = $('fade');
+  if (!first){ fade.classList.add('on'); await new Promise(r => setTimeout(r, 420)); }
+  if (state.ctx){ state.ctx.alive = false; disposeTree(state.ctx.group); scene.remove(state.ctx.group); }
+  const def = CHAPTERS[i];
+  state.idx = i; state.step = 0; state.seen = new Set([0]); state.tourT = 0;
+  document.documentElement.style.setProperty('--accent', hexCss(def.accent));
+  $('chapNum').textContent = chapLabel(i);
+  const tIdx = TOPICS.indexOf(def.topic);
+  $('sceneTag').innerHTML = `<b style="color:${hexCss(def.topic.color)}">${def.topic.name}</b> · chapter ${def.num.split('.')[1]} of ${def.topic.chapters.length}`;
+  $('refCard').style.display = def.ref ? '' : 'none';
+  if (def.ref){
+    $('refHead').textContent = def.ref.related ? 'Related Feynman lecture' : 'From the Feynman Lectures';
+    $('refLabel').textContent = def.ref.label; $('refTitle').textContent = def.ref.title; $('refLink').href = def.ref.url;
+  }
+  $('sceneTitle').textContent = def.title; $('sceneSub').textContent = def.sub;
+  $('topicGrid').querySelectorAll('.cc').forEach(b => b.classList.toggle('on', +b.dataset.i === i));
+  $('toc').querySelectorAll('button').forEach(b => { const on = +b.dataset.i === i; b.classList.toggle('on', on); if (on) b.scrollIntoView({block:'nearest'}); });
+  const nx = CHAPTERS[(i + 1) % CHAPTERS.length]; $('sNext').title = `Next: ${nx.num} ${nx.title} (])`;
+  $('eq').innerHTML = tex(def.eq, true);
+  bloom.strength = def.bloom ?? 0.75;
+  const ctx = makeCtx(def); state.ctx = ctx;
+  def.init(ctx);
+  buildParams(ctx); buildReadouts(ctx);
+  // camera: start pulled back, then glide in
+  const cp = new V3(...def.cam.pos), tg = new V3(...def.cam.target);
+  camera.position.copy(cp.clone().sub(tg).multiplyScalar(1.7).add(tg).add(new V3(2, 1.5, 0)));
+  controls.target.copy(tg);
+  fade.classList.remove('on');
+  flyTo(def.cam.pos, def.cam.target, 2.2);
+  location.hash = def.id;
+  showStep(0, true);
+  switching = false;
+}
+
+function showStep(k, instant=false){
+  const def = CHAPTERS[state.idx], ctx = state.ctx;
+  k = Math.max(0, Math.min(def.steps.length-1, k));
+  state.step = k; state.seen.add(k); state.tourT = 0;
+  const st = def.steps[k], cap = $('capText');
+  cap.classList.add('out');
+  setTimeout(() => { cap.innerHTML = rich(st.text); cap.classList.remove('out'); }, instant ? 0 : 280);
+  const dots = $('dots'); dots.innerHTML = '';
+  def.steps.forEach((_, i) => {
+    const d = document.createElement('i');
+    if (i === k) d.className = 'on'; else if (state.seen.has(i)) d.className = 'seen';
+    d.onclick = () => showStep(i); dots.appendChild(d);
+  });
+  if (st.cam && !instant) flyTo(st.cam[0], st.cam[1], 2.0);
+  if (st.run && ctx) st.run(ctx);
+}
+function nextStep(){
+  const def = CHAPTERS[state.idx];
+  if (state.step < def.steps.length-1) showStep(state.step+1);
+  else goScene((state.idx+1) % CHAPTERS.length);
+}
+function prevStep(){ if (state.step > 0) showStep(state.step-1); }
+
+/* toolbar */
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+const ICON_PLAY  = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>';
+function syncPlay(){ $('playBtn').innerHTML = state.playing ? ICON_PAUSE : ICON_PLAY; }
+function togglePlay(){ state.playing = !state.playing; syncPlay(); }
+function cycleSpeed(dir=1){
+  const i = SPEEDS.indexOf(state.speed);
+  state.speed = SPEEDS[(i + dir + SPEEDS.length) % SPEEDS.length];
+  $('speed').textContent = state.speed + '×';
+}
+function toggleTour(){ state.tour = !state.tour; state.tourT = 0; $('tourBtn').classList.toggle('on', state.tour); }
+function toggleOrbit(){ controls.autoRotate = !controls.autoRotate; $('orbitBtn').classList.toggle('on', controls.autoRotate); }
+function toggleClean(){ document.body.classList.toggle('clean'); }
+function resetSim(){ state.ctx?.reset(); }
+function resetCam(){ const d = CHAPTERS[state.idx]; flyTo(d.cam.pos, d.cam.target, 1.4); }
+function toggleFS(){ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
+
+$('playBtn').onclick = togglePlay;
+$('speed').onclick = () => cycleSpeed(1);
+$('speed').oncontextmenu = e => { e.preventDefault(); cycleSpeed(-1); };
+$('resetBtn').onclick = resetSim;
+$('tourBtn').onclick = toggleTour;
+$('orbitBtn').onclick = toggleOrbit;
+$('camBtn').onclick = resetCam;
+$('cleanBtn').onclick = toggleClean;
+$('panelBtn').onclick = () => document.body.classList.toggle('panel-open');
+$('fsBtn').onclick = toggleFS;
+$('nextStep').onclick = nextStep;
+$('prevStep').onclick = prevStep;
+canvas.addEventListener('dblclick', () => { if (document.body.classList.contains('clean')) toggleClean(); });
+
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' && e.key !== ' ') return;
+  if (!$('intro').classList.contains('gone')){ startApp(); return; }
+  const k = e.key;
+  if (document.body.classList.contains('contents-open')){ if (k === 'Escape' || k === 'm' || k === 'M') closeContents(); return; }
+  if (k === ' '){ e.preventDefault(); togglePlay(); }
+  else if (k === 'ArrowRight'){ nextStep(); }
+  else if (k === 'ArrowLeft'){ prevStep(); }
+  else if (k.length === 1 && k >= '1' && k <= String(TOPICS.length)){ goScene(CHAPTERS.indexOf(TOPICS[+k - 1].chapters[0])); }
+  else if (k === 'm' || k === 'M'){ openContents(); }
+  else if (k === 'l' || k === 'L'){ document.body.classList.toggle('side-collapsed'); }
+  else if (k === ']' || k === 'PageDown'){ goScene((state.idx + 1) % CHAPTERS.length); }
+  else if (k === '[' || k === 'PageUp'){ goScene((state.idx - 1 + CHAPTERS.length) % CHAPTERS.length); }
+  else if (k === 'r' || k === 'R'){ resetSim(); }
+  else if (k === 'h' || k === 'H' || k === 'Escape'){ if (k !== 'Escape' || document.body.classList.contains('clean')) toggleClean(); }
+  else if (k === 't' || k === 'T'){ toggleTour(); }
+  else if (k === 'o' || k === 'O'){ toggleOrbit(); }
+  else if (k === 'c' || k === 'C'){ resetCam(); }
+  else if (k === 'f' || k === 'F'){ toggleFS(); }
+  else if (k === '+' || k === '='){ cycleSpeed(1); }
+  else if (k === '-'){ cycleSpeed(-1); }
+});
+
+/* =====================================================================
+   Main loop
+   ===================================================================== */
+let last = performance.now();
+function frame(now){
+  const rdt = Math.min((now - last)/1000, 0.05); last = now;
+  updateTweens(rdt);
+  const ctx = state.ctx;
+  if (ctx){
+    const sdt = state.playing ? rdt*state.speed : 0;
+    ctx.def.update(sdt, ctx);
+    readoutT += rdt; if (readoutT > 0.12){ readoutT = 0; updateReadouts(ctx); }
+    if (state.tour && !switching){ state.tourT += rdt; if (state.tourT > 11) nextStep(); }
+  }
+  controls.update();
+  composer.render();
+  labelRenderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+buildNav(); buildToc(); syncPlay();
+const startIdx = Math.max(0, CHAPTERS.findIndex(c => '#' + c.id === location.hash));
+goScene(startIdx, true);
+requestAnimationFrame(frame);
+
+let started = false;
+function startApp(){
+  if (started) return; started = true;
+  $('intro').classList.add('gone');
+  canvas.focus();
+}
+$('intro').addEventListener('click', startApp);
+$('contentsBtn').onclick = toggleContents;
+$('sPrev').onclick = () => goScene((state.idx - 1 + CHAPTERS.length) % CHAPTERS.length);
+$('sNext').onclick = () => goScene((state.idx + 1) % CHAPTERS.length);
+$('sideToggle').onclick = () => document.body.classList.toggle('side-collapsed');
+$('closeContents').onclick = closeContents;
+$('contents').addEventListener('click', e => { if (e.target.id === 'contents') closeContents(); });
+$('prevCh').onclick = () => goScene((state.idx - 1 + CHAPTERS.length) % CHAPTERS.length);
+$('nextCh').onclick = () => goScene((state.idx + 1) % CHAPTERS.length);
+</script>
+</body>
+</html>

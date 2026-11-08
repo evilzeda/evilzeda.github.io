@@ -41,6 +41,8 @@ const translations = {
     skill_3_title: "Visualization",
     skill_3_desc: "Translating complex datasets into intuitive visual stories.",
     works_heading: "Selected <span>Works</span>",
+    work_px_title: "physcx",
+    work_px_desc: "Interactive 3D physics simulations, built on the Feynman Lectures.",
     work_1_title: "Data Collection",
     work_1_desc: "Automated scraping & ingestion.",
     work_2_title: "Data Cleansing",
@@ -120,6 +122,8 @@ const translations = {
     skill_3_desc:
       "Menerjemahkan kumpulan data kompleks menjadi cerita visual yang intuitif.",
     works_heading: "Karya <span>Pilihan</span>",
+    work_px_title: "physcx",
+    work_px_desc: "Simulasi fisika 3D interaktif, berdasarkan Feynman Lectures.",
     work_1_title: "Pengumpulan Data",
     work_1_desc: "Scraping & ingestin data otomatis.",
     work_2_title: "Pembersihan Data",
@@ -198,6 +202,8 @@ const translations = {
     skill_3_desc:
       "複雑なデータセットを直感的なビジュアルストーリーに変換します。",
     works_heading: "主要な <span>作品</span>",
+    work_px_title: "physcx",
+    work_px_desc: "ファインマン物理学に基づくインタラクティブな3D物理シミュレーション。",
     work_1_title: "データ収集",
     work_1_desc: "自動化されたスクレイピングと取り込み。",
     work_2_title: "データクレンジング",
