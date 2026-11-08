@@ -50,7 +50,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #refCard a.read{display:inline-flex;gap:6px;align-items:center;margin-top:12px;font-size:12.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;transition:background .2s}
 #refCard a.read:hover{background:rgba(255,255,255,.06)}
 #intro .vols{display:flex;gap:12px;justify-content:center;margin-bottom:26px;flex-wrap:wrap;padding:0 16px}
-#intro .vols{max-width:640px;margin-left:auto;margin-right:auto}
+#intro .vols{max-width:660px;margin-left:auto;margin-right:auto}
 #intro .vols button{flex:1 1 180px}
 #intro .vols button{border:1px solid rgba(255,255,255,.14);border-top:2px solid var(--tc);border-radius:10px;padding:11px 16px;text-align:left;min-width:180px;transition:border-color .2s,background .2s}
 #intro .vols button:hover{border-color:rgba(255,255,255,.42);background:rgba(255,255,255,.04)}
@@ -63,6 +63,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #side .srow{display:flex;align-items:center;justify-content:space-between}
 #side .logo{font-size:19px}
 #sideToggle{width:30px;height:30px;border-radius:8px;color:var(--mute);display:grid;place-items:center}
+#mChapters{display:none;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-size:13px;color:var(--ink);background:rgba(255,255,255,.05)}
 #sideToggle:hover{color:var(--ink);background:rgba(255,255,255,.06)}
 #side .tag{margin-top:12px}
 #side .chapter{margin-top:6px;gap:10px}
@@ -129,7 +130,7 @@ body.contents-open #contents{opacity:1;pointer-events:auto}
 #panel{position:fixed;top:18px;right:18px;width:300px;max-height:calc(100vh - 110px);overflow:auto;display:flex;flex-direction:column;gap:10px;z-index:5;scrollbar-width:thin;scrollbar-color:#2a3040 transparent}
 .card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .card h3{margin:0 0 10px 0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
-#eq{font-size:17px;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+#eq{font-size:15.5px;overflow-x:auto;overflow-y:hidden;padding:2px 0}
 #eq .katex-display{margin:4px 0}
 .param{margin:10px 0 14px}
 .param:last-child{margin-bottom:2px}
@@ -191,7 +192,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 #intro .go{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);animation:pulse 2.2s ease-in-out infinite}
 @keyframes pulse{50%{color:var(--ink)}}
 #intro .bar{display:flex;gap:10px;justify-content:center;margin-bottom:30px}
-#intro .bar i{width:34px;height:3px;border-radius:2px;opacity:0;animation:grow .7s ease forwards}
+#intro .bar i{width:26px;height:3px;border-radius:2px;opacity:0;animation:grow .7s ease forwards}
 @keyframes grow{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
 
 #err{position:fixed;inset:0;display:none;place-items:center;z-index:30;background:var(--bg);font-family:var(--serif);font-size:20px;color:var(--mute);text-align:center;padding:30px}
@@ -201,9 +202,17 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
   .hint{display:none}
 }
 @media (max-width:820px){
-  #side{left:12px;right:12px;top:12px;width:auto;max-height:none;background:none;border:0;padding:0;backdrop-filter:none;-webkit-backdrop-filter:none}
-  #toc,#side .keys,#sideToggle,.chnav{display:none!important}
-  #side .chapter h1{font-size:23px}
+  #side{left:0;right:0;top:0;width:auto;max-height:none;border:0;border-radius:0;
+    padding:max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 26px max(16px, env(safe-area-inset-left, 0px));
+    background:linear-gradient(to bottom, rgba(11,13,18,.95) 74%, rgba(11,13,18,0));backdrop-filter:none;-webkit-backdrop-filter:none}
+  #toc,#side .keys,#sideToggle{display:none!important}
+  #mChapters{display:inline-flex!important}
+  #side .chapter h1{font-size:22px}
+  #side .chapter p{font-size:14.5px}
+  .chnav{margin-top:10px}
+  .chnav button{height:36px;font-size:13px}
+  #capText{background:rgba(11,13,18,.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:12px;padding:8px 12px}
+  #toolbar .sep{display:none}
   .chapter h1{font-size:25px}
   .chapter p{font-size:15px}
   #sceneList{top:auto;bottom:128px;left:0;right:0;transform:none;flex-direction:row;justify-content:center;gap:0}
@@ -212,11 +221,18 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
   .tag{font-size:10px;margin-top:8px}
   #panel{top:auto;bottom:70px;right:10px;left:10px;width:auto;max-height:46vh;transform:translateY(calc(100% + 90px));transition:transform .35s ease}
   body.panel-open #panel{transform:none}
+  #panel{max-height:62vh;background:rgba(11,13,18,.9);border-radius:16px;padding:4px}
+  #panel > section:nth-child(3){order:1}
+  #panel > section:nth-child(4){order:2}
+  #panel > section:nth-child(2){order:3}
+  #panel > section:nth-child(1){order:4}
+  body.panel-open #caption{opacity:0;pointer-events:none}
   #panelBtn{display:flex!important}
-  #caption{width:calc(100vw - 24px);bottom:150px}
-  #capText{font-size:18px;min-height:0}
+  #caption{width:calc(100vw - 24px);bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
+  #capText{font-size:16.5px;min-height:0;line-height:1.38}
   .capNav{margin-top:6px}
-  #toolbar{bottom:12px;max-width:calc(100vw - 16px);overflow-x:auto}
+  #toolbar{bottom:calc(12px + env(safe-area-inset-bottom, 0px));max-width:calc(100vw - 16px)}
+  #toolbar button{min-width:44px;height:40px}
   #toolbar .wide{display:none}
 }
 </style>
@@ -227,6 +243,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 <aside id="side" class="ui">
   <div class="srow">
     <div class="logo"><span class="d">∂</span><b>physcx</b></div>
+    <button id="mChapters" title="All chapters"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Chapters</button>
     <button id="sideToggle" title="Show / hide chapter list (L)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
   </div>
   <div class="tag" id="sceneTag"></div>
@@ -257,19 +274,19 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 </div>
 
 <div id="toolbar" class="ui">
-  <button id="prevCh" title="Previous chapter ([)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
-  <button id="contentsBtn" title="All chapters (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="lbl wide">Contents</span></button>
-  <button id="nextCh" title="Next chapter (])"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg></button>
+  <button id="prevCh" class="wide" title="Previous chapter ([)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+  <button id="contentsBtn" class="wide" title="All chapters (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="lbl wide">Contents</span></button>
+  <button id="nextCh" class="wide" title="Next chapter (])"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg></button>
   <span class="sep"></span>
   <button id="playBtn" title="Play / pause (Space)"></button>
   <button id="speed" title="Simulation speed">1×</button>
   <button id="resetBtn" title="Restart simulation (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
   <span class="sep"></span>
   <button id="tourBtn" class="wide" title="Auto-advance the narration (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5l8 7-8 7z"/><path d="M13 19V5l8 7-8 7z"/></svg><span class="wide">Tour</span></button>
-  <button id="orbitBtn" title="Slowly orbit the camera (O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="4"/><circle cx="12" cy="12" r="2.2"/></svg><span class="wide">Orbit</span></button>
+  <button id="orbitBtn" class="wide" title="Slowly orbit the camera (O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="4"/><circle cx="12" cy="12" r="2.2"/></svg><span class="wide">Orbit</span></button>
   <button id="camBtn" class="wide" title="Reset the camera (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
-  <button id="cleanBtn" title="Hide the interface (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
-  <button id="panelBtn" title="Parameters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+  <button id="cleanBtn" class="wide" title="Hide the interface (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <button id="panelBtn" title="Parameters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="lbl">Controls</span></button>
   <button id="fsBtn" class="wide" title="Fullscreen (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 </div>
 
@@ -277,7 +294,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 <div id="contents">
   <div class="cwrap">
     <div class="chead">
-      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twelve interactive chapters in six topics, most of them built on a lecture from <i>The Feynman Lectures on Physics</i></p></div>
+      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Seventeen interactive chapters in nine topics, most of them built on a lecture from <i>The Feynman Lectures on Physics</i></p></div>
       <button id="closeContents" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div id="topicGrid"></div>
@@ -286,9 +303,9 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 <div id="fade"></div>
 <div id="intro">
   <div class="box">
-    <div class="bar"><i style="background:#F0AC5F;animation-delay:.1s"></i><i style="background:#5CD0B3;animation-delay:.2s"></i><i style="background:#FFE066;animation-delay:.3s"></i><i style="background:#FC6255;animation-delay:.4s"></i><i style="background:#83C167;animation-delay:.5s"></i><i style="background:#D147BD;animation-delay:.6s"></i></div>
+    <div class="bar"><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i></div>
     <h2><span>∂</span>physcx</h2>
-    <p>Twelve interactive chapters, inspired by the Feynman Lectures</p>
+    <p>Seventeen interactive chapters, inspired by the Feynman Lectures</p>
     <div class="vols" id="introTopics"></div>
     <div class="go">pick a topic, or click anywhere to begin</div>
   </div>
@@ -404,10 +421,14 @@ function updateTweens(dt){
   }
 }
 let camTok = 0;
+function fitCam(p, t){
+  const f = Math.max(1, Math.min(2.2, 0.9/camera.aspect));
+  return p.sub(t).multiplyScalar(f).add(t);
+}
 function flyTo(pos, target, dur=1.8){
   const tok = ++camTok;
   const p0 = camera.position.clone(), t0 = controls.target.clone();
-  const p1 = new V3(...pos), t1 = new V3(...target);
+  const t1 = new V3(...target), p1 = fitCam(new V3(...pos), t1);
   const s0 = new THREE.Spherical().setFromVector3(p0.clone().sub(t0));
   const s1 = new THREE.Spherical().setFromVector3(p1.clone().sub(t1));
   let dTh = s1.theta - s0.theta;
@@ -2218,6 +2239,635 @@ const FeynQuantum = {
   },
 };
 
+/* =====================================================================
+   NEW TOPICS: oscillations, fluids, relativity, radiation
+   ===================================================================== */
+const FLURL = 'https://www.feynmanlectures.caltech.edu/';
+
+/* ---------------------------------------------------------------------
+   Vol. I, Ch. 23 — Resonance (a row of driven pendulums)
+   --------------------------------------------------------------------- */
+const FeynResonance = {
+  id:'f-resonance', bloom:0.5, title:'Resonance', sub:'Why a push in the right rhythm builds up', accent:C.purple,
+  ref:{label:'Vol. I · Ch. 23', title:'Resonance', url:FLURL + 'I_23.html'},
+  cam:{pos:[10.5, 3.4, 8.8], target:[-0.6, 1.0, 0]},
+  eq:String.raw`\begin{aligned} \ddot x + \gamma\dot x + \omega_0^2 x &= \tfrac{F}{m}\cos\omega t\\[2pt] A &= \frac{F/m}{\sqrt{(\omega_0^2-\omega^2)^2 + \gamma^2\omega^2}} \end{aligned}`,
+  params:[
+    {key:'w', tex:'\\omega', label:'drive frequency', min:1.2, max:3.0, step:0.01, value:2.1},
+    {key:'g', tex:'\\gamma', label:'damping', min:0.05, max:1, step:0.01, value:0.15},
+    {key:'F', tex:'F/m', label:'drive strength', min:0.05, max:0.4, step:0.01, value:0.15},
+  ],
+  steps:[
+    {text:'Anything that swings has a natural frequency $\\omega_0$. Push it periodically at some other frequency $\\omega$ and, once it settles, it swings at $\\omega$, the frequency of the push, not its own.'},
+    {text:'Thirteen pendulums of different lengths, so different $\\omega_0$, all get the same rhythmic push. Only the one whose $\\omega_0$ matches the drive swings hard. That is resonance.', cam:[[11,3.8,1.2],[-0.6,1,0]]},
+    {text:'The size of each swing follows $A = (F/m)\\big/\\sqrt{(\\omega_0^2-\\omega^2)^2 + \\gamma^2\\omega^2}$, the gold curve on the back wall. The bars are the measured swings.', cam:[[10.5,3.4,8.8],[-0.6,1,0]]},
+    {text:'Watch the colors: pendulums tuned below the drive lag behind it slightly (blue), the resonant one lags by a quarter cycle (yellow), and those above swing opposite to the push (red).', run:c=>c.setParam('w',2.4,3)},
+    {text:'Less friction makes the peak taller and narrower: its width is about $\\gamma$ and its height grows like $1/\\gamma$. The sharpness is the quality factor $Q = \\omega_0/\\gamma$.', run:c=>c.setParam('g',0.07,2.5)},
+  ],
+  N:13, W0:[1.2, 3.0], HS:4, X0:-3.4,
+  w0Of(i){ return this.W0[0] + (this.W0[1] - this.W0[0])*i/(this.N - 1); },
+  zOf(w0){ return -6 + 12*(w0 - this.W0[0])/(this.W0[1] - this.W0[0]); },
+  amp(c, w0){ const P = c.params; return P.F/Math.sqrt((w0*w0 - P.w*P.w)**2 + (P.g*P.w)**2); },
+  init(c){
+    const d = c.data;
+    const metal = new THREE.MeshStandardMaterial({color:0x3a4256, metalness:.7, roughness:.35});
+    const ground = new THREE.GridHelper(16, 32, 0x2a3348, 0x161b27); ground.position.y = -1.6; c.group.add(ground);
+    for (const z of [-6.9, 6.9]){
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 4.9, 12), metal); post.position.set(0, 0.85, z); c.group.add(post);
+    }
+    d.bar = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 14), metal); d.bar.position.y = 3.3; c.group.add(d.bar);
+    const dl = texLabel('\\text{drive } \\omega', 0x9aa3b5, 15); dl.position.set(0, 3.75, 6.9); c.group.add(dl);
+    d.pend = [];
+    for (let i = 0; i < this.N; i++){
+      const w0 = this.w0Of(i), L = 0.6*9.8/(w0*w0), z = this.zOf(w0);
+      const pivot = new THREE.Group(); pivot.position.set(0, 3.2, z);
+      const rodG = new THREE.CylinderGeometry(0.012, 0.012, 1, 6); rodG.translate(0, -0.5, 0);
+      const rod = new THREE.Mesh(rodG, new THREE.MeshBasicMaterial({color:0x8b93a7})); rod.scale.y = L;
+      const bob = new THREE.Mesh(new THREE.SphereGeometry(0.17, 20, 14), new THREE.MeshStandardMaterial({color:C.blue, emissive:C.blue, emissiveIntensity:.35, roughness:.4}));
+      bob.position.y = -L;
+      pivot.add(rod, bob); c.group.add(pivot);
+      d.pend.push({w0, L, pivot, bob, x:0, v:0, amp:0});
+    }
+    // back wall: measured bars + theory curve
+    d.bars = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({color:0xffffff, roughness:.5}), this.N);
+    d.bars.frustumCulled = false; c.group.add(d.bars);
+    for (let i = 0; i < this.N; i++) d.bars.setColorAt(i, new THREE.Color(C.blue));
+    d.curvePos = new Float32Array(240*3);
+    const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.BufferAttribute(d.curvePos, 3).setUsage(THREE.DynamicDrawUsage));
+    d.curve = new THREE.Line(cg, new THREE.LineBasicMaterial({color:C.gold})); d.curve.frustumCulled = false; c.group.add(d.curve);
+    const ax = makeArrow(0x6b7280, 0.012, 0.9); ax.userData.arrow.set(new V3(this.X0, -1.58, -6.8), new V3(0, 0, 14)); c.group.add(ax);
+    const l1 = texLabel('\\omega_0', 0x9aa3b5, 16); l1.position.set(this.X0, -1.95, 7.4); c.group.add(l1);
+    const l2 = texLabel('A', 0x9aa3b5, 16); l2.position.set(this.X0, 3.4, -6.8); c.group.add(l2);
+    const l3 = texLabel('\\text{long}', 0x6b7280, 13); l3.position.set(0.6, -1.3, -6.2); c.group.add(l3);
+    const l4 = texLabel('\\text{short}', 0x6b7280, 13); l4.position.set(0.6, 2.2, 6.2); c.group.add(l4);
+    d.mark = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(0, -1.6, 0), new V3(0, 3.0, 0)]), new THREE.LineDashedMaterial({color:C.purple, dashSize:0.12, gapSize:0.08}));
+    d.mark.computeLineDistances(); d.mark.position.x = this.X0; c.group.add(d.mark);
+    d.dummy = new THREE.Object3D(); d.t = 0;
+    this.reset(c);
+  },
+  reset(c){ const d = c.data; d.t = 0; for (const p of d.pend){ p.x = 0; p.v = 0; p.amp = 0; } },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){
+      const n = Math.max(1, Math.ceil(dt/0.004)), h = dt/n, t0 = d.t;
+      for (const p of d.pend){
+        let x = p.x, v = p.v; const w2 = p.w0*p.w0;
+        for (let k = 0; k < n; k++){
+          const t = t0 + (k + 1)*h;
+          v += (-w2*x - P.g*v + P.F*Math.cos(P.w*t))*h; x += v*h;
+        }
+        p.x = x; p.v = v;
+        const inst = Math.hypot(x, v/P.w);
+        p.amp += (inst - p.amp)*(1 - Math.exp(-dt/0.5));
+      }
+      d.t += dt;
+    }
+    d.bar.position.x = 0.1*Math.cos(P.w*d.t);
+    d.pend.forEach((p, i) => {
+      const th = Math.atan2(Math.max(-2.2, Math.min(2.2, p.x*2.2)), p.L);
+      p.pivot.rotation.z = th;
+      const del = Math.atan2(P.g*P.w, p.w0*p.w0 - P.w*P.w)/Math.PI;
+      const col = gradient([C.blue, C.teal, C.yellow, C.gold, C.red], del);
+      p.bob.material.color.copy(col); p.bob.material.emissive.copy(col);
+      const hgt = Math.max(0.01, Math.min(p.amp*this.HS, 4.8));
+      d.dummy.position.set(this.X0, -1.6 + hgt/2, this.zOf(p.w0)); d.dummy.scale.set(0.12, hgt, 0.5); d.dummy.updateMatrix();
+      d.bars.setMatrixAt(i, d.dummy.matrix); d.bars.setColorAt(i, col);
+    });
+    d.bars.instanceMatrix.needsUpdate = true; if (d.bars.instanceColor) d.bars.instanceColor.needsUpdate = true;
+    for (let i = 0; i < 240; i++){
+      const w0 = this.W0[0] - 0.05 + (this.W0[1] - this.W0[0] + 0.1)*i/239;
+      d.curvePos[i*3] = this.X0 + 0.08; d.curvePos[i*3+1] = -1.6 + Math.min(this.amp(c, w0)*this.HS, 4.8); d.curvePos[i*3+2] = this.zOf(w0);
+    }
+    d.curve.geometry.attributes.position.needsUpdate = true;
+    d.mark.position.z = this.zOf(Math.max(this.W0[0], Math.min(this.W0[1], P.w)));
+  },
+  readouts(c){
+    const d = c.data, P = c.params;
+    let best = d.pend[0]; for (const p of d.pend) if (p.amp > best.amp) best = p;
+    return [
+      ['drive frequency $\\omega$', P.w.toFixed(2)],
+      ['largest swing at $\\omega_0$', best.w0.toFixed(2)],
+      ['quality factor $Q = \\omega/\\gamma$', (P.w/P.g).toFixed(1)],
+      ['peak height $F/m\\gamma\\omega$', (P.F/(P.g*P.w)).toFixed(3)],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Vol. II, Ch. 40 — The flow of dry water (potential flow + circulation)
+   --------------------------------------------------------------------- */
+function dryVel(x, z, U, G, R){
+  const r2 = x*x + z*z, r4 = r2*r2, k = G/(2*Math.PI);
+  const u = U*(1 - R*R*(x*x - z*z)/r4) - k*z/r2;
+  const v = -U*R*R*2*x*z/r4 + k*x/r2;
+  return [u, v];
+}
+const FeynDry = {
+  id:'f-dry', bloom:0.45, title:'The Flow of Dry Water', sub:'Ideal flow, Bernoulli, and the Magnus effect', accent:C.blue,
+  ref:{label:'Vol. II · Ch. 40', title:'The Flow of Dry Water', url:FLURL + 'II_40.html'},
+  cam:{pos:[0, 11.5, 13.5], target:[0, -1, 0.6]},
+  eq:String.raw`\begin{aligned} \nabla\cdot\vec v &= 0, \quad \nabla\times\vec v = 0\\[2pt] p + \tfrac12\rho v^2 &= \text{const}\\[2pt] F_{\text{lift}} &= \rho\, U\,\Gamma \end{aligned}`,
+  params:[
+    {key:'U', tex:'U', label:'stream speed', min:0.3, max:2, step:0.01, value:1},
+    {key:'G', tex:'\\Gamma', label:'circulation (spin)', min:-16, max:16, step:0.1, value:0},
+    {key:'show', label:'show', type:'select', value:'both', options:[{label:'Particles', value:'particles'}, {label:'Streamlines', value:'lines'}, {label:'Both', value:'both'}]},
+  ],
+  steps:[
+    {text:'Feynman borrows von Neumann’s name for an ideal fluid with no viscosity: <i>dry water</i>. If it starts without swirls it never gets any, so $\\nabla\\cdot\\vec v = 0$ and $\\nabla\\times\\vec v = 0$.', run:c=>{c.setParam('G',0,1); c.setParam('U',1,0);}},
+    {text:'Around a cylinder the stream splits at a front stagnation point and closes up behind it. The floor shows pressure from Bernoulli’s law $p + \\tfrac12\\rho v^2 = \\text{const}$: fast flow means low pressure (blue).', cam:[[0,12.5,2.5],[0,-1,0]]},
+    {text:'Spin the cylinder, which adds circulation $\\Gamma$. Flow speeds up on one side and slows on the other, so the pressures no longer balance: a sideways force $F = \\rho U \\Gamma$ per unit length, the Magnus effect.', cam:[[0,11.5,13.5],[0,-1,0.6]], run:c=>c.setParam('G',7,2.5)},
+    {text:'Spin harder and the two stagnation points slide together, meet, and lift off the surface when $\\Gamma > 4\\pi U R$.', run:c=>c.setParam('G',14.5,2.5)},
+    {text:'Dry water pushes on the cylinder sideways but never drags it downstream: front and back pressures cancel exactly. That is d’Alembert’s paradox, and it is why we need wet water.', run:c=>c.setParam('G',0,2)},
+  ],
+  R:1, NP:2600, XR:8, ZR:4.4,
+  init(c){
+    const d = c.data;
+    d.uni = {uU:{value:1}, uG:{value:0}, uR:{value:this.R}, uLo:{value:new THREE.Color(C.blue)}, uMid:{value:new THREE.Color(0x1a2233)}, uHi:{value:new THREE.Color(C.gold)}};
+    const fg = new THREE.PlaneGeometry(2*this.XR, 2*this.ZR + 0.6, 1, 1); fg.rotateX(-Math.PI/2);
+    d.floor = new THREE.Mesh(fg, new THREE.ShaderMaterial({
+      uniforms:d.uni, transparent:true, depthWrite:false,
+      vertexShader:`varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
+      fragmentShader:`
+        uniform float uU, uG, uR; uniform vec3 uLo, uMid, uHi; varying vec3 vW;
+        void main(){
+          float x = vW.x, z = vW.z, r2 = x*x + z*z;
+          if (r2 < uR*uR){ gl_FragColor = vec4(0.04,0.05,0.07,1.0); return; }
+          float r4 = r2*r2, k = uG/6.2831853;
+          float u = uU*(1.0 - uR*uR*(x*x - z*z)/r4) - k*z/r2;
+          float v = -uU*uR*uR*2.0*x*z/r4 + k*x/r2;
+          float cp = 1.0 - (u*u + v*v)/(uU*uU);
+          vec3 col = cp > 0.0 ? mix(uMid, uHi, clamp(cp, 0.0, 1.0)) : mix(uMid, uLo, clamp(-cp/2.5, 0.0, 1.0));
+          float f = cp*6.0, w = fwidth(f);
+          col += (1.0 - smoothstep(0.0, 1.5*w, min(fract(f), 1.0 - fract(f))))*0.07;
+          vec2 q = abs(vW.xz)/vec2(8.0, 4.7);
+          float fade = 1.0 - smoothstep(0.85, 1.0, max(q.x, q.y));
+          gl_FragColor = vec4(col*0.75, 0.95*fade);
+        }`,
+    }));
+    d.floor.position.y = -1.35; c.group.add(d.floor);
+    // spinning cylinder
+    d.cyl = new THREE.Group();
+    d.cyl.add(new THREE.Mesh(new THREE.CylinderGeometry(this.R, this.R, 2.7, 64), new THREE.MeshStandardMaterial({color:0x232b3b, metalness:.6, roughness:.35})));
+    for (let i = 0; i < 8; i++){
+      const a = i/8*Math.PI*2, s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.72, 0.12), new THREE.MeshBasicMaterial({color:i % 2 ? C.blue : C.teal}));
+      s.position.set(Math.cos(a)*this.R, 0, Math.sin(a)*this.R); s.rotation.y = -a; d.cyl.add(s);
+    }
+    d.cyl.position.y = 0.0; c.group.add(d.cyl);
+    // particles
+    d.pp = new Float32Array(this.NP*3); d.pc = new Float32Array(this.NP*3);
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.BufferAttribute(d.pp, 3).setUsage(THREE.DynamicDrawUsage));
+    pg.setAttribute('color', new THREE.BufferAttribute(d.pc, 3).setUsage(THREE.DynamicDrawUsage));
+    d.parts = new THREE.Points(pg, new THREE.PointsMaterial({size:0.075, map:circleTexture(), vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.parts.frustumCulled = false; c.group.add(d.parts);
+    for (let i = 0; i < this.NP; i++) this.spawn(d, i, true);
+    d.lines = new THREE.Group(); c.group.add(d.lines);
+    d.stag = [glowDot(C.red, 0.08), glowDot(C.red, 0.08)]; c.group.add(...d.stag);
+    d.liftA = makeArrow(C.yellow, 0.035); c.group.add(d.liftA);
+    d.liftL = texLabel('\\vec F', C.yellow, 20); c.group.add(d.liftL);
+    const ul = texLabel('U \\rightarrow', 0x9aa3b5, 18); ul.position.set(-7.2, 1.0, -4.2); c.group.add(ul);
+    reveal(d.floor, 1.1);
+    this.recompute(c);
+  },
+  spawn(d, i, anywhere){
+    let x, z;
+    do {
+      x = anywhere ? (Math.random()*2 - 1)*this.XR : -this.XR + Math.random()*0.3;
+      z = (Math.random()*2 - 1)*this.ZR;
+    } while (x*x + z*z < this.R*this.R*1.05);
+    d.pp[i*3] = x; d.pp[i*3+1] = -1.2 + Math.random()*2.5; d.pp[i*3+2] = z;
+  },
+  reset(c){ const d = c.data; for (let i = 0; i < this.NP; i++) this.spawn(d, i, true); this.recompute(c); },
+  onParam(k, c){ if (k !== 'show') this.recompute(c); },
+  recompute(c){
+    const d = c.data, P = c.params, U = P.U, G = P.G, R = this.R;
+    d.uni.uU.value = U; d.uni.uG.value = G;
+    clearGroup(d.lines);
+    const mat = new THREE.LineBasicMaterial({color:0xcfd6e4, transparent:true, opacity:.4});
+    for (let z0 = -4.25; z0 <= 4.26; z0 += 0.5){
+      const pts = []; let x = -this.XR, z = z0;
+      for (let k = 0; k < 900 && x < this.XR; k++){
+        pts.push(new V3(x, 1.36, z));
+        const [u1, v1] = dryVel(x, z, U, G, R), m1 = Math.hypot(u1, v1); if (m1 < 1e-4) break;
+        const xm = x + 0.025*u1/m1, zm = z + 0.025*v1/m1;
+        const [u2, v2] = dryVel(xm, zm, U, G, R), m2 = Math.hypot(u2, v2); if (m2 < 1e-4) break;
+        x += 0.05*u2/m2; z += 0.05*v2/m2;
+        if (Math.abs(z) > 5) break;
+      }
+      if (pts.length > 1) d.lines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+    }
+    // stagnation points: U ζ² − iΓζ/2π − U R² = 0
+    const k = G/(2*Math.PI), disc = 4*U*U*R*R - k*k;
+    let s;
+    if (disc >= 0){ const q = Math.sqrt(disc); s = [[q/(2*U), k/(2*U)], [-q/(2*U), k/(2*U)]]; }
+    else { const q = Math.sqrt(-disc); const b1 = (k + q)/(2*U), b2 = (k - q)/(2*U); s = [[0, Math.abs(b1) >= Math.abs(b2) ? b1 : b2]]; }
+    d.stag.forEach((m, i) => { const p = s[i]; m.visible = !!p; if (p) m.position.set(p[0], 1.4, p[1]); });
+    // force from surface pressure p = −½|v|²
+    let fx = 0, fz = 0; const M = 360;
+    for (let i = 0; i < M; i++){
+      const a = (i + 0.5)/M*2*Math.PI, nx = Math.cos(a), nz = Math.sin(a);
+      const [u, v] = dryVel(R*nx, R*nz, U, G, R), p = -0.5*(u*u + v*v);
+      fx -= p*nx*R*2*Math.PI/M; fz -= p*nz*R*2*Math.PI/M;
+    }
+    d.fx = fx; d.fz = fz;
+    const F = new V3(fx, 0, fz).multiplyScalar(0.22);
+    d.liftA.userData.arrow.set(new V3(0, 1.75, 0), F); d.liftA.visible = F.length() > 0.05;
+    d.liftL.position.set(F.x*1.15, 2.0, F.z*1.15); d.liftL.visible = d.liftA.visible;
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, U = P.U, G = P.G, R = this.R, show = P.show;
+    d.parts.visible = show !== 'lines'; d.lines.visible = show !== 'particles';
+    if (dt > 0){
+      d.cyl.rotation.y -= dt*G/(2*Math.PI*R*R)*0.9;
+      const h = dt*1.4;
+      for (let i = 0; i < this.NP; i++){
+        let x = d.pp[i*3], z = d.pp[i*3+2];
+        const [u1, v1] = dryVel(x, z, U, G, R);
+        const [u2, v2] = dryVel(x + u1*h/2, z + v1*h/2, U, G, R);
+        x += u2*h; z += v2*h;
+        if (x > this.XR || Math.abs(z) > this.ZR + 0.4 || x*x + z*z < R*R || !isFinite(x)){ this.spawn(d, i, false); continue; }
+        d.pp[i*3] = x; d.pp[i*3+2] = z;
+        const col = gradient([C.blue, C.teal, C.yellow, C.gold], Math.hypot(u2, v2)/(2*U));
+        d.pc[i*3] = col.r; d.pc[i*3+1] = col.g; d.pc[i*3+2] = col.b;
+      }
+      d.parts.geometry.attributes.position.needsUpdate = true; d.parts.geometry.attributes.color.needsUpdate = true;
+    }
+  },
+  readouts(c){
+    const d = c.data, P = c.params;
+    return [
+      ['sideways force (measured)', Math.hypot(d.fx, d.fz).toFixed(3)],
+      ['$\\rho U \\Gamma$', Math.abs(P.U*P.G).toFixed(3)],
+      ['drag (measured)', Math.abs(d.fx).toFixed(4)],
+      ['$\\Gamma / 4\\pi U R$', (Math.abs(P.G)/(4*Math.PI*P.U*this.R)).toFixed(2)],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Vol. II, Ch. 41 — The flow of wet water (Navier–Stokes via lattice Boltzmann)
+   --------------------------------------------------------------------- */
+const LB_EX = [0,1,0,-1,0,1,-1,-1,1], LB_EY = [0,0,1,0,-1,1,1,-1,-1];
+const LB_W = [4/9,1/9,1/9,1/9,1/9,1/36,1/36,1/36,1/36];
+const FeynWet = {
+  id:'f-wet', bloom:0.4, title:'The Flow of Wet Water', sub:'Viscosity, the Reynolds number, and vortex streets', accent:C.blue,
+  ref:{label:'Vol. II · Ch. 41', title:'The Flow of Wet Water', url:FLURL + 'II_41.html'},
+  cam:{pos:[0.6, 11, 12.5], target:[0.4, -1.0, 0.4]},
+  eq:String.raw`\begin{aligned}&\rho\Big(\frac{\partial\vec v}{\partial t} + (\vec v\cdot\nabla)\vec v\Big)\\ &\qquad = -\nabla p + \eta\,\nabla^2\vec v\\[4pt] &\mathcal R = \frac{\rho\, v D}{\eta}\end{aligned}`,
+  params:[
+    {key:'Re', tex:'\\mathcal R', label:'Reynolds number', min:10, max:180, step:1, value:130},
+    {key:'view', label:'color by', type:'select', value:'vort', options:[{label:'Vorticity', value:'vort'}, {label:'Speed', value:'speed'}]},
+    {key:'dye', label:'tracer particles', type:'select', value:1, options:[{label:'On', value:1}, {label:'Off', value:0}]},
+  ],
+  steps:[
+    {text:'Real water is wet: it has viscosity $\\eta$ and sticks to every surface. Its motion obeys the Navier–Stokes equation, solved live here. Height and color show the vorticity $\\vec\\Omega = \\nabla\\times\\vec v$: red spins one way, blue the other.'},
+    {text:'Everything depends on one number, the Reynolds number $\\mathcal R = \\rho v D/\\eta$. At low $\\mathcal R$ the flow is smooth, with a pair of eddies sitting still behind the cylinder.', run:c=>{c.setParam('Re',24,0); c.reset();}},
+    {text:'Raise $\\mathcal R$ past about 40 and the eddies can’t stay put. They peel off one side, then the other, and drift downstream as a von Kármán vortex street.', run:c=>{c.setParam('Re',130,0); c.reset();}},
+    {text:'The street has a steady beat. The Strouhal number $fD/v$ comes out near $0.2$ over a wide range of $\\mathcal R$. The same shedding makes wires hum in the wind.', cam:[[0.4,14.5,3],[0.4,-1,0]]},
+    {text:'None of this can happen in dry water. Vorticity is born at the surface, where viscosity holds the fluid still against the wall, and then gets carried downstream.', cam:[[0.6,11,12.5],[0.4,-1.0,0.4]]},
+  ],
+  NX:200, NY:80, U:0.1, D:16, W:16,
+  init(c){
+    const d = c.data, NX = this.NX, NY = this.NY, N = NX*NY;
+    d.N = N; d.f = new Float32Array(9*N); d.g = new Float32Array(9*N);
+    d.ux = new Float32Array(N); d.uy = new Float32Array(N); d.curl = new Float32Array(N); d.solid = new Uint8Array(N);
+    d.cx = Math.floor(NX/5); d.cy = NY/2 + 0.6; const r = this.D/2;
+    for (let y = 0; y < NY; y++) for (let x = 0; x < NX; x++) if ((x - d.cx)**2 + (y - d.cy)**2 <= r*r) d.solid[y*NX + x] = 1;
+    const W = this.W, H = W*NY/NX; d.H = H;
+    const geo = new THREE.PlaneGeometry(W, H, NX - 1, NY - 1); geo.rotateX(-Math.PI/2);
+    // PlaneGeometry rows run from +y to −y; after rotation that is z from −H/2 to +H/2, so vertex j*NX+i is cell (i, j)
+    d.col = new Float32Array(N*3); geo.setAttribute('color', new THREE.BufferAttribute(d.col, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.attributes.position.setUsage(THREE.DynamicDrawUsage);
+    d.surf = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:.55, metalness:.05, side:THREE.DoubleSide}));
+    d.surf.position.y = -0.6; c.group.add(d.surf);
+    const edge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(W, H).rotateX(-Math.PI/2)), new THREE.LineBasicMaterial({color:0x3c4252}));
+    edge.position.y = -0.62; c.group.add(edge);
+    const rw = r*W/(NX - 1);
+    d.cyl = new THREE.Mesh(new THREE.CylinderGeometry(rw, rw, 1.6, 48), new THREE.MeshStandardMaterial({color:0x2a3446, metalness:.6, roughness:.35}));
+    d.cyl.position.set(-W/2 + d.cx*W/(NX - 1), 0, -H/2 + d.cy*H/(NY - 1)); c.group.add(d.cyl);
+    const ul = texLabel('v \\rightarrow', 0x9aa3b5, 18); ul.position.set(-W/2 - 0.3, 0.2, -H/2 - 0.4); c.group.add(ul);
+    d.ND = 1400; d.dp = new Float32Array(d.ND*2); d.dpos = new Float32Array(d.ND*3);
+    const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(d.dpos, 3).setUsage(THREE.DynamicDrawUsage));
+    d.dots = new THREE.Points(dg, new THREE.PointsMaterial({size:0.07, map:circleTexture(), color:0xfff4d0, transparent:true, opacity:.8, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.dots.frustumCulled = false; c.group.add(d.dots);
+    reveal(d.surf, 1.1);
+    this.reset(c);
+  },
+  feq(k, rho, ux, uy){ const eu = LB_EX[k]*ux + LB_EY[k]*uy; return LB_W[k]*rho*(1 + 3*eu + 4.5*eu*eu - 1.5*(ux*ux + uy*uy)); },
+  reset(c){
+    const d = c.data, NX = this.NX, NY = this.NY, N = d.N, U = this.U;
+    for (let y = 0; y < NY; y++) for (let x = 0; x < NX; x++){
+      const i = y*NX + x, uy = 0.01*U*Math.sin(2*Math.PI*x/NX);
+      for (let k = 0; k < 9; k++) d.f[k*N + i] = this.feq(k, 1, d.solid[i] ? 0 : U, d.solid[i] ? 0 : uy);
+    }
+    d.ux.fill(U); d.uy.fill(0); d.steps = 0; d.cross = []; d.lastSign = 0;
+    for (let i = 0; i < d.ND; i++) this.spawnDye(d, i, true);
+    this.paint(c);
+  },
+  spawnDye(d, i, anywhere){
+    d.dp[i*2] = anywhere ? Math.random()*(this.NX - 2) : 1 + Math.random()*3;
+    d.dp[i*2+1] = Math.random()*(this.NY - 1);
+  },
+  step(d, tau){
+    const NX = this.NX, NY = this.NY, N = d.N, f = d.f, g = d.g, om = 1/tau, U = this.U;
+    for (let y = 0; y < NY; y++){
+      const yu = y === NY - 1 ? 0 : y + 1, yd = y === 0 ? NY - 1 : y - 1;
+      for (let x = 0; x < NX; x++){
+        const i = y*NX + x;
+        const f0 = f[i], f1 = f[N+i], f2 = f[2*N+i], f3 = f[3*N+i], f4 = f[4*N+i], f5 = f[5*N+i], f6 = f[6*N+i], f7 = f[7*N+i], f8 = f[8*N+i];
+        let p0, p1, p2, p3, p4, p5, p6, p7, p8;
+        if (d.solid[i]){
+          p0 = f0; p1 = f3; p2 = f4; p3 = f1; p4 = f2; p5 = f7; p6 = f8; p7 = f5; p8 = f6;
+          d.ux[i] = 0; d.uy[i] = 0;
+        } else {
+          const rho = f0 + f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8;
+          const ux = (f1 - f3 + f5 - f6 - f7 + f8)/rho, uy = (f2 - f4 + f5 + f6 - f7 - f8)/rho;
+          d.ux[i] = ux; d.uy[i] = uy;
+          const u2 = 1.5*(ux*ux + uy*uy), r9 = rho*4/9, r1 = rho/9, r36 = rho/36;
+          p0 = f0 + om*(r9*(1 - u2) - f0);
+          p1 = f1 + om*(r1*(1 + 3*ux + 4.5*ux*ux - u2) - f1);
+          p2 = f2 + om*(r1*(1 + 3*uy + 4.5*uy*uy - u2) - f2);
+          p3 = f3 + om*(r1*(1 - 3*ux + 4.5*ux*ux - u2) - f3);
+          p4 = f4 + om*(r1*(1 - 3*uy + 4.5*uy*uy - u2) - f4);
+          const a = ux + uy, b = -ux + uy;
+          p5 = f5 + om*(r36*(1 + 3*a + 4.5*a*a - u2) - f5);
+          p6 = f6 + om*(r36*(1 + 3*b + 4.5*b*b - u2) - f6);
+          p7 = f7 + om*(r36*(1 - 3*a + 4.5*a*a - u2) - f7);
+          p8 = f8 + om*(r36*(1 - 3*b + 4.5*b*b - u2) - f8);
+        }
+        g[i] = p0;
+        g[2*N + yu*NX + x] = p2;
+        g[4*N + yd*NX + x] = p4;
+        if (x < NX - 1){ g[N + i + 1] = p1; g[5*N + yu*NX + x + 1] = p5; g[8*N + yd*NX + x + 1] = p8; }
+        if (x > 0){ g[3*N + i - 1] = p3; g[6*N + yu*NX + x - 1] = p6; g[7*N + yd*NX + x - 1] = p7; }
+      }
+    }
+    for (let y = 0; y < NY; y++){
+      const i0 = y*NX, iL = y*NX + NX - 1;
+      for (let k = 0; k < 9; k++){ g[k*N + i0] = this.feq(k, 1, U, 0); g[k*N + iL] = g[k*N + iL - 1]; }
+    }
+    d.f = g; d.g = f;
+  },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){
+      const tau = 3*(this.U*this.D/P.Re) + 0.5;
+      const want = Math.max(1, Math.min(40, Math.round(dt*420))), t0 = performance.now();
+      let n = 0;
+      while (n < want && performance.now() - t0 < 11){ this.step(d, tau); n++; }
+      d.steps += n;
+      // dye
+      for (let i = 0; i < d.ND; i++){
+        const x = d.dp[i*2], y = d.dp[i*2+1], ci = Math.round(y)*this.NX + Math.round(x);
+        let nx = x + (d.ux[ci] || 0)*n, ny = y + (d.uy[ci] || 0)*n;
+        if (ny < 0) ny += this.NY - 1; if (ny > this.NY - 1) ny -= this.NY - 1;
+        d.dp[i*2] = nx; d.dp[i*2+1] = ny;
+        const cj = Math.round(ny)*this.NX + Math.round(nx);
+        if (nx > this.NX - 2 || nx < 0 || d.solid[cj]) this.spawnDye(d, i, false);
+      }
+      // Strouhal probe behind the cylinder
+      const pi = Math.round(d.cy)*this.NX + Math.round(d.cx + 3*this.D), s = Math.sign(d.uy[pi]);
+      if (s && d.lastSign && s !== d.lastSign && d.steps > 2500){ d.cross.push(d.steps); if (d.cross.length > 9) d.cross.shift(); }
+      if (s) d.lastSign = s;
+      if (!isFinite(d.ux[pi])){ c.setParam('Re', Math.max(10, P.Re - 30), 0); this.reset(c); return; }
+    }
+    this.paint(c);
+  },
+  paint(c){
+    const d = c.data, P = c.params, NX = this.NX, NY = this.NY, U = this.U, W = this.W, H = d.H;
+    const pos = d.surf.geometry.attributes.position.array, col = d.col, vort = P.view === 'vort';
+    const neg = new THREE.Color(C.blue), mid = new THREE.Color(0x141a26), posC = new THREE.Color(C.red), tmp = new THREE.Color();
+    for (let y = 0; y < NY; y++){
+      const yu = y === NY - 1 ? 0 : y + 1, yd = y === 0 ? NY - 1 : y - 1;
+      for (let x = 0; x < NX; x++){
+        const i = y*NX + x, xl = x > 0 ? i - 1 : i, xr = x < NX - 1 ? i + 1 : i;
+        const w = (d.uy[xr] - d.uy[xl]) - (d.ux[yu*NX + x] - d.ux[yd*NX + x]);
+        let h, cc;
+        if (d.solid[i]){ h = 0; tmp.set(0x0b0d12); }
+        else if (vort){
+          const k = Math.max(-1, Math.min(1, w*18));
+          h = Math.max(-0.9, Math.min(0.9, w*14));
+          if (k >= 0) tmp.copy(mid).lerp(posC, Math.pow(k, 0.7)); else tmp.copy(mid).lerp(neg, Math.pow(-k, 0.7));
+        } else {
+          const sp = Math.hypot(d.ux[i], d.uy[i])/U;
+          h = (sp - 1)*0.9;
+          tmp.copy(gradient([0x10204a, C.blue, C.teal, C.yellow, C.gold], sp/1.6));
+        }
+        pos[i*3+1] = h; col[i*3] = tmp.r; col[i*3+1] = tmp.g; col[i*3+2] = tmp.b;
+      }
+    }
+    d.surf.geometry.attributes.position.needsUpdate = true; d.surf.geometry.attributes.color.needsUpdate = true;
+    d.normTick = (d.normTick || 0) + 1; if (d.normTick % 2 === 0) d.surf.geometry.computeVertexNormals();
+    d.dots.visible = !!P.dye;
+    if (P.dye){
+      for (let i = 0; i < d.ND; i++){
+        const x = d.dp[i*2], y = d.dp[i*2+1], ci = Math.round(y)*NX + Math.round(x);
+        d.dpos[i*3] = -W/2 + x*W/(NX - 1); d.dpos[i*3+2] = -H/2 + y*H/(NY - 1);
+        d.dpos[i*3+1] = -0.6 + (pos[ci*3+1] || 0) + 0.06;
+      }
+      d.dots.geometry.attributes.position.needsUpdate = true;
+    }
+  },
+  readouts(c){
+    const d = c.data, P = c.params, tau = 3*(this.U*this.D/P.Re) + 0.5;
+    let st = '…';
+    if (d.cross.length >= 5){ const per = 2*(d.cross[d.cross.length - 1] - d.cross[0])/(d.cross.length - 1); st = (this.D/(per*this.U)).toFixed(3); }
+    return [
+      ['Reynolds number $\\mathcal R$', String(Math.round(P.Re))],
+      ['Strouhal number $fD/v$', P.Re < 45 ? 'no shedding' : st],
+      ['relaxation time $\\tau$', tau.toFixed(4)],
+      ['solver steps', String(d.steps)],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Vol. I, Ch. 17 — Space-time diagram with a Lorentz boost
+   --------------------------------------------------------------------- */
+const FeynSpaceTime = {
+  id:'f-spacetime', bloom:0.35, title:'Space-Time', sub:'Light cones, worldlines, and the relativity of simultaneity', accent:C.maroon,
+  ref:{label:'Vol. I · Ch. 17', title:'Space-Time', url:FLURL + 'I_17.html'},
+  cam:{pos:[13.5, 7.5, 14], target:[0, 2.8, 0]},
+  eq:String.raw`\begin{aligned} x' &= \frac{x - vt}{\sqrt{1 - v^2/c^2}}\\[2pt] t' &= \frac{t - vx/c^2}{\sqrt{1 - v^2/c^2}}\\[2pt] s^2 &= c^2t^2 - x^2 - y^2 \end{aligned}`,
+  params:[
+    {key:'b', tex:'v/c', label:'watch from a frame moving at', min:-0.9, max:0.9, step:0.01, value:0},
+    {key:'u', tex:'u/c', label:'rocket speed (rest frame)', min:0, max:0.95, step:0.01, value:0.6},
+    {key:'sweep', label:'“now” sheet', type:'select', value:1, options:[{label:'Sweep', value:1}, {label:'Hide', value:0}]},
+  ],
+  steps:[
+    {text:'Put time on the vertical axis (as $ct$) and space on the floor. Every event is a point and every object draws a line, its worldline. Light moves at 45°, so a flash at the origin spreads as a cone.', run:c=>c.setParam('b',0,1.5)},
+    {text:'The moving sheet is “now” for the observer at rest. Lamps $A$ and $B$ flash at the same moment: the sheet reaches both flashes together, and their light spreads as circles.', cam:[[11,4.5,15],[0,2.8,0]]},
+    {text:'Now look from the rocket’s frame. Space and time mix, $x\' = \\gamma(x - vt)$ and $t\' = \\gamma(t - vx/c^2)$, and the two flashes no longer happen together. $B$ comes first.', cam:[[13.5,7.5,14],[0,2.8,0]], run:c=>c.setParam('b',0.6,3)},
+    {text:'The light cone does not move at all: every observer measures the same speed of light. The interval $s^2 = c^2t^2 - x^2 - y^2$ between two events is the same in every frame (see the live panel).'},
+    {text:'The flashes sit outside each other’s light cones, so neither can affect the other, and their order depends on who is watching. Boost the other way and $A$ comes first.', run:c=>c.setParam('b',-0.6,3)},
+  ],
+  T:7, X:6.6,
+  tr(c, x, y, t){ const b = c.params.b, g = 1/Math.sqrt(1 - b*b); return [g*(x - b*t), y, g*(t - b*x)]; },
+  init(c){
+    const d = c.data, T = this.T, X = this.X;
+    const grid = new THREE.GridHelper(2*X, 26, 0x3a4256, 0x1b2232); c.group.add(grid);
+    const ax = [[new V3(-X, 0, 0), new V3(2*X + 0.4, 0, 0), 'x', new V3(X + 0.7, 0, 0)], [new V3(0, 0, -X), new V3(0, 0, 2*X + 0.4), 'y', new V3(0, 0, X + 0.7)], [new V3(0, 0, 0), new V3(0, T + 0.4, 0), 'ct', new V3(0, T + 0.8, 0)]];
+    ax.forEach(([o, v, s, lp]) => { const a = makeArrow(0x6b7280, 0.012, 0.9); a.userData.arrow.set(o, v); c.group.add(a); const l = texLabel(s, 0x9aa3b5, 17); l.position.copy(lp); c.group.add(l); });
+    const coneG = new THREE.ConeGeometry(T, T, 72, 1, true); coneG.rotateX(Math.PI); coneG.translate(0, T/2, 0);
+    d.cone = new THREE.Mesh(coneG, new THREE.MeshBasicMaterial({color:C.yellow, transparent:true, opacity:.03, side:THREE.DoubleSide, depthWrite:false}));
+    c.group.add(d.cone);
+    const cl = [];
+    for (let i = 0; i < 12; i++){ const a = i/12*Math.PI*2; cl.push(0, 0, 0, T*Math.cos(a), T, T*Math.sin(a)); }
+    for (let i = 0; i < 96; i++){ const a0 = i/96*Math.PI*2, a1 = (i + 1)/96*Math.PI*2; cl.push(T*Math.cos(a0), T, T*Math.sin(a0), T*Math.cos(a1), T, T*Math.sin(a1)); }
+    const clg = new THREE.BufferGeometry(); clg.setAttribute('position', new THREE.Float32BufferAttribute(cl, 3));
+    c.group.add(new THREE.LineSegments(clg, new THREE.LineBasicMaterial({color:C.yellow, transparent:true, opacity:.16})));
+    const lc = texLabel('\\text{light cone}', C.yellow, 14); lc.position.set(T*0.72, T*0.78, 0); c.group.add(lc);
+    // worldlines defined in the rest frame: position (x0 + ux t, y0)
+    d.objs = [
+      {name:'observer', x0:0, y0:0, ux:0, col:C.white, label:'\\text{you}'},
+      {name:'rocket', x0:0, y0:0, ux:null, col:C.teal, label:'\\text{rocket}'},
+      {name:'lampA', x0:-3, y0:2.5, ux:0, col:C.red, label:''},
+      {name:'lampB', x0:3, y0:2.5, ux:0, col:C.blue, label:''},
+      {name:'light+', x0:0, y0:0, ux:1, col:C.yellow, label:''},
+      {name:'light-', x0:0, y0:0, ux:-1, col:C.yellow, label:''},
+    ];
+    d.objs.forEach(o => {
+      o.line = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:o.col, transparent:true, opacity:o.name.startsWith('light') ? .55 : .9}));
+      c.group.add(o.line);
+      o.dot = glowDot(o.col, 0.09); c.group.add(o.dot);
+      if (o.label){ o.lab = texLabel(o.label, o.col, 14); c.group.add(o.lab); }
+    });
+    d.flashes = [{x:-3, y:2.5, t:2.5, col:C.red, name:'A'}, {x:3, y:2.5, t:2.5, col:C.blue, name:'B'}];
+    d.flashes.forEach(f => {
+      f.dot = glowDot(f.col, 0.16); c.group.add(f.dot);
+      f.lab = texLabel(f.name, f.col, 20); c.group.add(f.lab);
+      f.ring = new THREE.Mesh(new THREE.RingGeometry(0.97, 1, 96), new THREE.MeshBasicMaterial({color:f.col, transparent:true, opacity:.7, side:THREE.DoubleSide, depthWrite:false}));
+      f.ring.rotation.x = -Math.PI/2; c.group.add(f.ring);
+    });
+    d.sheet = new THREE.Mesh(new THREE.PlaneGeometry(2*X, 2*X).rotateX(-Math.PI/2), new THREE.MeshBasicMaterial({color:C.maroon, transparent:true, opacity:.06, side:THREE.DoubleSide, depthWrite:false}));
+    c.group.add(d.sheet);
+    d.sheetEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(2*X, 2*X).rotateX(-Math.PI/2)), new THREE.LineBasicMaterial({color:C.maroon}));
+    c.group.add(d.sheetEdge);
+    d.nowL = texLabel('\\text{now}', C.maroon, 15); c.group.add(d.nowL);
+    d.ring0 = new THREE.Mesh(new THREE.RingGeometry(0.97, 1, 128), new THREE.MeshBasicMaterial({color:C.yellow, transparent:true, opacity:.6, side:THREE.DoubleSide, depthWrite:false}));
+    d.ring0.rotation.x = -Math.PI/2; c.group.add(d.ring0);
+    d.tau = 0;
+    this.reset(c);
+  },
+  reset(c){ c.data.tau = 0; },
+  update(dt, c){
+    const d = c.data, P = c.params, T = this.T, X = this.X;
+    if (dt > 0){ d.tau += dt*0.8; if (d.tau > T + 1.2) d.tau = 0; }
+    const tau = Math.min(d.tau, T);
+    d.objs.forEach(o => {
+      const ux = o.ux == null ? P.u : o.ux, seg = [];
+      let prev = null;
+      for (let k = 0; k <= 160; k++){
+        const t = -14 + 28*k/160, [x1, y1, t1] = this.tr(c, o.x0 + ux*t, o.y0, t);
+        const ok = t1 >= 0 && t1 <= T && Math.abs(x1) <= X;
+        const cur = ok ? [x1, t1, y1] : null;
+        if (cur && prev) seg.push(...prev, ...cur);
+        prev = cur;
+      }
+      o.line.geometry.dispose(); o.line.geometry = new THREE.BufferGeometry(); o.line.geometry.setAttribute('position', new THREE.Float32BufferAttribute(seg, 3));
+      // where is it "now" (t' = tau)?
+      const [xa, , ta] = this.tr(c, o.x0, o.y0, 0), [xb, , tb] = this.tr(c, o.x0 + ux*1, o.y0, 1);
+      const s = (tau - ta)/(tb - ta), xn = xa + (xb - xa)*s;
+      o.dot.visible = !!P.sweep && Math.abs(xn) <= X && d.tau <= T;
+      o.dot.position.set(xn, tau, o.y0);
+      if (o.lab){ o.lab.position.set(xn, tau + 0.45, o.y0 - (o.name === 'rocket' ? 0.6 : 0)); o.lab.visible = o.dot.visible; }
+    });
+    d.flashes.forEach(f => {
+      const [x1, y1, t1] = this.tr(c, f.x, f.y, f.t); f.tp = t1;
+      f.dot.position.set(x1, t1, y1); f.lab.position.set(x1, t1 + 0.45, y1);
+      const r = tau - t1, on = !!P.sweep && r > 0 && d.tau <= T;
+      f.ring.visible = on; if (on){ f.ring.position.set(x1, tau, y1); f.ring.scale.setScalar(Math.max(r, 0.01)); f.ring.material.opacity = 0.75*Math.max(0, 1 - r/8); }
+      f.dot.scale.setScalar(on && r < 0.35 ? 2.4 : 1);
+    });
+    d.sheet.visible = d.sheetEdge.visible = d.nowL.visible = !!P.sweep;
+    d.sheet.position.y = tau; d.sheetEdge.position.y = tau; d.nowL.position.set(-X - 0.2, tau + 0.3, X);
+    d.ring0.visible = !!P.sweep && tau > 0.05; d.ring0.position.y = tau; d.ring0.scale.setScalar(Math.max(tau, 0.01));
+  },
+  readouts(c){
+    const d = c.data, P = c.params, b = P.b, g = 1/Math.sqrt(1 - b*b);
+    const [xA, , tA] = this.tr(c, -3, 2.5, 2.5), [xB, , tB] = this.tr(c, 3, 2.5, 2.5);
+    const s2 = (tB - tA)**2 - (xB - xA)**2;
+    const ur = (P.u - b)/(1 - P.u*b);
+    return [
+      ['$\\gamma = 1/\\sqrt{1 - v^2/c^2}$', g.toFixed(3)],
+      ['$ct\'_B - ct\'_A$', sgnf(tB - tA, 2)],
+      ['interval $s^2$ between flashes', s2.toFixed(2)],
+      ['rocket speed in this frame', sgnf(ur, 3) + 'c'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Vol. I, Ch. 28 — Electromagnetic radiation from a shaken charge
+   --------------------------------------------------------------------- */
+const FeynRadiation = {
+  id:'f-radiation', bloom:0.3, title:'Electromagnetic Radiation', sub:'A shaken charge sends out waves', accent:C.gold,
+  ref:{label:'Vol. I · Ch. 28', title:'Electromagnetic Radiation', url:FLURL + 'I_28.html'},
+  cam:{pos:[4, 6.5, 17.5], target:[0, -0.3, 0]},
+  eq:String.raw`\vec E = \frac{-q}{4\pi\epsilon_0 c^2}\,\frac{\vec a_\perp(t - r/c)}{r}`,
+  params:[
+    {key:'w', tex:'\\omega', label:'shaking frequency', min:1, max:6, step:0.05, value:2.4},
+    {key:'comp', label:'arrow length shows', type:'select', value:1, options:[{label:'r × E (pattern)', value:1}, {label:'E (true 1/r)', value:0}]},
+    {key:'lobe', label:'radiation pattern', type:'select', value:1, options:[{label:'Show', value:1}, {label:'Hide', value:0}]},
+  ],
+  steps:[
+    {text:'Feynman’s formula for the field far from a moving charge: $\\vec E = -q\\,\\vec a_\\perp(t - r/c)\\big/4\\pi\\epsilon_0 c^2 r$. Only the acceleration matters, and only as it was a time $r/c$ earlier.', run:c=>{c.setParam('comp',1); c.setParam('w',2.4,0);}},
+    {text:'Shake a charge up and down. Every arrow repeats the charge’s motion, but late: the disturbance travels outward at speed $c$. Arrows are drawn as $r\\,E$ so you see the pattern instead of the fading.'},
+    {text:'Only the part of the acceleration perpendicular to the line of sight counts. Straight above and below the charge there is no wave at all; sideways it is strongest. Intensity goes like $\\sin^2\\theta$ (the doughnut).', cam:[[9,9,9],[0,0,0]]},
+    {text:'Switch to true lengths. The field falls off only as $1/r$, much slower than the $1/r^2$ of a charge at rest. That slow fall-off is why light from distant stars reaches us at all.', cam:[[4,6.5,17.5],[0,-0.3,0]], run:c=>c.setParam('comp',0)},
+    {text:'Shake faster and the waves get shorter, $\\lambda = 2\\pi c/\\omega$, while the radiated power climbs as $\\omega^4$. That steep rise is why scattered sunlight, and so the sky, is blue.', run:c=>{c.setParam('comp',1); c.setParam('w',5,3);}},
+  ],
+  C0:3, AMP:0.35,
+  init(c){
+    const d = c.data; d.arrows = [];
+    const add = p => { const a = makeArrow(C.gold, 0.02); c.group.add(a); d.arrows.push({p, a}); };
+    for (let x = -8; x <= 8.01; x += 0.8) for (let y = -4.8; y <= 4.81; y += 0.8){ const p = new V3(x, y, 0); if (p.length() > 1.2) add(p); }
+    for (let r = 2; r <= 8; r += 1.5) for (let i = 0; i < 16; i++){
+      const a = i/16*Math.PI*2; if (Math.abs(Math.sin(a)) < 0.2) continue;
+      add(new V3(r*Math.cos(a), 0, r*Math.sin(a)));
+    }
+    d.charge = glowDot(C.red, 0.2); c.group.add(d.charge);
+    const ql = texLabel('q', C.red, 18); d.ql = ql; c.group.add(ql);
+    d.acc = makeArrow(C.green, 0.03); c.group.add(d.acc);
+    d.accL = texLabel('\\vec a', C.green, 17); c.group.add(d.accL);
+    const pts = [];
+    for (let i = 0; i <= 64; i++){ const th = i/64*Math.PI, r = 3.2*Math.sin(th)**2; pts.push(new THREE.Vector2(r*Math.sin(th), r*Math.cos(th))); }
+    d.lobe = new THREE.Mesh(new THREE.LatheGeometry(pts, 64), new THREE.MeshBasicMaterial({color:C.gold, transparent:true, opacity:.04, side:THREE.DoubleSide, depthWrite:false}));
+    d.lobeW = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.LatheGeometry(pts.filter((_, i) => i % 4 === 0), 24)), new THREE.LineBasicMaterial({color:C.gold, transparent:true, opacity:.08}));
+    c.group.add(d.lobe, d.lobeW);
+    const disk = new THREE.Mesh(new THREE.RingGeometry(1.2, 8.6, 96), new THREE.MeshBasicMaterial({color:0x58C4DD, transparent:true, opacity:.035, side:THREE.DoubleSide, depthWrite:false}));
+    disk.rotation.x = -Math.PI/2; c.group.add(disk);
+    d.t = 0;
+  },
+  reset(c){ c.data.t = 0; },
+  update(dt, c){
+    const d = c.data, P = c.params, w = P.w, A = this.AMP, cs = this.C0;
+    d.t += dt;
+    const y = A*Math.sin(w*d.t), a = -A*w*w*Math.sin(w*d.t), anorm = A*w*w;
+    d.charge.position.set(0, y, 0); d.ql.position.set(0.35, y + 0.35, 0);
+    const av = new V3(0, a/anorm*1.1, 0);
+    d.acc.userData.arrow.set(new V3(0, y, 0), av); d.accL.position.set(-0.4, y + av.y*1.1, 0);
+    const n = new V3(), ap = new V3(), lo = new THREE.Color(C.blue), hi = new THREE.Color(C.gold);
+    for (const o of d.arrows){
+      const r = o.p.length(), tr = d.t - r/cs, ar = -A*w*w*Math.sin(w*tr);
+      n.copy(o.p).divideScalar(r);
+      ap.set(0, ar, 0).addScaledVector(n, -ar*n.y);       // a_perp = a − (a·n)n
+      const E = ap.multiplyScalar(-1/anorm*0.6*(P.comp ? 1 : 2/r));
+      o.a.userData.arrow.set(o.p, E);
+      o.a.userData.arrow.mat.color.copy(lo).lerp(hi, Math.min(1, E.length()/0.6)).multiplyScalar(0.85);
+    }
+    d.lobe.visible = d.lobeW.visible = !!P.lobe;
+  },
+  readouts(c){
+    const P = c.params;
+    return [
+      ['wavelength $\\lambda = 2\\pi c/\\omega$', (2*Math.PI*this.C0/P.w).toFixed(2)],
+      ['delay to $r = 8$: $r/c$', (8/this.C0).toFixed(2)],
+      ['power vs $\\omega = 1$ ($\\propto\\omega^4$)', (P.w**4).toFixed(1) + '×'],
+    ];
+  },
+};
+
 // related lectures for the chapters not built directly on one
 const FL = 'https://www.feynmanlectures.caltech.edu/';
 Gravity.ref = {label:'Vol. I · Ch. 7', title:'The Theory of Gravitation', url:FL + 'I_07.html', related:true};
@@ -2229,9 +2879,12 @@ Lorentz.ref = {label:'Vol. II · Ch. 29', title:'The Motion of Charges in Electr
 const TOPICS = [
   {id:'mech',    name:'Mechanics',        color:C.gold,   blurb:'Forces, orbits, and the paths nature chooses', chapters:[FeynOrbit, Gravity, FeynAction, Lorenz]},
   {id:'rot',     name:'Rotation',         color:C.teal,   blurb:'Torque, angular momentum, tumbling bodies',     chapters:[FeynTop, Rigid]},
+  {id:'osc',     name:'Oscillations',     color:C.purple, blurb:'Natural frequencies and driven motion',          chapters:[FeynResonance]},
   {id:'waves',   name:'Waves & Optics',   color:C.yellow, blurb:'Interference and the principle of least time',   chapters:[Waves, FeynLight]},
-  {id:'em',      name:'Electromagnetism', color:C.red,    blurb:'Fields, charges, and the Lorentz force',          chapters:[EField, Lorentz]},
+  {id:'fluids',  name:'Fluids',           color:C.blue,   blurb:'Ideal flow, viscosity, and Navier–Stokes',       chapters:[FeynDry, FeynWet]},
+  {id:'em',      name:'Electromagnetism', color:C.red,    blurb:'Fields, forces, and radiation',                  chapters:[EField, Lorentz, FeynRadiation]},
   {id:'heat',    name:'Heat',             color:C.green,  blurb:'Temperature and pressure from moving atoms',      chapters:[FeynGas]},
+  {id:'rel',     name:'Relativity',       color:C.maroon, blurb:'Space and time mixed by motion',                  chapters:[FeynSpaceTime]},
   {id:'quantum', name:'Quantum',          color:C.pink,   blurb:'Amplitudes, interference, and measurement',       chapters:[FeynQuantum]},
 ];
 const CHAPTERS = [];
@@ -2518,6 +3171,7 @@ $('intro').addEventListener('click', startApp);
 $('contentsBtn').onclick = toggleContents;
 $('sPrev').onclick = () => goScene((state.idx - 1 + CHAPTERS.length) % CHAPTERS.length);
 $('sNext').onclick = () => goScene((state.idx + 1) % CHAPTERS.length);
+$('mChapters').onclick = openContents;
 $('sideToggle').onclick = () => document.body.classList.toggle('side-collapsed');
 $('closeContents').onclick = closeContents;
 $('contents').addEventListener('click', e => { if (e.target.id === 'contents') closeContents(); });
