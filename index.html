@@ -55,6 +55,7 @@
                 <div id="hint" class="hint hidden" data-i18n="hint_move">Arrows / D-pad to walk · A to talk · START for menu</div>
 
                 <div id="dialog" class="textbox window hidden" aria-live="polite">
+                    <span id="dialog-name" class="nameplate" hidden></span>
                     <p id="dialog-text"></p>
                     <span class="next">▼</span>
                 </div>
@@ -67,6 +68,7 @@
                         <button type="button" class="menu-item" data-open="services"><i class='bx bx-bolt-circle'></i><span data-i18n="nav_skills">Skills</span></button>
                         <button type="button" class="menu-item" data-open="portfolio"><i class='bx bx-collection'></i><span data-i18n="nav_works">Works</span></button>
                         <button type="button" class="menu-item" data-open="contact"><i class='bx bx-envelope'></i><span data-i18n="nav_contact">Contact</span></button>
+                        <button type="button" class="menu-item" data-action="dex"><i class='bx bx-book-bookmark'></i><span data-i18n="menu_dex">Dex</span></button>
                         <button type="button" class="menu-item" data-action="options"><i class='bx bx-cog'></i><span data-i18n="menu_options">Options</span></button>
                         <button type="button" class="menu-item" data-action="exit"><i class='bx bx-x'></i><span data-i18n="menu_exit">Exit</span></button>
                     </div>
@@ -93,9 +95,11 @@
                         <div class="b-plat b-plat-enemy"></div>
                         <img id="b-enemy-img" class="b-sprite b-enemy" alt="">
                         <div class="b-plat b-plat-player"></div>
+                        <img id="b-trainer" class="b-sprite b-trainer" alt="THARIQ">
+                        <span id="b-ball" class="b-ball" aria-hidden="true"></span>
                         <img id="b-player-img" class="b-sprite b-player" alt="">
                         <div class="b-hud b-hud-player">
-                            <div class="b-name"><span>THARIQ</span><span class="b-lv">Lv99</span></div>
+                            <div class="b-name"><span id="b-player-name">DATAVIZ</span><span class="b-lv">Lv<span id="b-player-lv">12</span></span></div>
                             <div class="hp"><b>HP</b><div class="hp-bar"><i id="b-player-hp"></i></div></div>
                             <div class="hp-num" id="b-player-hpnum">100/100</div>
                         </div>
@@ -308,6 +312,8 @@
     <noscript><p class="noscript">This site is an interactive game and needs JavaScript. Email: thariqibrahim1998@gmail.com</p></noscript>
 
     <!-- custom js-->
+    <script src="./i18n.js"></script>
+    <script src="./sprites.js"></script>
     <script src="./script.js"></script>
 </body>
 </html>

@@ -1,6 +1,8 @@
 /* =========================================================
    evilzeda — retro handheld RPG personal site
-   Town map, dialog, menus, battles and content panels.
+   Town, building interiors with residents, dialog, menus,
+   partner battles with legendaries, and content panels.
+   Needs i18n.js and sprites.js loaded first.
    ========================================================= */
 (() => {
 'use strict';
@@ -11,253 +13,8 @@ const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
 };
-
-/* ---------------------------------------------------------
-   Translations (original site text + game text)
-   --------------------------------------------------------- */
-const translations = {
-  en: {
-    nav_home: "Home",
-    nav_about: "About",
-    nav_skills: "Skills",
-    nav_works: "Works",
-    nav_contact: "Contact",
-    home_hello: "Hello, I am",
-    home_name: "Ibrahim Atthariq",
-    home_desc:
-      "a person who crafting data, systems, and insights with simplicity and precision.",
-    about_heading: "About <span>Me</span>",
-    about_role: "Analytics Engineer & Developer",
-    about_desc:
-      "I am Ibrahim Atthariq. Transitioning from the calculating nature phenomenon using laws of physics to the building logic of computer science, I find joy in understanding how things work. I am passionate about understanding the internal mechanisms of systems, particularly in distributed systems, data warehousing, and machine learning. I also enjoy exploring other domains, such as applied finance and economics.",
-    about_cv: "Download CV",
-    skills_heading: "My <span>Skills</span>",
-    skill_1_title: "Data Architect & Pipeline",
-    skill_1_desc:
-      "Architecting robust flows to transform raw chaotic data into structured, usable assets.",
-    skill_2_title: "Analysis",
-    skill_2_desc:
-      "Uncovering patterns and trends to drive informed decision-making.",
-    skill_3_title: "Visualization",
-    skill_3_desc: "Translating complex datasets into intuitive visual stories.",
-    works_heading: "Selected <span>Works</span>",
-    work_px_title: "physcx",
-    work_px_desc: "Interactive 3D physics simulations, built on the Feynman Lectures.",
-    work_1_title: "Data Collection",
-    work_1_desc: "Automated scraping & ingestion.",
-    work_2_title: "Data Cleansing",
-    work_2_desc: "Ensuring data integrity.",
-    work_3_title: "Analysis",
-    work_3_desc: "Statistical modeling.",
-    work_4_title: "Visualization",
-    work_4_desc: "Dashboard creation.",
-    contact_heading: "Contact <span>Me</span>",
-    contact_btn: "Send Message",
-
-    title_sub: "DATA EDITION",
-    title_press: "PRESS START",
-    hint_move: "Arrows / D-pad to walk · A to talk · START for menu",
-    keys_help: "Move: Arrows/WASD · A: Z/Space · B: X/Esc · START: Enter · SELECT: Shift (day/night) · Tip: click a building to enter",
-    intro_3: "Welcome to EVILZEDA TOWN! Every building here holds a piece of my story.",
-    intro_4: "Walk with the arrow keys or D-pad, press A to read signs, and START for the menu. Careful, wild bugs lurk in the tall grass!",
-    sign_town: "EVILZEDA TOWN: where raw, chaotic data becomes insight.",
-    sign_home: "HOME: Come in and say hello. My socials are inside.",
-    sign_mail: "MAIL: Drop me a message anytime!",
-    sign_lab: "LAB: Trainer card, background and CV.",
-    sign_gym: "GYM: Train with my skills.",
-    sign_works: "WORKS: A gallery of selected projects.",
-    npc_1: "Hey! Wild bugs like NULL VALUE and DIRTY DATA hide in the tall grass.",
-    npc_2: "Squash them with THARIQ's skills: pipelines, analysis and visualization!",
-    water_text: "The pond is perfectly still, as clean as a well-modeled table.",
-    lbl_home: "HOME", lbl_mail: "MAIL", lbl_lab: "LAB", lbl_gym: "GYM", lbl_works: "WORKS",
-    menu_options: "Options", menu_exit: "Exit",
-    opt_lang: "Language", opt_time: "Day / Night", opt_sound: "Sound", opt_back: "Back",
-    ui_close: "Close", ui_on: "ON", ui_off: "OFF",
-    home_social: "Find me around the web",
-    card_title: "TRAINER CARD", card_name: "NAME", card_role: "ROLE", card_type: "TYPE", card_badges: "BADGES",
-    skills_tip: "Tip: these skills double as battle moves. Try them on wild bugs in the tall grass!",
-    type_data: "DATA", type_logic: "LOGIC", type_art: "ART",
-    works_reg: "REGISTERED", works_view: "View",
-    contact_text: "Want to trade ideas or team up on a new quest? My mailbox is always open.",
-    b_appear: "A wild {x} appeared!",
-    b_what: "What will {p} do?",
-    b_fight: "FIGHT", b_info: "INFO", b_run: "RUN", b_back: "BACK",
-    b_used: "{p} used {m}!",
-    b_super: "It's super effective!",
-    b_crit: "A critical hit!",
-    b_win: "The wild {x} was cleaned up!",
-    b_gain: "Data quality rose by {n}%!",
-    b_enemy_used: "The wild {x} used {m}!",
-    b_lose: "THARIQ ran out of coffee... Recharged and back on track!",
-    b_run_ok: "Got away safely!",
-    en_desc_0: "It hides in empty cells and breaks every JOIN.",
-    en_desc_1: "Covered in typos, duplicates and mixed date formats.",
-    en_desc_2: "Scans the full table every time. Every. Single. Time.",
-    en_desc_3: "Appears whenever two branches disagree.",
-    en_desc_4: "Grows quietly until everything crashes."
-  },
-  id: {
-    nav_home: "Beranda",
-    nav_about: "Tentang",
-    nav_skills: "Keahlian",
-    nav_works: "Karya",
-    nav_contact: "Kontak",
-    home_hello: "Halo, saya",
-    home_name: "Ibrahim Atthariq",
-    home_desc:
-      "Seseorang yang merancang data, sistem, dan wawasan dengan kesederhanaan dan ketelitian.",
-    about_heading: "Tentang <span>Saya</span>",
-    about_role: "Insinyur & Pengembang Analitik",
-    about_desc:
-      "Saya Ibrahim Atthariq. Beralih dari menghitung fenomena alam menggunakan hukum fisika ke membangun logika ilmu komputer, saya menemukan kegemaran dalam memahami cara kerja sesuatu. Saya memiliki hasrat untuk memahami mekanisme internal dari sistem, terutama dalam sistem terdistribusi, gudang data, dan pembelajaran mesin. Saya juga senang mengeksplorasi bidang lain, seperti keuangan terapan dan ekonomi.",
-    about_cv: "Unduh CV",
-    skills_heading: "Keahlian <span>Saya</span>",
-    skill_1_title: "Arsitek Data & Alur Data",
-    skill_1_desc:
-      "Merancang aliran data yang kuat untuk mengubah data mentah menjadi aset yang terstruktur dan berguna.",
-    skill_2_title: "Analisis",
-    skill_2_desc:
-      "Menemukan pola dan tren untuk mendorong pengambilan keputusan yang tepat.",
-    skill_3_title: "Visualisasi",
-    skill_3_desc:
-      "Menerjemahkan kumpulan data kompleks menjadi cerita visual yang intuitif.",
-    works_heading: "Karya <span>Pilihan</span>",
-    work_px_title: "physcx",
-    work_px_desc: "Simulasi fisika 3D interaktif, berdasarkan Feynman Lectures.",
-    work_1_title: "Pengumpulan Data",
-    work_1_desc: "Scraping & ingestin data otomatis.",
-    work_2_title: "Pembersihan Data",
-    work_2_desc: "Menjamin integritas data.",
-    work_3_title: "Analisis",
-    work_3_desc: "Pemodelan statistik.",
-    work_4_title: "Visualisasi",
-    work_4_desc: "Pembuatan dashboard.",
-    contact_heading: "Kontak <span>Saya</span>",
-    contact_btn: "Kirim Pesan",
-
-    title_sub: "EDISI DATA",
-    title_press: "TEKAN START",
-    hint_move: "Panah / D-pad untuk jalan · A untuk bicara · START untuk menu",
-    keys_help: "Gerak: Panah/WASD · A: Z/Spasi · B: X/Esc · START: Enter · SELECT: Shift (siang/malam) · Tips: klik bangunan untuk masuk",
-    intro_3: "Selamat datang di KOTA EVILZEDA! Setiap bangunan di sini menyimpan sepotong cerita saya.",
-    intro_4: "Berjalanlah dengan tombol panah atau D-pad, tekan A untuk membaca papan, dan START untuk menu. Hati-hati, bug liar bersembunyi di rumput tinggi!",
-    sign_town: "KOTA EVILZEDA: tempat data mentah yang kacau menjadi wawasan.",
-    sign_home: "RUMAH: Mampir dan sapa saya. Media sosial saya ada di dalam.",
-    sign_mail: "POS: Kirimi saya pesan kapan saja!",
-    sign_lab: "LAB: Kartu trainer, latar belakang, dan CV.",
-    sign_gym: "GYM: Berlatih dengan keahlian saya.",
-    sign_works: "KARYA: Galeri proyek pilihan.",
-    npc_1: "Hai! Bug liar seperti NULL VALUE dan DIRTY DATA bersembunyi di rumput tinggi.",
-    npc_2: "Kalahkan mereka dengan keahlian THARIQ: pipeline, analisis, dan visualisasi!",
-    water_text: "Kolamnya tenang sekali, sebersih tabel yang dimodelkan dengan baik.",
-    lbl_home: "RUMAH", lbl_mail: "POS", lbl_lab: "LAB", lbl_gym: "GYM", lbl_works: "KARYA",
-    menu_options: "Opsi", menu_exit: "Keluar",
-    opt_lang: "Bahasa", opt_time: "Siang / Malam", opt_sound: "Suara", opt_back: "Kembali",
-    ui_close: "Tutup", ui_on: "NYALA", ui_off: "MATI",
-    home_social: "Temukan saya di internet",
-    card_title: "KARTU TRAINER", card_name: "NAMA", card_role: "PERAN", card_type: "TIPE", card_badges: "LENCANA",
-    skills_tip: "Tips: keahlian ini juga jurus bertarung. Coba lawan bug liar di rumput tinggi!",
-    type_data: "DATA", type_logic: "LOGIKA", type_art: "SENI",
-    works_reg: "TERDAFTAR", works_view: "Lihat",
-    contact_text: "Ingin bertukar ide atau berpetualang bersama? Kotak surat saya selalu terbuka.",
-    b_appear: "{x} liar muncul!",
-    b_what: "Apa yang akan {p} lakukan?",
-    b_fight: "SERANG", b_info: "INFO", b_run: "KABUR", b_back: "KEMBALI",
-    b_used: "{p} menggunakan {m}!",
-    b_super: "Sangat efektif!",
-    b_crit: "Serangan kritis!",
-    b_win: "{x} liar berhasil dibersihkan!",
-    b_gain: "Kualitas data naik {n}%!",
-    b_enemy_used: "{x} liar menggunakan {m}!",
-    b_lose: "THARIQ kehabisan kopi... Sudah isi ulang dan siap lagi!",
-    b_run_ok: "Berhasil kabur dengan aman!",
-    en_desc_0: "Bersembunyi di sel kosong dan merusak setiap JOIN.",
-    en_desc_1: "Penuh salah ketik, duplikat, dan format tanggal campur aduk.",
-    en_desc_2: "Memindai seluruh tabel setiap saat. Setiap. Saat.",
-    en_desc_3: "Muncul setiap kali dua branch tidak sepakat.",
-    en_desc_4: "Tumbuh diam-diam sampai semuanya crash."
-  },
-  jp: {
-    nav_home: "ホーム",
-    nav_about: "自己紹介",
-    nav_skills: "スキル",
-    nav_works: "作品",
-    nav_contact: "コンタクト",
-    home_hello: "こんにちは、私は",
-    home_name: "イブラヒム・アッタリク",
-    home_desc: "データ、システム、洞察をシンプルかつ正確に作成する人。",
-    about_heading: "自己 <span>紹介</span>",
-    about_role: "アナリティクスエンジニア",
-    about_desc:
-      "私はイブラヒム・アッタリクです。自然現象を物理法則で計算することから、コンピュータサイエンスの論理を構築することに移る中で、ものの仕組みを理解することに喜びを見出しました。私は特に分散システム、データウェアハウス、機械学習の内部メカニズムを理解することに情熱を持っています。また、応用金融や経済学などの他の分野を探求することも楽しんでいます。",
-    about_cv: "CVをダウンロード",
-    skills_heading: "私の <span>スキル</span>",
-    skill_1_title: "データアーキテクト＆パイプライン",
-    skill_1_desc:
-      "混沌とした生データを構造化された有用な資産に変えるための堅牢なフローを設計します。",
-    skill_2_title: "分析",
-    skill_2_desc:
-      "パターンやトレンドを発見し、情報に基づいた意思決定を促進します。",
-    skill_3_title: "可視化",
-    skill_3_desc:
-      "複雑なデータセットを直感的なビジュアルストーリーに変換します。",
-    works_heading: "主要な <span>作品</span>",
-    work_px_title: "physcx",
-    work_px_desc: "ファインマン物理学に基づくインタラクティブな3D物理シミュレーション。",
-    work_1_title: "データ収集",
-    work_1_desc: "自動化されたスクレイピングと取り込み。",
-    work_2_title: "データクレンジング",
-    work_2_desc: "データの整合性を確保します。",
-    work_3_title: "分析",
-    work_3_desc: "統計モデリング。",
-    work_4_title: "可視化",
-    work_4_desc: "ダッシュボード作成。",
-    contact_heading: "コンタクト <span>私</span>",
-    contact_btn: "メッセージを送る",
-
-    title_sub: "データ・エディション",
-    title_press: "PRESS START",
-    hint_move: "矢印 / 十字キーで移動 · Aで話す · STARTでメニュー",
-    keys_help: "移動：矢印/WASD · A：Z/スペース · B：X/Esc · START：Enter · SELECT：Shift（昼/夜）· ヒント：建物をクリックして入る",
-    intro_3: "エビルゼダ・タウンへようこそ！ここにある建物には、それぞれ私のストーリーが詰まっています。",
-    intro_4: "矢印キーか十字キーで歩き、Aで看板を読み、STARTでメニューを開こう。草むらの野生のバグに気をつけて！",
-    sign_town: "エビルゼダ・タウン：混沌とした生データがインサイトに変わる町。",
-    sign_home: "いえ：あいさつはこちら。SNSのリンクもあるよ。",
-    sign_mail: "ポスト：いつでもメッセージをどうぞ！",
-    sign_lab: "ラボ：トレーナーカード、経歴、CV。",
-    sign_gym: "ジム：わたしのスキルを見てみよう。",
-    sign_works: "さくひん：これまでの作品を展示中。",
-    npc_1: "やあ！草むらにはNULL VALUEやDIRTY DATAみたいな野生のバグがひそんでいるよ。",
-    npc_2: "パイプライン、分析、可視化。THARIQのスキルでやっつけよう！",
-    water_text: "静かな水面。きれいにモデリングされたテーブルのように澄んでいる。",
-    lbl_home: "いえ", lbl_mail: "ポスト", lbl_lab: "ラボ", lbl_gym: "ジム", lbl_works: "さくひん",
-    menu_options: "せってい", menu_exit: "とじる",
-    opt_lang: "げんご", opt_time: "ひる / よる", opt_sound: "サウンド", opt_back: "もどる",
-    ui_close: "とじる", ui_on: "オン", ui_off: "オフ",
-    home_social: "SNSはこちら",
-    card_title: "トレーナーカード", card_name: "なまえ", card_role: "しょくぎょう", card_type: "タイプ", card_badges: "バッジ",
-    skills_tip: "ヒント：これらのスキルはバトルのわざにもなります。草むらの野生のバグに試してみよう！",
-    type_data: "データ", type_logic: "ロジック", type_art: "アート",
-    works_reg: "とうろくずみ", works_view: "見る",
-    contact_text: "アイデアを交換したり、一緒に新しい冒険に出たりしませんか？メールはいつでも大歓迎です。",
-    b_appear: "野生の {x} が あらわれた！",
-    b_what: "{p} は どうする？",
-    b_fight: "たたかう", b_info: "しらべる", b_run: "にげる", b_back: "もどる",
-    b_used: "{p} の {m}！",
-    b_super: "こうかは バツグンだ！",
-    b_crit: "クリティカルヒット！",
-    b_win: "野生の {x} を クリーンにした！",
-    b_gain: "データ品質が {n}% あがった！",
-    b_enemy_used: "野生の {x} の {m}！",
-    b_lose: "THARIQ は コーヒー切れ… 充電して ふっかつした！",
-    b_run_ok: "うまく にげきれた！",
-    en_desc_0: "空のセルに隠れて、すべてのJOINを壊す。",
-    en_desc_1: "タイプミス、重複、バラバラな日付形式だらけ。",
-    en_desc_2: "毎回フルスキャン。毎回、毎回。",
-    en_desc_3: "2つのブランチの意見が食い違うと現れる。",
-    en_desc_4: "静かに大きくなり、やがて全てをクラッシュさせる。"
-  }
-};
+const ART = window.EVZ_ART;
+const translations = window.EVZ_I18N;
 
 let lang = 'en';
 function t(key, vars) {
@@ -267,6 +24,9 @@ function t(key, vars) {
 }
 const plain = (s) => String(s).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* ---------------------------------------------------------
    Sound (tiny square-wave blips)
@@ -286,9 +46,10 @@ function blip(freq = 660, dur = 0.05, type = 'square', vol = 0.03) {
         o.start(); o.stop(actx.currentTime + dur + 0.02);
     } catch (e) { /* audio unavailable */ }
 }
+const jingle = (notes, gap = 110, dur = 0.09) => notes.forEach((f, i) => setTimeout(() => blip(f, dur), i * gap));
 
 /* ---------------------------------------------------------
-   Pixel sprites (original art, 16x16)
+   People sprites (16x16)
    --------------------------------------------------------- */
 const SPR = {
     down: [
@@ -350,47 +111,32 @@ SPR.downWalk = SPR.down.slice(0, 14).concat(['...kpk....kpk...', '...kok....kok.
 SPR.upWalk = SPR.up.slice(0, 14).concat(['...kpk....kpk...', '...kok....kok...']);
 SPR.rightWalk = SPR.right.slice(0, 14).concat(['...kpk..kpk.....', '..kook..kook....']);
 
-const MON = {
-    bug: [
-        '...k........k...',
-        '....k......k....',
-        '.....kkkkkk.....',
-        '....kcccccck....',
-        '...kcwkccwkck...',
-        '...kcwkccwkck...',
-        '..kcccccccccck..',
-        '..kccckkkkccck..',
-        '.kdccccccccccdk.',
-        '.kddccccccccddk.',
-        'kd.kddddddddk.dk',
-        'k..kddddddddk..k',
-        '...kdddddddk....',
-        '....kkkkkkk.....',
-        '...k.k...k.k....',
-        '................'
-    ],
-    ghost: [
-        '................',
-        '.....kkkkkk.....',
-        '....kwwwwwwk....',
-        '...kwwwwwwwwk...',
-        '..kwwkwwwwkwwk..',
-        '..kwwkwwwwkwwk..',
-        '..kwwwwwwwwwwk..',
-        '..kwwwwkkwwwwk..',
-        '..kwwwwkkwwwwk..',
-        '.kcwwwwwwwwwwck.',
-        '.kcwwwwwwwwwwck.',
-        '..kwwwwwwwwwwk..',
-        '..kwwwwwwwwwwk..',
-        '..kwwkwwwkwwwk..',
-        '..kwk.kwk.kwk...',
-        '...k...k...k....'
-    ]
-};
+function styleRows(rows, style) {
+    const out = rows.map((r) => r.split(''));
+    if (style === 'long') {
+        for (let y = 4; y <= 9; y++) { out[y][2] = 'k'; out[y][3] = 'h'; out[y][12] = 'h'; out[y][13] = 'k'; }
+    }
+    if (style === 'cap') {
+        for (let y = 2; y <= 3; y++) out[y] = out[y].map((c) => (c === 'h' ? 'c' : c));
+        out[4] = '..kCCCCCCCCCCk..'.split('');
+    }
+    return out.map((r) => r.join(''));
+}
 
 const PAL_PLAYER = { k: '#1b1b2f', h: '#3b2a20', s: '#f2c79b', e: '#1b1b2f', m: '#c9735a', b: '#2bb3a3', B: '#1d7f74', w: '#ffffff', p: '#34405a', o: '#c0392b' };
-const PAL_NPC = Object.assign({}, PAL_PLAYER, { h: '#c96f2d', b: '#8e5cc2', B: '#64408a', o: '#2a2a3a' });
+const PAL_TOWNNPC = Object.assign({}, PAL_PLAYER, { h: '#c96f2d', b: '#8e5cc2', B: '#64408a', o: '#2a2a3a' });
+
+const RESIDENTS = {
+    mom:     { style: 'long', pal: { h: '#8a3b2a', b: '#ef8fae', B: '#c96a8a', p: '#6a4a8a', o: '#3a2a3a', m: '#d0586a' } },
+    post:    { style: 'cap',  pal: { c: '#3d6fd6', C: '#2a4f9e', h: '#2a1a12', b: '#3d6fd6', B: '#2a4f9e', w: '#ffd447', p: '#2a2f45', o: '#1b1b2f', s: '#d9a77a' } },
+    prof:    { style: 'none', pal: { h: '#c9ced6', b: '#f4f6f8', B: '#cfd6de', w: '#7fb6e6', p: '#5a4a3a', o: '#3a2a1a' } },
+    leader:  { style: 'cap',  pal: { c: '#e04b3c', C: '#a8322a', h: '#1b1b2f', b: '#23233a', B: '#e04b3c', w: '#ffd447', p: '#23233a', o: '#e04b3c', s: '#c98b5e' } },
+    curator: { style: 'long', pal: { h: '#1b1b2f', b: '#8e5cc2', B: '#64408a', w: '#ffffff', p: '#3a3a55', o: '#1b1b2f', s: '#f6d2b0' } }
+};
+for (const r of Object.values(RESIDENTS)) {
+    r.rows = styleRows(SPR.down, r.style);
+    r.pal = Object.assign({}, PAL_PLAYER, r.pal);
+}
 
 function drawRows(ctx, rows, pal, x, y, flip = false, scale = 1) {
     for (let r = 0; r < rows.length; r++) {
@@ -404,10 +150,10 @@ function drawRows(ctx, rows, pal, x, y, flip = false, scale = 1) {
         }
     }
 }
-function spriteURL(rows, pal, scale = 8, flip = false) {
+function spriteURL(rows, pal, scale = 8) {
     const c = document.createElement('canvas');
     c.width = 16 * scale; c.height = rows.length * scale;
-    drawRows(c.getContext('2d'), rows, pal, 0, 0, flip, scale);
+    drawRows(c.getContext('2d'), rows, pal, 0, 0, false, scale);
     return c.toDataURL();
 }
 
@@ -435,13 +181,14 @@ const MAP = [
 const COLS = 20, ROWS = 15, TS = 16;
 
 const BUILDINGS = [
-    { id: 'home',  panel: 'home',      x: 2,  y: 2, w: 4, h: 3, roof: '#d65a5a', label: 'lbl_home' },
-    { id: 'mail',  panel: 'contact',   x: 8,  y: 2, w: 4, h: 3, roof: '#f2a541', label: 'lbl_mail' },
-    { id: 'lab',   panel: 'about',     x: 14, y: 2, w: 4, h: 3, roof: '#4f7cc2', label: 'lbl_lab' },
-    { id: 'gym',   panel: 'services',  x: 2,  y: 9, w: 5, h: 3, roof: '#2a9d8f', label: 'lbl_gym' },
-    { id: 'works', panel: 'portfolio', x: 13, y: 9, w: 5, h: 3, roof: '#8e5cc2', label: 'lbl_works' }
+    { id: 'home',  panel: 'home',      x: 2,  y: 2, w: 4, h: 3, roof: '#d65a5a' },
+    { id: 'mail',  panel: 'contact',   x: 8,  y: 2, w: 4, h: 3, roof: '#f2a541' },
+    { id: 'lab',   panel: 'about',     x: 14, y: 2, w: 4, h: 3, roof: '#4f7cc2' },
+    { id: 'gym',   panel: 'services',  x: 2,  y: 9, w: 5, h: 3, roof: '#2a9d8f' },
+    { id: 'works', panel: 'portfolio', x: 13, y: 9, w: 5, h: 3, roof: '#8e5cc2' }
 ];
 BUILDINGS.forEach((b) => { b.door = { x: b.x + 2, y: b.y + b.h - 1 }; });
+const BUILDING = Object.fromEntries(BUILDINGS.map((b) => [b.id, b]));
 
 const SIGNS = [
     { x: 9, y: 6, key: 'sign_town' },
@@ -454,35 +201,117 @@ const SIGNS = [
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
-const player = { x: 4, y: 5, tx: 4, ty: 5, t: 0, moving: false, dir: 'down', step: 0, hp: 100, emote: false };
-const npc = { x: 15, y: 7, dir: 'left', step: 0 };
+const player = { x: 4, y: 5, tx: 4, ty: 5, t: 0, moving: false, dir: 'down', step: 0, emote: false };
+const townNpc = { x: 15, y: 7, dir: 'left' };
+let scene = 'town';
 let stepsSinceBattle = 0;
 
 const buildingAt = (x, y) => BUILDINGS.find((b) => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
 const signAt = (x, y) => SIGNS.find((s) => s.x === x && s.y === y);
 const tileAt = (x, y) => (MAP[y] && MAP[y][x]) || 'T';
 
+/* ---------------------------------------------------------
+   Interiors — one resident per building
+   Floor is x 3..16, y 3..13. Mat at (9,13)/(10,13).
+   --------------------------------------------------------- */
+const ROOM = { x0: 3, x1: 16, y0: 3, y1: 13 };
+const MAT = [[9, 13], [10, 13]];
+const INTERIORS = {
+    home: {
+        who: 'mom', name: 'name_mom', npc: { x: 12, y: 8 }, lines: ['mom_1', 'mom_2', 'mom_3'], heal: true,
+        floor: 'wood', wall: '#f6dfc4', trim: '#d65a5a',
+        rug: { x: 6, y: 7, w: 5, h: 4, c: '#d65a5a' },
+        deco: [['window', 5], ['frame', 9], ['window', 12]],
+        props: [
+            { k: 'bed', x: 3, y: 3, w: 2, h: 2, say: 'obj_bed' },
+            { k: 'shelf', x: 6, y: 3, w: 2, h: 1, say: 'obj_shelf' },
+            { k: 'tv', x: 13, y: 3, w: 2, h: 1, say: 'obj_tv' },
+            { k: 'table', x: 7, y: 8, w: 3, h: 1 },
+            { k: 'plant', x: 16, y: 3, w: 1, h: 1 },
+            { k: 'plant', x: 3, y: 12, w: 1, h: 1 }
+        ]
+    },
+    mail: {
+        who: 'post', name: 'name_post', npc: { x: 9, y: 5 }, lines: ['post_1', 'post_2'],
+        floor: 'tile', wall: '#fbe6b4', trim: '#f2a541',
+        deco: [['window', 4], ['clock', 9], ['window', 14]],
+        props: [
+            { k: 'cubby', x: 4, y: 3, w: 4, h: 1, say: 'obj_cubby' },
+            { k: 'cubby', x: 12, y: 3, w: 4, h: 1, say: 'obj_cubby' },
+            { k: 'counter', x: 5, y: 6, w: 10, h: 1 },
+            { k: 'bags', x: 14, y: 10, w: 2, h: 1 },
+            { k: 'plant', x: 3, y: 12, w: 1, h: 1 },
+            { k: 'plant', x: 16, y: 12, w: 1, h: 1 }
+        ]
+    },
+    lab: {
+        who: 'prof', name: 'name_prof', npc: { x: 9, y: 6 }, lines: ['prof_1', 'prof_2'],
+        floor: 'lab', wall: '#e4ecf7', trim: '#4f7cc2',
+        deco: [['board', 4], ['window', 14]],
+        props: [
+            { k: 'shelf', x: 3, y: 3, w: 3, h: 1, say: 'obj_shelf' },
+            { k: 'machine', x: 8, y: 3, w: 4, h: 2, say: 'obj_machine' },
+            { k: 'shelf', x: 14, y: 3, w: 3, h: 1, say: 'obj_shelf' },
+            { k: 'desk', x: 12, y: 8, w: 3, h: 1, say: 'obj_pc' },
+            { k: 'plant', x: 3, y: 12, w: 1, h: 1 },
+            { k: 'plant', x: 16, y: 12, w: 1, h: 1 }
+        ]
+    },
+    gym: {
+        who: 'leader', name: 'name_leader', npc: { x: 9, y: 5 }, lines: ['leader_1', 'leader_2'],
+        floor: 'gym', wall: '#d7f0ea', trim: '#2a9d8f',
+        rug: { x: 6, y: 4, w: 8, h: 6, c: '#2a9d8f', arena: true },
+        deco: [['banner', 5], ['banner', 9], ['banner', 13]],
+        props: [
+            { k: 'trophy', x: 3, y: 3, w: 2, h: 1, say: 'obj_trophy' },
+            { k: 'trophy', x: 15, y: 3, w: 2, h: 1, say: 'obj_trophy' },
+            { k: 'statue', x: 7, y: 11, w: 1, h: 1, say: 'obj_statue' },
+            { k: 'statue', x: 12, y: 11, w: 1, h: 1, say: 'obj_statue' }
+        ]
+    },
+    works: {
+        who: 'curator', name: 'name_curator', npc: { x: 13, y: 9 }, lines: ['curator_1', 'curator_2'],
+        floor: 'gallery', wall: '#efe6fa', trim: '#8e5cc2',
+        rug: { x: 7, y: 8, w: 6, h: 4, c: '#8e5cc2' },
+        deco: [['art', 4], ['art', 7], ['art', 10], ['art', 13]],
+        props: [
+            { k: 'pedestal', x: 5, y: 5, w: 1, h: 1, c: '#2bb3a3', say: 'obj_pedestal' },
+            { k: 'pedestal', x: 8, y: 5, w: 1, h: 1, c: '#e0688a', say: 'obj_pedestal' },
+            { k: 'pedestal', x: 11, y: 5, w: 1, h: 1, c: '#4f7cc2', say: 'obj_pedestal' },
+            { k: 'pedestal', x: 14, y: 5, w: 1, h: 1, c: '#ffd447', say: 'obj_pedestal' },
+            { k: 'bench', x: 8, y: 9, w: 4, h: 1 },
+            { k: 'plant', x: 3, y: 3, w: 1, h: 1 },
+            { k: 'plant', x: 16, y: 3, w: 1, h: 1 }
+        ]
+    }
+};
+
+function propAt(room, x, y) { return room.props.find((p) => x >= p.x && x < p.x + p.w && y >= p.y && y < p.y + p.h); }
+const isMat = (x, y) => MAT.some(([mx, my]) => mx === x && my === y);
+
 function isSolid(x, y) {
-    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
-    const c = tileAt(x, y);
-    if (c === 'T' || c === '~') return true;
-    if (buildingAt(x, y) || signAt(x, y)) return true;
-    if (npc.x === x && npc.y === y) return true;
-    return false;
+    if (scene === 'town') {
+        if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
+        const c = tileAt(x, y);
+        if (c === 'T' || c === '~') return true;
+        if (buildingAt(x, y) || signAt(x, y)) return true;
+        return townNpc.x === x && townNpc.y === y;
+    }
+    const room = INTERIORS[scene];
+    if (x < ROOM.x0 || x > ROOM.x1 || y < ROOM.y0 || y > ROOM.y1) return true;
+    if (room.npc.x === x && room.npc.y === y) return true;
+    return !!propAt(room, x, y);
 }
 
-/* --- tile painting --- */
+/* ---------------------------------------------------------
+   Painting helpers
+   --------------------------------------------------------- */
 function hash(x, y, n) {
     let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(n, 1442695041)) | 0;
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
-function shade(hex, amt) {
-    const n = parseInt(hex.slice(1), 16);
-    const f = (v) => Math.max(0, Math.min(255, Math.round(v + (amt > 0 ? (255 - v) * amt : v * amt))));
-    const r = f(n >> 16), gg = f((n >> 8) & 255), b = f(n & 255);
-    return '#' + ((1 << 24) | (r << 16) | (gg << 8) | b).toString(16).slice(1);
-}
+const shade = ART.shade;
 
 function paintTile(g, ch, tx, ty, f) {
     const X = tx * TS, Y = ty * TS;
@@ -563,19 +392,18 @@ function paintBuilding(g, b) {
     g.fillStyle = ink; g.fillRect(X + 1, Y + roofH - 2, W - 2, H - roofH + 2);
     g.fillStyle = '#f4ead5'; g.fillRect(X + 2, Y + roofH - 1, W - 4, H - roofH);
     g.fillStyle = '#e2d3b2'; g.fillRect(X + 2, Y + H - 4, W - 4, 3);
+    // roof with shingles and a chimney
+    g.fillStyle = ink; g.fillRect(X + W - 14, Y - 3, 8, 8);
+    g.fillStyle = shade(b.roof, -0.3); g.fillRect(X + W - 13, Y - 2, 6, 6);
     g.fillStyle = ink; g.fillRect(X, Y + 1, W, roofH);
     g.fillStyle = b.roof; g.fillRect(X + 1, Y + 2, W - 2, roofH - 2);
     g.fillStyle = shade(b.roof, -0.22);
-    for (let yy = Y + 6; yy < Y + roofH; yy += 5) g.fillRect(X + 1, yy, W - 2, 1);
+    for (let yy = Y + 6, row = 0; yy < Y + roofH; yy += 5, row++) {
+        g.fillRect(X + 1, yy, W - 2, 1);
+        for (let xx = X + 3 + (row % 2) * 4; xx < X + W - 2; xx += 8) g.fillRect(xx, yy - 4, 1, 4);
+    }
     g.fillStyle = shade(b.roof, 0.3); g.fillRect(X + 1, Y + 2, W - 2, 1);
     g.fillStyle = shade(b.roof, -0.4); g.fillRect(X + 1, Y + roofH - 1, W - 2, 1);
-    const label = plain(t(b.label));
-    g.font = "8px 'Press Start 2P', 'DotGothic16', monospace";
-    g.textBaseline = 'top';
-    const tw = Math.ceil(g.measureText(label).width);
-    const bw = Math.min(W - 4, tw + 6), bx = X + Math.round((W - bw) / 2), by = Y + 7;
-    g.fillStyle = ink; g.fillRect(bx, by, bw, 11);
-    g.fillStyle = '#fff8e1'; g.fillText(label, bx + 3, by + 2, bw - 6);
     const wy = Y + roofH + 3;
     [X + 6, X + W - 18].forEach((wx) => {
         g.fillStyle = ink; g.fillRect(wx - 1, wy - 1, 14, 11);
@@ -599,7 +427,209 @@ function paintSign(g, s) {
     g.fillStyle = '#a87438'; g.fillRect(X + 4, Y + 5, 8, 1); g.fillRect(X + 4, Y + 7, 6, 1);
 }
 
-const world = { ready: false, frames: [], lights: null, night: false, anim: 0 };
+/* --- interior painting --- */
+function paintFloor(P, kind, tx, ty) {
+    const X = tx * TS, Y = ty * TS;
+    switch (kind) {
+        case 'wood':
+            P(X, Y, 16, 16, '#d39a5f');
+            for (let r = 0; r < 4; r++) {
+                P(X, Y + r * 4 + 3, 16, 1, '#b7804a');
+                P(X + Math.floor(hash(tx, ty + r, 3) * 14), Y + r * 4, 1, 3, '#b7804a');
+            }
+            break;
+        case 'tile':
+            P(X, Y, 16, 16, (tx + ty) % 2 ? '#efe8d6' : '#e2d8c0');
+            P(X, Y + 15, 16, 1, '#cfc3a6'); P(X + 15, Y, 1, 16, '#cfc3a6');
+            break;
+        case 'lab':
+            P(X, Y, 16, 16, '#eef3f9');
+            P(X, Y + 15, 16, 1, '#cad6e6'); P(X + 15, Y, 1, 16, '#cad6e6');
+            P(X + 1, Y + 1, 3, 1, '#ffffff');
+            break;
+        case 'gym':
+            P(X, Y, 16, 16, (tx + ty) % 2 ? '#c9d6d2' : '#bdcbc7');
+            P(X, Y + 15, 16, 1, '#a9b9b4');
+            break;
+        default: // gallery
+            P(X, Y, 16, 16, '#a8744a');
+            for (let i = 0; i < 4; i++) P(X + i * 4 + ((ty % 2) * 2), Y, 1, 16, '#8f603a');
+            P(X, Y + 15, 16, 1, '#8f603a');
+    }
+}
+
+const PROP = {
+    bed(P, X, Y) {
+        P(X, Y - 2, 32, 34, '#2a2a3a'); P(X + 1, Y - 1, 30, 32, '#8a5a3a');
+        P(X + 3, Y + 1, 26, 28, '#ffffff'); P(X + 4, Y + 2, 24, 7, '#f1f1f8');
+        P(X + 3, Y + 11, 26, 18, '#4f7cc2'); P(X + 3, Y + 11, 26, 2, '#6f98dc');
+        for (let i = 0; i < 4; i++) P(X + 6 + i * 6, Y + 16, 3, 3, '#3d64a8');
+    },
+    shelf(P, X, Y, w) {
+        P(X, Y - 16, w * 16, 30, '#2a2a3a'); P(X + 1, Y - 15, w * 16 - 2, 28, '#9a6a42');
+        const cols = ['#e0688a', '#4f7cc2', '#2bb3a3', '#ffd447', '#8e5cc2', '#f2a541'];
+        [Y - 13, Y - 2].forEach((yy, r) => {
+            P(X + 2, yy + 9, w * 16 - 4, 2, '#6b4229');
+            for (let x = X + 3, i = r; x < X + w * 16 - 4; x += 4, i++) P(x, yy + 1 + (i % 3), 3, 8 - (i % 3), cols[i % cols.length]);
+        });
+    },
+    tv(P, X, Y) {
+        P(X + 2, Y + 4, 28, 10, '#2a2a3a'); P(X + 3, Y + 5, 26, 8, '#8a5a3a');
+        P(X + 4, Y - 12, 24, 17, '#2a2a3a'); P(X + 6, Y - 10, 20, 12, '#5ad0ff');
+        P(X + 7, Y - 9, 6, 2, '#c9f1ff'); P(X + 10, Y - 4, 12, 4, '#2bb3a3');
+        P(X + 20, Y + 7, 6, 3, '#e04b3c');
+    },
+    table(P, X, Y, w) {
+        P(X, Y - 2, w * 16, 14, '#2a2a3a'); P(X + 1, Y - 1, w * 16 - 2, 9, '#c98b52');
+        P(X + 1, Y + 8, w * 16 - 2, 3, '#8a5a3a');
+        P(X + 18, Y + 1, 6, 4, '#ffffff'); P(X + 19, Y + 2, 4, 2, '#e0688a');
+    },
+    plant(P, X, Y) {
+        P(X + 4, Y + 8, 8, 7, '#2a2a3a'); P(X + 5, Y + 9, 6, 5, '#c96f2d');
+        P(X + 2, Y - 2, 12, 11, '#2a2a3a');
+        P(X + 3, Y - 1, 10, 9, '#3fa06a'); P(X + 5, Y - 4, 6, 4, '#3fa06a');
+        P(X + 4, Y, 3, 2, '#7ccf6a'); P(X + 7, Y - 3, 2, 2, '#7ccf6a');
+    },
+    counter(P, X, Y, w) {
+        P(X, Y - 1, w * 16, 17, '#2a2a3a');
+        P(X + 1, Y, w * 16 - 2, 5, '#f6c26a'); P(X + 1, Y + 5, w * 16 - 2, 10, '#c9772a');
+        for (let x = X + 8; x < X + w * 16 - 8; x += 24) P(x, Y + 7, 10, 6, '#a95f1c');
+        P(X + 20, Y - 3, 8, 4, '#ffffff'); P(X + 21, Y - 2, 6, 1, '#e04b3c');
+        P(X + w * 16 - 34, Y - 4, 10, 5, '#f4ead5'); P(X + w * 16 - 33, Y - 3, 8, 1, '#4f7cc2');
+    },
+    cubby(P, X, Y, w) {
+        P(X, Y - 16, w * 16, 30, '#2a2a3a'); P(X + 1, Y - 15, w * 16 - 2, 28, '#b37a46');
+        for (let r = 0; r < 3; r++) for (let c = 0; c < w * 2; c++) {
+            const cx = X + 2 + c * 8, cy = Y - 14 + r * 9;
+            P(cx, cy, 7, 8, '#6b4229');
+            if (hash(c, r, w + X) > 0.35) P(cx + 1, cy + 3, 5, 4, hash(c, r, 9) > 0.5 ? '#ffffff' : '#ffe9b0');
+        }
+    },
+    bags(P, X, Y) {
+        [[X + 2, '#b9935a'], [X + 15, '#a37f48']].forEach(([x, c]) => {
+            P(x, Y - 2, 14, 16, '#2a2a3a'); P(x + 1, Y - 1, 12, 14, c);
+            P(x + 4, Y - 4, 6, 3, '#2a2a3a'); P(x + 3, Y + 4, 8, 3, '#4f7cc2');
+        });
+    },
+    machine(P, X, Y, w, h) {
+        P(X, Y - 16, w * 16, h * 16 + 14, '#2a2a3a'); P(X + 1, Y - 15, w * 16 - 2, h * 16 + 12, '#9aa7b8');
+        P(X + 4, Y - 12, w * 16 - 8, 14, '#2a2a3a'); P(X + 5, Y - 11, w * 16 - 10, 12, '#1f3b4f');
+        for (let i = 0; i < 6; i++) P(X + 8 + i * 8, Y - 8 + (i % 3) * 2, 5, 4 - (i % 3), ['#4dff9a', '#5ad0ff', '#ffd447'][i % 3]);
+        for (let i = 0; i < 8; i++) P(X + 6 + i * 7, Y + 6, 4, 3, i % 3 ? '#ffd447' : '#ff5d73');
+        P(X + 4, Y + 14, w * 16 - 8, 10, '#7d8a9c');
+        for (let x = X + 8; x < X + w * 16 - 8; x += 6) P(x, Y + 16, 3, 6, '#5f6b7c');
+    },
+    desk(P, X, Y, w) {
+        P(X, Y - 2, w * 16, 15, '#2a2a3a'); P(X + 1, Y - 1, w * 16 - 2, 6, '#e7ecf3'); P(X + 1, Y + 5, w * 16 - 2, 7, '#b9c4d3');
+        P(X + 6, Y - 14, 18, 14, '#2a2a3a'); P(X + 7, Y - 13, 16, 10, '#2bb3a3');
+        P(X + 9, Y - 10, 2, 6, '#ffd447'); P(X + 13, Y - 8, 2, 4, '#e0688a'); P(X + 17, Y - 11, 2, 7, '#ffffff');
+        P(X + 30, Y - 4, 10, 4, '#4f7cc2');
+    },
+    trophy(P, X, Y, w) {
+        P(X, Y - 14, w * 16, 28, '#2a2a3a'); P(X + 1, Y - 13, w * 16 - 2, 26, '#5b6b8a');
+        P(X + 2, Y - 1, w * 16 - 4, 2, '#3a465e');
+        for (let i = 0; i < w * 2; i++) {
+            const x = X + 3 + i * 7;
+            P(x, Y - 10, 5, 4, '#ffd447'); P(x + 2, Y - 6, 1, 3, '#d9a520'); P(x + 1, Y - 3, 3, 2, '#d9a520');
+            P(x, Y + 4, 5, 6, i % 2 ? '#c9ced6' : '#e08a3c');
+        }
+    },
+    statue(P, X, Y) {
+        P(X + 1, Y + 6, 14, 10, '#2a2a3a'); P(X + 2, Y + 7, 12, 8, '#9aa7b8');
+        P(X + 2, Y - 14, 12, 21, '#2a2a3a'); P(X + 3, Y - 13, 10, 19, '#c9d1dc');
+        P(X + 4, Y - 18, 3, 6, '#2a2a3a'); P(X + 9, Y - 18, 3, 6, '#2a2a3a');
+        P(X + 5, Y - 9, 2, 2, '#5a6b8c'); P(X + 9, Y - 9, 2, 2, '#5a6b8c');
+        P(X + 4, Y - 12, 3, 2, '#ffffff');
+    },
+    pedestal(P, X, Y, w, h, c) {
+        P(X + 2, Y - 2, 12, 18, '#2a2a3a'); P(X + 3, Y - 1, 10, 16, '#f4f0fa'); P(X + 3, Y + 11, 10, 4, '#d9d0e8');
+        P(X + 3, Y - 12, 10, 10, '#2a2a3a'); P(X + 4, Y - 11, 8, 8, c);
+        P(X + 5, Y - 10, 3, 2, '#ffffff');
+    },
+    bench(P, X, Y, w) {
+        P(X, Y, w * 16, 10, '#2a2a3a'); P(X + 1, Y + 1, w * 16 - 2, 5, '#6b4229');
+        P(X + 4, Y + 6, 3, 6, '#2a2a3a'); P(X + w * 16 - 7, Y + 6, 3, 6, '#2a2a3a');
+    }
+};
+
+function paintDeco(P, kind, tx, room) {
+    const X = tx * TS, Y = 16;
+    switch (kind) {
+        case 'window':
+            P(X, Y + 4, 30, 22, '#2a2a3a'); P(X + 2, Y + 6, 26, 18, '#9fd3f0');
+            P(X + 3, Y + 7, 8, 4, '#d9f1fc'); P(X + 14, Y + 6, 2, 18, '#2a2a3a'); P(X + 2, Y + 14, 26, 2, '#2a2a3a');
+            P(X - 2, Y + 24, 34, 3, room.trim);
+            break;
+        case 'frame':
+            P(X, Y + 5, 28, 20, '#2a2a3a'); P(X + 2, Y + 7, 24, 16, '#f2c14e');
+            P(X + 4, Y + 9, 20, 12, '#7ccf6a'); P(X + 4, Y + 9, 20, 5, '#9fd3f0'); P(X + 16, Y + 10, 4, 4, '#ffd447');
+            break;
+        case 'clock':
+            P(X + 4, Y + 4, 22, 22, '#2a2a3a'); P(X + 6, Y + 6, 18, 18, '#ffffff');
+            P(X + 14, Y + 9, 2, 7, '#2a2a3a'); P(X + 14, Y + 14, 6, 2, '#2a2a3a');
+            break;
+        case 'board':
+            P(X, Y + 3, 60, 25, '#8a5a3a'); P(X + 2, Y + 5, 56, 21, '#2f5a4a');
+            P(X + 5, Y + 9, 18, 1, '#ffffff'); P(X + 5, Y + 13, 26, 1, '#ffffff'); P(X + 5, Y + 17, 14, 1, '#ffffff');
+            P(X + 38, Y + 8, 2, 14, '#ffffff'); P(X + 38, Y + 21, 16, 1, '#ffffff'); P(X + 40, Y + 18, 4, 3, '#ffd447'); P(X + 46, Y + 13, 4, 8, '#e0688a');
+            break;
+        case 'banner':
+            P(X + 6, Y + 2, 20, 26, '#2a2a3a'); P(X + 7, Y + 3, 18, 22, room.trim);
+            P(X + 12, Y + 8, 8, 8, '#ffd447'); P(X + 14, Y + 10, 4, 4, '#ffffff');
+            P(X + 7, Y + 25, 6, 3, room.trim); P(X + 19, Y + 25, 6, 3, room.trim);
+            break;
+        case 'art': {
+            const cols = [['#2bb3a3', '#ffd447'], ['#e0688a', '#4f7cc2'], ['#8e5cc2', '#ffd447'], ['#4f7cc2', '#e0688a']][(tx / 3 | 0) % 4];
+            P(X + 2, Y + 3, 28, 24, '#2a2a3a'); P(X + 4, Y + 5, 24, 20, '#f2c14e');
+            P(X + 6, Y + 7, 20, 16, cols[0]); P(X + 9, Y + 12, 8, 8, cols[1]); P(X + 18, Y + 9, 5, 12, '#ffffff');
+            break;
+        }
+    }
+}
+
+function bakeRoom(id) {
+    const room = INTERIORS[id];
+    const c = document.createElement('canvas'); c.width = 320; c.height = 240;
+    const g = c.getContext('2d');
+    const P = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), w, h); };
+    P(0, 0, 320, 240, '#0d0d1a');
+    const L = ROOM.x0 * TS, R = (ROOM.x1 + 1) * TS, B = (ROOM.y1 + 1) * TS;
+    // walls
+    P(L, 16, R - L, 32, room.wall);
+    for (let x = L; x < R; x += 8) P(x, 18, 1, 26, shade(room.wall, -0.06));
+    P(L, 16, R - L, 3, shade(room.wall, -0.2));
+    P(L, 44, R - L, 4, shade(room.wall, -0.4));
+    // floor
+    for (let ty = ROOM.y0; ty <= ROOM.y1; ty++) for (let tx = ROOM.x0; tx <= ROOM.x1; tx++) paintFloor(P, room.floor, tx, ty);
+    P(L, 48, R - L, 3, 'rgba(0,0,0,.18)');
+    // rug
+    if (room.rug) {
+        const r = room.rug, x = r.x * TS, y = r.y * TS, w = r.w * TS, h = r.h * TS;
+        P(x, y, w, h, shade(r.c, -0.35)); P(x + 2, y + 2, w - 4, h - 4, r.c);
+        P(x + 5, y + 5, w - 10, h - 10, shade(r.c, 0.25)); P(x + 7, y + 7, w - 14, h - 14, r.c);
+        if (r.arena) {
+            P(x + 2, y + h / 2 - 1, w - 4, 2, '#ffffff');
+            const cx = x + w / 2, cy = y + h / 2;
+            for (let a = 0; a < 40; a++) { const an = a / 40 * Math.PI * 2; P(cx + Math.cos(an) * 14 - 1, cy + Math.sin(an) * 14 - 1, 2, 2, '#ffffff'); }
+        }
+    }
+    // wall decorations
+    room.deco.forEach(([k, tx]) => paintDeco(P, k, tx, room));
+    // props
+    room.props.forEach((p) => PROP[p.k](P, p.x * TS, p.y * TS, p.w, p.h, p.c));
+    // mat
+    P(9 * TS + 2, 13 * TS + 4, 28, 10, '#2a2a3a'); P(9 * TS + 3, 13 * TS + 5, 26, 8, '#d65a5a');
+    for (let x = 9 * TS + 5; x < 9 * TS + 28; x += 4) P(x, 13 * TS + 6, 2, 6, '#ef8a8a');
+    // room border
+    P(L - 4, 12, R - L + 8, 4, '#2a2a3a'); P(L - 4, 12, 4, B - 12 + 4, '#2a2a3a'); P(R, 12, 4, B - 12 + 4, '#2a2a3a');
+    P(L - 4, B, 9 * TS - L + 4, 4, '#2a2a3a'); P(11 * TS, B, R - 11 * TS + 4, 4, '#2a2a3a');
+    return c;
+}
+
+/* ---------------------------------------------------------
+   World baking + render
+   --------------------------------------------------------- */
+const world = { ready: false, frames: [], lights: null, rooms: {}, night: false, anim: 0 };
 const canvas = $('#world');
 const g = canvas.getContext('2d');
 
@@ -634,12 +664,14 @@ function bakeLights() {
 function bakeWorld() {
     world.frames = [bakeFrame(0), bakeFrame(1)];
     world.lights = bakeLights();
+    for (const id of Object.keys(INTERIORS)) world.rooms[id] = bakeRoom(id);
     world.ready = true;
 }
 
-function drawPerson(p, pal, x, y, walking) {
+function drawPerson(p, fixedRows, pal, x, y, walking) {
     let rows, flip = false;
-    if (p.dir === 'left' || p.dir === 'right') {
+    if (fixedRows) { rows = fixedRows; }
+    else if (p.dir === 'left' || p.dir === 'right') {
         rows = walking ? SPR.rightWalk : SPR.right;
         flip = p.dir === 'left';
     } else {
@@ -652,30 +684,41 @@ function drawPerson(p, pal, x, y, walking) {
     drawRows(g, rows, pal, x, y - 3 - (walking ? 1 : 0), flip);
 }
 
+function drawEmote(x, y) {
+    g.fillStyle = '#2a2a3a'; g.fillRect(x, y, 9, 11);
+    g.fillStyle = '#fff'; g.fillRect(x + 1, y + 1, 7, 9);
+    g.fillStyle = '#e04b3c'; g.fillRect(x + 4, y + 2, 1, 4); g.fillRect(x + 4, y + 7, 1, 2);
+}
+
+let residentEmote = false;
 function render() {
     if (!world.ready) return;
-    g.drawImage(world.frames[world.anim], 0, 0);
     const ppx = (player.x + (player.tx - player.x) * player.t) * TS;
     const ppy = (player.y + (player.ty - player.y) * player.t) * TS;
     const walking = player.moving && player.t > 0.15 && player.t < 0.85;
-    const ents = [
-        { y: npc.y * TS, draw: () => drawPerson(npc, PAL_NPC, npc.x * TS, npc.y * TS, false) },
-        { y: ppy, draw: () => drawPerson(player, PAL_PLAYER, ppx, ppy, walking) }
-    ].sort((a, b) => a.y - b.y);
-    ents.forEach((e) => e.draw());
-    if (!player.moving && tileAt(player.x, player.y) === ',') {
-        g.drawImage(world.frames[world.anim], player.x * TS, player.y * TS + 9, 16, 7, player.x * TS, player.y * TS + 9, 16, 7);
+    const ents = [{ y: ppy, draw: () => drawPerson(player, null, PAL_PLAYER, ppx, ppy, walking) }];
+    if (scene === 'town') {
+        g.drawImage(world.frames[world.anim], 0, 0);
+        ents.push({ y: townNpc.y * TS, draw: () => drawPerson(townNpc, null, PAL_TOWNNPC, townNpc.x * TS, townNpc.y * TS, false) });
+    } else {
+        g.drawImage(world.rooms[scene], 0, 0);
+        const room = INTERIORS[scene], res = RESIDENTS[room.who];
+        ents.push({ y: room.npc.y * TS, draw: () => drawPerson(null, res.rows, res.pal, room.npc.x * TS, room.npc.y * TS, false) });
     }
-    if (world.night) {
-        g.fillStyle = 'rgba(12,16,56,.55)'; g.fillRect(0, 0, 320, 240);
-        g.drawImage(world.lights, 0, 0);
+    ents.sort((a, b) => a.y - b.y).forEach((e) => e.draw());
+    if (scene === 'town') {
+        if (!player.moving && tileAt(player.x, player.y) === ',') {
+            g.drawImage(world.frames[world.anim], player.x * TS, player.y * TS + 9, 16, 7, player.x * TS, player.y * TS + 9, 16, 7);
+        }
+        if (world.night) {
+            g.fillStyle = 'rgba(12,16,56,.55)'; g.fillRect(0, 0, 320, 240);
+            g.drawImage(world.lights, 0, 0);
+        }
+    } else if (residentEmote) {
+        const n = INTERIORS[scene].npc;
+        drawEmote(n.x * TS + 4, n.y * TS - 17);
     }
-    if (player.emote) {
-        const ex = Math.round(ppx) + 4, ey = Math.round(ppy) - 17;
-        g.fillStyle = '#2a2a3a'; g.fillRect(ex, ey, 9, 11);
-        g.fillStyle = '#fff'; g.fillRect(ex + 1, ey + 1, 7, 9);
-        g.fillStyle = '#e04b3c'; g.fillRect(ex + 4, ey + 2, 1, 4); g.fillRect(ex + 4, ey + 7, 1, 2);
-    }
+    if (player.emote) drawEmote(Math.round(ppx) + 4, Math.round(ppy) - 17);
 }
 
 /* ---------------------------------------------------------
@@ -720,8 +763,12 @@ function tryMove(d) {
     player.dir = d;
     const [dx, dy] = DIRS[d];
     const nx = player.x + dx, ny = player.y + dy;
-    const door = BUILDINGS.find((b) => b.door.x === nx && b.door.y === ny);
-    if (door && d === 'up') { enterBuilding(door); return; }
+    if (scene === 'town') {
+        const door = BUILDINGS.find((b) => b.door.x === nx && b.door.y === ny);
+        if (door && d === 'up') { enterBuilding(door); return; }
+    } else if (d === 'down' && isMat(player.x, player.y)) {
+        exitBuilding(); return;
+    }
     if (isSolid(nx, ny)) {
         const now = performance.now();
         if (now - lastBump > 280) { blip(110, 0.05, 'square', 0.02); lastBump = now; }
@@ -732,7 +779,7 @@ function tryMove(d) {
 }
 function onStep() {
     stepsSinceBattle++;
-    if (state === 'world' && tileAt(player.x, player.y) === ',' && stepsSinceBattle > 3 && Math.random() < 0.13) {
+    if (scene === 'town' && state === 'world' && tileAt(player.x, player.y) === ',' && stepsSinceBattle > 3 && Math.random() < 0.13) {
         startEncounter();
     }
 }
@@ -740,21 +787,55 @@ function onStep() {
 function interact() {
     const [dx, dy] = DIRS[player.dir];
     const fx = player.x + dx, fy = player.y + dy;
-    const door = BUILDINGS.find((b) => b.door.x === fx && b.door.y === fy);
-    if (door) return enterBuilding(door);
-    const s = signAt(fx, fy);
-    if (s) return say([t(s.key)]);
-    if (npc.x === fx && npc.y === fy) return talkNpc();
-    if (tileAt(fx, fy) === '~') return say([t('water_text')]);
-    const b = buildingAt(fx, fy);
-    if (b) return say([t('sign_' + b.id)]);
+    if (scene === 'town') {
+        const door = BUILDINGS.find((b) => b.door.x === fx && b.door.y === fy);
+        if (door) return enterBuilding(door);
+        const s = signAt(fx, fy);
+        if (s) return say([t(s.key)]);
+        if (townNpc.x === fx && townNpc.y === fy) return talkTownNpc();
+        if (tileAt(fx, fy) === '~') return say([t('water_text')]);
+        const b = buildingAt(fx, fy);
+        if (b) return say([t('sign_' + b.id)]);
+        return;
+    }
+    const room = INTERIORS[scene];
+    const n = room.npc;
+    if ((n.x === fx && n.y === fy) || (propAt(room, fx, fy) && n.x === fx + dx && n.y === fy + dy)) return talkResident();
+    const p = propAt(room, fx, fy);
+    if (p && p.say) return say([t(p.say)]);
 }
-function talkNpc() {
-    const dx = player.x - npc.x, dy = player.y - npc.y;
-    npc.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
-    say([t('npc_1'), t('npc_2')], () => { npc.dir = 'left'; });
+function talkTownNpc() {
+    const dx = player.x - townNpc.x, dy = player.y - townNpc.y;
+    townNpc.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+    say([t('npc_1'), t('npc_2')], () => { townNpc.dir = 'left'; });
 }
 
+function talkResident() {
+    if (scene === 'town') return;
+    const id = scene, room = INTERIORS[id];
+    const name = t(room.name);
+    const lines = room.lines.map((k) => ({ name, text: t(k) }));
+    state = 'transition';
+    residentEmote = true;
+    blip(1320, 0.06);
+    setTimeout(() => {
+        residentEmote = false;
+        state = 'world';
+        const done = () => openPanel(BUILDING[id].panel, 'world');
+        if (room.heal) {
+            // heal the team right after the first greeting line
+            say(lines.slice(0, 1), () => {
+                healParty();
+                jingle([523, 659, 784, 659, 1047], 140, 0.12);
+                say(lines.slice(1), done);
+            });
+        } else {
+            say(lines, done);
+        }
+    }, 420);
+}
+
+let roomHintShown = false;
 function enterBuilding(b) {
     if (state !== 'world') return;
     state = 'transition';
@@ -762,23 +843,47 @@ function enterBuilding(b) {
     blip(523, 0.06); setTimeout(() => blip(784, 0.08), 70);
     screenEl.classList.add('fade');
     setTimeout(() => {
-        if (b.id === 'home') player.hp = 100;
-        state = 'world';
-        openPanel(b.panel, 'world');
+        scene = b.id;
+        Object.assign(player, { x: MAT[0][0], y: MAT[0][1], tx: MAT[0][0], ty: MAT[0][1], t: 0, moving: false, dir: 'up' });
         screenEl.classList.remove('fade');
-    }, 260);
+        state = 'world';
+        if (!roomHintShown) { roomHintShown = true; showHint('hint_room', 8000); }
+        setTimeout(() => { if (state === 'world' && scene === b.id) talkResident(); }, 320);
+    }, 300);
+}
+function exitBuilding() {
+    if (state !== 'world' || scene === 'town') return;
+    const from = BUILDING[scene];
+    state = 'transition';
+    clearHeld();
+    blip(784, 0.06); setTimeout(() => blip(523, 0.08), 70);
+    screenEl.classList.add('fade');
+    setTimeout(() => {
+        scene = 'town';
+        const x = from.door.x, y = from.door.y + 1;
+        Object.assign(player, { x, y, tx: x, ty: y, t: 0, moving: false, dir: 'down' });
+        stepsSinceBattle = 0;
+        screenEl.classList.remove('fade');
+        state = 'world';
+    }, 300);
 }
 
 /* --- hint --- */
 const hintEl = $('#hint');
-let hintShown = false;
-function showHint() { if (hintShown) return; hintShown = true; hintEl.classList.remove('hidden'); setTimeout(hideHint, 9000); }
+let hintTimer = null, introHintShown = false;
+function showHint(key, ms = 9000) {
+    hintEl.dataset.i18n = key;
+    hintEl.innerHTML = t(key);
+    hintEl.classList.remove('hidden');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(hideHint, ms);
+}
 function hideHint() { hintEl.classList.add('hidden'); }
 
 /* ---------------------------------------------------------
-   Dialog
+   Dialog (lines are strings or {name, text})
    --------------------------------------------------------- */
-const dlg = { el: $('#dialog'), text: $('#dialog-text'), queue: [], full: '', i: 0, timer: null, typing: false, cb: null, ret: 'world' };
+const dlg = { el: $('#dialog'), text: $('#dialog-text'), nameEl: $('#dialog-name'), queue: [], full: '', i: 0, timer: null, typing: false, cb: null, ret: 'world' };
 function say(lines, cb) {
     if (state !== 'dialog') dlg.ret = (state === 'transition' || state === 'title') ? 'world' : state;
     state = 'dialog';
@@ -797,7 +902,11 @@ function nextLine() {
         if (cb) cb();
         return;
     }
-    dlg.full = dlg.queue.shift();
+    const line = dlg.queue.shift();
+    dlg.full = typeof line === 'string' ? line : line.text;
+    const nm = typeof line === 'string' ? '' : (line.name || '');
+    dlg.nameEl.textContent = nm;
+    dlg.nameEl.hidden = !nm;
     dlg.i = 0; dlg.typing = true;
     dlg.el.classList.remove('done');
     dlg.text.textContent = '';
@@ -857,6 +966,7 @@ menuEl.addEventListener('click', (e) => {
         case 'options': blip(880, 0.04); showMenuPage('options'); break;
         case 'back': blip(660, 0.04); showMenuPage('main'); break;
         case 'exit': closeMenu(); break;
+        case 'dex': closeMenu(true); state = 'world'; showDex(); break;
         case 'theme': toggleTheme(); break;
         case 'sound':
             soundOn = !soundOn;
@@ -879,7 +989,7 @@ function openPanel(id, returnTo) {
     if (!sec || !sec.classList.contains('panel')) return;
     if (state !== 'panel') {
         panelReturn = returnTo || state;
-        if (panelReturn === 'menu' || panelReturn === 'transition') panelReturn = 'world';
+        if (['menu', 'transition', 'dialog'].includes(panelReturn)) panelReturn = 'world';
     }
     if (state === 'menu') closeMenu(true);
     $$('.panel').forEach((p) => { p.hidden = p !== sec; });
@@ -903,37 +1013,78 @@ function closePanel() {
 $$('[data-close]', layer).forEach((el) => el.addEventListener('click', closePanel));
 $$('.navbar a').forEach((a) => a.addEventListener('click', (e) => {
     e.preventDefault();
+    if (state === 'battle' || state === 'dialog') return; // finish the current scene first
     openPanel(a.dataset.panel);
 }));
 $('#logo-link').addEventListener('click', (e) => { e.preventDefault(); if (state === 'panel') closePanel(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 $('#to-top').addEventListener('click', (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
 /* ---------------------------------------------------------
+   Creatures, partners and the Dex
+   --------------------------------------------------------- */
+const TYPE_KEY = { data: 'type_data', logic: 'type_logic', art: 'type_art' };
+const SKILL_MOVES = [
+    { key: 'skill_1_title', type: 'data', power: 40 },
+    { key: 'skill_2_title', type: 'logic', power: 40 },
+    { key: 'skill_3_title', type: 'art', power: 40 }
+];
+const PARTNERS = [
+    { name: 'DATAVIZ',  art: 'DATAVIZ',  type: 'art',   sig: 'CHART BURST', lv: 12 },
+    { name: 'PIPELYNX', art: 'PIPELYNX', type: 'data',  sig: 'ETL POUNCE',  lv: 11 },
+    { name: 'QUERYOWL', art: 'QUERYOWL', type: 'logic', sig: 'DEEP JOIN',   lv: 11 }
+];
+const WILD = [
+    { name: 'NULL VALUE',     art: 'NULL_VALUE',     type: 'logic', weak: 'data',  moves: ['VOID', 'BLANK STARE'], desc: 0 },
+    { name: 'DIRTY DATA',     art: 'DIRTY_DATA',     type: 'art',   weak: 'data',  moves: ['TYPO STORM', 'DUPLICATE'], desc: 1 },
+    { name: 'SLOW QUERY',     art: 'SLOW_QUERY',     type: 'data',  weak: 'logic', moves: ['FULL SCAN', 'TIMEOUT'], desc: 2 },
+    { name: 'MERGE CONFLICT', art: 'MERGE_CONFLICT', type: 'data',  weak: 'logic', moves: ['<<<<<<< HEAD', 'REBASE'], desc: 3 },
+    { name: 'MEMORY LEAK',    art: 'MEMORY_LEAK',    type: 'logic', weak: 'art',   moves: ['OVERFLOW', 'SLOW DRIP'], desc: 4 }
+];
+const LEGENDS = [
+    { name: 'PETADRAKE',  art: 'PETADRAKE',  type: 'data',  weak: 'logic', moves: ['PETABYTE BREATH', 'COLD STORAGE'], desc: 5, legendary: true },
+    { name: 'SINGULARIX', art: 'SINGULARIX', type: 'logic', weak: 'art',   moves: ['EVENT HORIZON', 'INFINITE LOOP'], desc: 6, legendary: true },
+    { name: 'PRISMORA',   art: 'PRISMORA',   type: 'art',   weak: 'data',  moves: ['SPECTRUM SCALE', 'GRADIENT DUST'], desc: 7, legendary: true }
+];
+const ALL_CREATURES = [...WILD, ...LEGENDS];
+const LEGEND_CHANCE = 0.07;
+const maxHpFor = (lv) => 30 + lv * 3;
+
+const party = PARTNERS.map((p) => Object.assign({}, p, { exp: 0 }));
+(() => {
+    try {
+        const saved = JSON.parse(store.get('evz_party') || 'null');
+        if (Array.isArray(saved)) saved.forEach((s, i) => { if (party[i] && s) { party[i].lv = Math.min(100, Math.max(party[i].lv, s.lv | 0)); party[i].exp = Math.max(0, s.exp | 0); } });
+    } catch (e) { /* ignore */ }
+    party.forEach((p) => { p.maxHp = maxHpFor(p.lv); p.hp = p.maxHp; });
+})();
+function saveParty() { store.set('evz_party', JSON.stringify(party.map((p) => ({ lv: p.lv, exp: p.exp })))); }
+function healParty() { party.forEach((p) => { p.maxHp = maxHpFor(p.lv); p.hp = p.maxHp; }); }
+
+let dex = [];
+try { dex = JSON.parse(store.get('evz_dex') || '[]'); if (!Array.isArray(dex)) dex = []; } catch (e) { dex = []; }
+function markSeen(name) { if (!dex.includes(name)) { dex.push(name); store.set('evz_dex', JSON.stringify(dex)); } }
+function showDex() {
+    const legends = LEGENDS.filter((l) => dex.includes(l.name)).map((l) => l.name);
+    const seen = ALL_CREATURES.filter((c) => dex.includes(c.name)).length;
+    const lines = [t('dex_text', { n: seen, t: ALL_CREATURES.length, l: legends.length })];
+    if (legends.length) lines.push(t('dex_legend', { list: legends.join(', ') }));
+    say(lines);
+}
+
+/* ---------------------------------------------------------
    Battle
    --------------------------------------------------------- */
-const MOVES = [
-    { key: 'skill_1_title', type: 'data', typeKey: 'type_data' },
-    { key: 'skill_2_title', type: 'logic', typeKey: 'type_logic' },
-    { key: 'skill_3_title', type: 'art', typeKey: 'type_art' }
-];
-const ENEMIES = [
-    { name: 'NULL VALUE', shape: 'ghost', pal: { k: '#2a2a3a', w: '#eef0ff', c: '#9aa3d9' }, weak: 'data', moves: ['VOID', 'BLANK STARE'] },
-    { name: 'DIRTY DATA', shape: 'bug', pal: { k: '#2a1a10', c: '#a0703c', d: '#6e4a26', w: '#ffffff' }, weak: 'data', moves: ['TYPO STORM', 'DUPLICATE'] },
-    { name: 'SLOW QUERY', shape: 'bug', pal: { k: '#10203a', c: '#5aa0e6', d: '#346fae', w: '#ffffff' }, weak: 'logic', moves: ['FULL SCAN', 'TIMEOUT'] },
-    { name: 'MERGE CONFLICT', shape: 'ghost', pal: { k: '#3a1010', w: '#ff9a9a', c: '#c94a4a' }, weak: 'logic', moves: ['<<<<<<< HEAD', 'REBASE'] },
-    { name: 'MEMORY LEAK', shape: 'bug', pal: { k: '#24103a', c: '#b07ae6', d: '#7a4bb0', w: '#ffffff' }, weak: 'art', moves: ['OVERFLOW', 'SLOW DRIP'] }
-];
-const battle = { active: false, enemy: null, menu: 'main', waiting: false, resolve: null, skip: null, busy: false, timer: null, auto: null };
-const bEl = $('#battle'), bMsg = $('#b-msg'), bMenu = $('#b-menu');
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const battle = { active: false, enemy: null, cur: 0, menu: 'main', resolve: null, skip: null, busy: false, timer: null, auto: null };
+const bEl = $('#battle'), bMsg = $('#b-msg'), bMenu = $('#b-menu'), bBottom = $('.b-bottom');
+const bEnemy = $('#b-enemy-img'), bPartner = $('#b-player-img'), bTrainer = $('#b-trainer'), bBall = $('#b-ball');
+const bHudP = $('.b-hud-player'), bHudE = $('.b-hud-enemy');
 
 function msg(text, opts) {
     const holdForInput = !(opts && opts.wait === false);
     return new Promise((res) => {
-        bMenu.classList.add('hidden');
+        setMenuMode(null);
         clearInterval(battle.timer);
         clearTimeout(battle.auto);
-        battle.waiting = false;
         battle.resolve = null;
         bEl.classList.remove('msg-done');
         let i = 0;
@@ -943,16 +1094,14 @@ function msg(text, opts) {
             battle.skip = null;
             bMsg.textContent = text;
             if (!holdForInput) { res(); return; }
-            battle.waiting = true;
             bEl.classList.add('msg-done');
             battle.resolve = () => {
-                battle.waiting = false;
                 battle.resolve = null;
                 clearTimeout(battle.auto);
                 bEl.classList.remove('msg-done');
                 res();
             };
-            battle.auto = setTimeout(() => { if (battle.resolve) battle.resolve(); }, 2200);
+            battle.auto = setTimeout(() => { if (battle.resolve) battle.resolve(); }, 2400);
         };
         battle.skip = finish;
         battle.timer = setInterval(() => {
@@ -969,155 +1118,292 @@ function battleAdvance() {
 }
 $('#b-msgbox').addEventListener('click', () => { if (state === 'battle') battleAdvance(); });
 
-function setHp(who, hp) {
-    const bar = $('#b-' + who + '-hp');
-    bar.style.width = hp + '%';
-    bar.classList.toggle('mid', hp <= 50 && hp > 20);
-    bar.classList.toggle('low', hp <= 20);
-    if (who === 'player') $('#b-player-hpnum').textContent = hp + '/100';
+function setBar(bar, hp, max) {
+    const pct = Math.max(0, Math.round(hp / max * 100));
+    bar.style.width = pct + '%';
+    bar.classList.toggle('mid', pct <= 50 && pct > 20);
+    bar.classList.toggle('low', pct <= 20);
 }
-function anim(el, cls, keep) {
+function updateHud() {
+    const p = party[battle.cur], e = battle.enemy;
+    $('#b-player-name').textContent = p.name;
+    $('#b-player-lv').textContent = p.lv;
+    $('#b-player-hpnum').textContent = Math.max(0, p.hp) + '/' + p.maxHp;
+    setBar($('#b-player-hp'), p.hp, p.maxHp);
+    if (e) setBar($('#b-enemy-hp'), e.hp, e.maxHp);
+}
+function anim(el, cls, ms = 600) {
     el.classList.remove(cls);
     void el.offsetWidth;
     el.classList.add(cls);
-    if (!keep) setTimeout(() => el.classList.remove(cls), 600);
+    if (ms) setTimeout(() => el.classList.remove(cls), ms);
 }
 
-function startEncounter() {
+function startEncounter(force) {
     state = 'battle';
     clearHeld();
+    hideHint();
     battle.active = true;
     player.emote = true;
+    const legendary = force ? !!force.legendary : Math.random() < LEGEND_CHANCE;
+    const pool = legendary ? LEGENDS : WILD;
+    const base = (force && force.name) ? ALL_CREATURES.find((c) => c.name === force.name) : pool[Math.floor(Math.random() * pool.length)];
     blip(1320, 0.08); setTimeout(() => blip(1568, 0.1), 90);
     setTimeout(() => {
         player.emote = false;
-        screenEl.classList.add('encounter');
-        [880, 660, 880, 660, 440].forEach((f, i) => setTimeout(() => blip(f, 0.07), i * 120));
-        setTimeout(() => { screenEl.classList.remove('encounter'); beginBattle(); }, 720);
+        screenEl.classList.add(base.legendary ? 'encounter-legend' : 'encounter');
+        if (base.legendary) jingle([196, 233, 196, 262, 196, 311], 130, 0.12);
+        else jingle([880, 660, 880, 660, 440], 120, 0.07);
+        setTimeout(() => {
+            screenEl.classList.remove('encounter', 'encounter-legend');
+            beginBattle(base);
+        }, base.legendary ? 1100 : 720);
     }, 500);
 }
-function beginBattle() {
-    const idx = Math.floor(Math.random() * ENEMIES.length);
-    const e = ENEMIES[idx];
-    battle.enemy = Object.assign({}, e, { idx, hp: 100, lv: 3 + Math.floor(Math.random() * 12) });
-    $('#b-enemy-name').textContent = e.name;
-    $('#b-enemy-lv').textContent = battle.enemy.lv;
-    const eImg = $('#b-enemy-img');
-    eImg.classList.remove('faint', 'hit');
-    eImg.src = spriteURL(MON[e.shape], e.pal, 8);
-    eImg.alt = e.name;
-    setHp('enemy', 100);
-    setHp('player', player.hp);
+
+function beginBattle(base) {
+    const lv = base.legendary ? 45 + Math.floor(Math.random() * 11) : 3 + Math.floor(Math.random() * 12);
+    const maxHp = base.legendary ? 120 + (lv - 45) * 2 : 16 + lv * 3;
+    battle.enemy = Object.assign({}, base, { lv, maxHp, hp: maxHp });
+    battle.cur = Math.max(0, party.findIndex((p) => p.hp > 0));
+    markSeen(base.name);
+
+    bEnemy.className = 'b-sprite b-enemy' + (base.legendary ? ' legendary' : '');
+    bEnemy.src = ART.creature(base.art);
+    bEnemy.alt = base.name;
+    $('#b-enemy-name').textContent = base.name;
+    $('#b-enemy-lv').textContent = lv;
+    bHudE.classList.toggle('legend', !!base.legendary);
+    bHudE.classList.add('hud-hidden');
+    bHudP.classList.add('hud-hidden');
+    bPartner.className = 'b-sprite b-player gone';
+    bTrainer.className = 'b-sprite b-trainer';
+    bBall.className = 'b-ball';
     bMsg.textContent = '';
+    setMenuMode(null);
+    updateHud();
     bEl.classList.remove('hidden');
-    bEl.classList.add('enter');
-    setTimeout(() => bEl.classList.remove('enter'), 700);
+    bEl.classList.toggle('legendary', !!base.legendary);
+    anim(bEl, 'enter', 800);
+
     (async () => {
-        await wait(400);
-        await msg(t('b_appear', { x: e.name }));
+        await wait(700);
+        bHudE.classList.remove('hud-hidden');
+        if (base.legendary) jingle([392, 466, 523, 622], 150, 0.15);
+        await msg(base.legendary ? t('b_legend', { x: base.name }) : t('b_appear', { x: base.name }));
+        await sendOut(battle.cur, 'b_go', true);
         mainMenu();
     })();
 }
+
+async function sendOut(i, key, trainerOnField) {
+    battle.cur = i;
+    const p = party[i];
+    updateHud();
+    bPartner.src = ART.flipped(p.art);
+    bPartner.alt = p.name;
+    await msg(t(key, { m: p.name }), { wait: false });
+    if (trainerOnField) anim(bTrainer, 'leave', 0);
+    anim(bBall, 'throw', 0);
+    blip(660, 0.05); setTimeout(() => blip(990, 0.05), 120);
+    await wait(650);
+    bBall.className = 'b-ball';
+    bPartner.className = 'b-sprite b-player';
+    anim(bPartner, 'popin', 500);
+    jingle([784, 1047], 90, 0.08);
+    await wait(450);
+    bHudP.classList.remove('hud-hidden');
+    await wait(500);
+}
+
 async function mainMenu() {
-    await msg(t('b_what', { p: 'THARIQ' }), { wait: false });
+    await msg(t('b_what', { p: party[battle.cur].name }), { wait: false });
     renderBattleMenu('main');
 }
+
+function setMenuMode(mode) {
+    bMenu.dataset.mode = mode || '';
+    bMenu.classList.toggle('hidden', !mode);
+    bBottom.dataset.mode = mode || '';
+}
+
 function renderBattleMenu(m) {
     battle.menu = m;
     bMenu.innerHTML = '';
-    bMenu.dataset.mode = m;
-    const add = (html, fn, cls) => {
+    setMenuMode(m);
+    const add = (html, fn, cls, parent = bMenu) => {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'b-btn ' + (cls || '');
         b.innerHTML = html;
         b.addEventListener('click', () => { if (battle.busy || state !== 'battle') return; blip(880, 0.04); fn(); });
-        bMenu.appendChild(b);
+        parent.appendChild(b);
         return b;
     };
     if (m === 'main') {
         add(t('b_fight'), () => renderBattleMenu('moves'));
+        add(t('b_team'), () => renderBattleMenu('team'));
         add(t('b_info'), doInfo);
         add(t('b_run'), doRun);
-    } else {
-        MOVES.forEach((mv, i) => add('<span>' + plain(t(mv.key)) + '</span><small>' + t(mv.typeKey) + '</small>', () => useMove(i), 't-' + mv.type));
+    } else if (m === 'moves') {
+        const p = party[battle.cur];
+        const info = document.createElement('div');
+        info.className = 'b-moveinfo';
+        info.innerHTML = '<span class="mi-type type"></span><span class="mi-pow"></span>';
+        const tEl = info.querySelector('.mi-type'), pEl = info.querySelector('.mi-pow');
+        movesFor(p).forEach((mv, i) => {
+            const b = add('<span>' + mv.label + '</span>', () => useMove(i), 't-' + mv.type);
+            const show = () => { tEl.textContent = t(TYPE_KEY[mv.type]); tEl.className = 'mi-type type t-' + mv.type; pEl.textContent = t('b_power') + ' ' + mv.power; };
+            b.addEventListener('focus', show); b.addEventListener('mouseenter', show);
+        });
+        bMenu.appendChild(info);
+        add(t('b_back'), () => renderBattleMenu('main'), 'back', info);
+    } else if (m === 'team') {
+        party.forEach((p, i) => {
+            const pct = Math.max(0, Math.round(p.hp / p.maxHp * 100));
+            add('<img alt="" src="' + ART.creature(p.art) + '"><span class="tm-name">' + p.name + ' <em>Lv' + p.lv + '</em></span>' +
+                '<i class="mini-hp"><i class="' + (pct <= 20 ? 'low' : pct <= 50 ? 'mid' : '') + '" style="width:' + pct + '%"></i></i><small>' + Math.max(0, p.hp) + '/' + p.maxHp + '</small>',
+                () => doSwitch(i), 'team' + (i === battle.cur ? ' current' : '') + (p.hp <= 0 ? ' fainted' : ''));
+        });
         add(t('b_back'), () => renderBattleMenu('main'), 'back');
     }
-    bMenu.classList.remove('hidden');
     const first = bMenu.querySelector('button');
     if (first) first.focus({ preventScroll: true });
 }
+
+function movesFor(p) {
+    return SKILL_MOVES.map((m) => ({ label: plain(t(m.key)), type: m.type, power: m.power }))
+        .concat([{ label: p.sig, type: p.type, power: 55 }]);
+}
+
 async function doInfo() {
     battle.busy = true;
-    await msg(t('en_desc_' + battle.enemy.idx));
+    const e = battle.enemy;
+    await msg(e.name + ' · ' + t(TYPE_KEY[e.type]) + ' · ' + t('en_desc_' + e.desc));
     battle.busy = false;
     mainMenu();
 }
 async function doRun() {
     battle.busy = true;
-    blip(330, 0.05); setTimeout(() => blip(260, 0.05), 80); setTimeout(() => blip(200, 0.08), 160);
+    jingle([330, 260, 200], 80, 0.06);
     await msg(t('b_run_ok'));
     battle.busy = false;
     endBattle();
 }
+async function doSwitch(i) {
+    const p = party[i];
+    battle.busy = true;
+    if (i === battle.cur) { await msg(t('b_already', { m: p.name })); battle.busy = false; renderBattleMenu('team'); return; }
+    if (p.hp <= 0) { await msg(t('b_cant', { m: p.name })); battle.busy = false; renderBattleMenu('team'); return; }
+    await msg(t('b_come_back', { m: party[battle.cur].name }), { wait: false });
+    bHudP.classList.add('hud-hidden');
+    anim(bPartner, 'recall', 0);
+    await wait(500);
+    bPartner.className = 'b-sprite b-player gone';
+    await sendOut(i, 'b_go_next', false);
+    const r = await enemyTurn();
+    battle.busy = false;
+    if (r === 'continue') mainMenu();
+}
+
 async function useMove(i) {
     battle.busy = true;
-    const mv = MOVES[i], en = battle.enemy;
-    await msg(t('b_used', { p: 'THARIQ', m: plain(t(mv.key)) }));
-    const eImg = $('#b-enemy-img');
-    anim(eImg, 'hit');
+    const p = party[battle.cur], en = battle.enemy;
+    const mv = movesFor(p)[i];
+    await msg(t('b_used', { p: p.name, m: mv.label }));
+    anim(bPartner, 'lunge', 400);
+    await wait(180);
+    anim(bEnemy, 'hit');
     blip(220, 0.14, 'sawtooth', 0.04);
-    let dmg = 24 + Math.floor(Math.random() * 18);
-    const crit = Math.random() < 0.15;
-    const sup = mv.type === en.weak;
-    if (crit) dmg = Math.round(dmg * 1.5);
-    if (sup) dmg = Math.round(dmg * 1.6);
+    const crit = Math.random() < 0.08;
+    const eff = mv.type === en.weak ? 1.6 : mv.type === en.type ? 0.6 : 1;
+    const stab = mv.type === p.type ? 1.25 : 1;
+    const dmg = Math.max(1, Math.round((mv.power / 40) * (6 + p.lv * 0.9) * stab * eff * (crit ? 1.5 : 1) * rand(0.85, 1)));
     en.hp = Math.max(0, en.hp - dmg);
-    setHp('enemy', en.hp);
+    updateHud();
     await wait(650);
     if (crit) await msg(t('b_crit'));
-    if (sup) await msg(t('b_super'));
+    if (eff > 1) await msg(t('b_super'));
+    if (eff < 1) await msg(t('b_not_eff'));
     if (en.hp <= 0) {
-        anim(eImg, 'faint', true);
-        blip(400, 0.1); setTimeout(() => blip(300, 0.1), 100); setTimeout(() => blip(180, 0.2), 200);
-        await wait(500);
+        anim(bEnemy, 'faint', 0);
+        jingle([400, 300, 180], 100, 0.12);
+        await wait(600);
         await msg(t('b_win', { x: en.name }));
-        [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => blip(f, 0.09), k * 110));
-        await msg(t('b_gain', { n: 5 + Math.floor(Math.random() * 16) }));
+        jingle([523, 659, 784, 1047], 110, 0.09);
+        await gainExp(p, en.lv * 7 * (en.legendary ? 3 : 1));
         battle.busy = false;
         endBattle();
         return;
     }
-    const em = en.moves[Math.floor(Math.random() * en.moves.length)];
-    await msg(t('b_enemy_used', { x: en.name, m: em }));
-    anim($('#b-player-img'), 'hit');
-    blip(160, 0.14, 'sawtooth', 0.04);
-    player.hp = Math.max(0, player.hp - (8 + Math.floor(Math.random() * 12)));
-    setHp('player', player.hp);
-    await wait(650);
-    if (player.hp <= 0) {
-        await msg(t('b_lose'));
-        player.hp = 100;
-        battle.busy = false;
-        endBattle();
-        return;
-    }
+    const r = await enemyTurn();
     battle.busy = false;
-    mainMenu();
+    if (r === 'continue') mainMenu();
 }
-function endBattle() {
+
+async function gainExp(p, n) {
+    p.exp += n;
+    await msg(t('b_exp', { m: p.name, n }));
+    while (p.exp >= p.lv * 12 && p.lv < 100) {
+        p.exp -= p.lv * 12;
+        p.lv++;
+        const old = p.maxHp;
+        p.maxHp = maxHpFor(p.lv);
+        p.hp += p.maxHp - old;
+        updateHud();
+        jingle([523, 784, 1047, 1319], 100, 0.1);
+        await msg(t('b_lvup', { m: p.name, n: p.lv }));
+    }
+    saveParty();
+}
+
+async function enemyTurn() {
+    const en = battle.enemy, p = party[battle.cur];
+    await msg(t('b_enemy_used', { x: en.name, m: pick(en.moves) }));
+    anim(bEnemy, 'lunge-e', 400);
+    await wait(180);
+    anim(bPartner, 'hit');
+    blip(160, 0.14, 'sawtooth', 0.04);
+    const dmg = Math.max(1, Math.round((3 + en.lv * 0.45) * rand(0.85, 1)));
+    p.hp = Math.max(0, p.hp - dmg);
+    updateHud();
+    await wait(650);
+    if (p.hp > 0) return 'continue';
+    anim(bPartner, 'faint', 0);
+    jingle([400, 300, 180], 100, 0.12);
+    await wait(500);
+    bHudP.classList.add('hud-hidden');
+    await msg(t('b_fainted', { m: p.name }));
+    const next = party.findIndex((q) => q.hp > 0);
+    if (next >= 0) {
+        bPartner.className = 'b-sprite b-player gone';
+        await sendOut(next, 'b_go_next', false);
+        return 'continue';
+    }
+    await msg(t('b_blackout'));
+    healParty();
+    endBattle(true);
+    return 'blackout';
+}
+
+function endBattle(blackout) {
     state = 'transition';
     screenEl.classList.add('fade');
     setTimeout(() => {
         bEl.classList.add('hidden');
-        bMenu.classList.add('hidden');
+        setMenuMode(null);
         clearTimeout(battle.auto);
         battle.active = false;
         battle.resolve = null; battle.skip = null;
         if (bEl.contains(document.activeElement)) document.activeElement.blur();
         stepsSinceBattle = 0;
-        state = 'world';
+        if (blackout) {
+            scene = 'town';
+            const d = BUILDING.home.door;
+            Object.assign(player, { x: d.x, y: d.y + 1, tx: d.x, ty: d.y + 1, t: 0, moving: false, dir: 'down' });
+        }
         screenEl.classList.remove('fade');
+        state = 'world';
     }, 320);
 }
 
@@ -1138,7 +1424,7 @@ function startGame() {
             cap(plain(t('home_desc'))),
             t('intro_3'),
             t('intro_4')
-        ], showHint);
+        ], () => { if (!introHintShown) { introHintShown = true; showHint('hint_move'); } });
     }, 500);
 }
 titleEl.addEventListener('click', () => { if (state === 'title') startGame(); });
@@ -1205,7 +1491,7 @@ function press(act) {
                     if (f && bMenu.contains(f)) f.click();
                     else { const b0 = bMenu.querySelector('button'); if (b0) b0.focus({ preventScroll: true }); }
                 }
-                else if (act === 'b' && battle.menu === 'moves') renderBattleMenu('main');
+                else if (act === 'b' && battle.menu !== 'main' && !battle.busy) renderBattleMenu('main');
             }
             break;
         case 'panel':
@@ -1226,7 +1512,6 @@ document.addEventListener('keydown', (e) => {
     const ae = document.activeElement;
     const nativeActivate = (e.code === 'Enter' || e.code === 'Space' || e.code === 'NumpadEnter') && ae && (ae.tagName === 'BUTTON' || ae.tagName === 'A');
     if (nativeActivate && (!screenEl.contains(ae) || state === 'menu' || (state === 'battle' && !battle.skip && !battle.resolve))) return;
-    // let arrows scroll the page when the game screen is out of view
     const rect = screenEl.getBoundingClientRect();
     if (isDir(act) && (rect.bottom < 0 || rect.top > window.innerHeight)) return;
     e.preventDefault();
@@ -1236,7 +1521,6 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => { const act = KEYMAP[e.code]; if (act && isDir(act)) releaseDir(act); });
 window.addEventListener('blur', clearHeld);
 
-// on-screen controls
 $$('.dpad button').forEach((btn) => {
     const d = btn.dataset.dir;
     btn.addEventListener('pointerdown', (e) => {
@@ -1265,19 +1549,32 @@ function tileFromEvent(e) {
     const r = canvas.getBoundingClientRect();
     return [Math.floor((e.clientX - r.left) / r.width * COLS), Math.floor((e.clientY - r.top) / r.height * ROWS)];
 }
+function clickTarget(tx, ty) {
+    if (scene === 'town') return buildingAt(tx, ty) || signAt(tx, ty) || (townNpc.x === tx && townNpc.y === ty ? townNpc : null);
+    const room = INTERIORS[scene];
+    if (room.npc.x === tx && room.npc.y === ty) return room.npc;
+    if (isMat(tx, ty)) return 'mat';
+    const p = propAt(room, tx, ty);
+    return p && p.say ? p : null;
+}
 canvas.addEventListener('click', (e) => {
     if (state !== 'world') return;
     const [tx, ty] = tileFromEvent(e);
-    const b = buildingAt(tx, ty);
-    if (b) { enterBuilding(b); return; }
-    const s = signAt(tx, ty);
-    if (s) { say([t(s.key)]); return; }
-    if (npc.x === tx && npc.y === ty) talkNpc();
+    const hit = clickTarget(tx, ty);
+    if (!hit) return;
+    if (scene === 'town') {
+        if (hit === townNpc) return talkTownNpc();
+        if (hit.door) return enterBuilding(hit);
+        return say([t(hit.key)]);
+    }
+    if (hit === 'mat') return exitBuilding();
+    if (hit === INTERIORS[scene].npc) return talkResident();
+    return say([t(hit.say)]);
 });
 canvas.addEventListener('mousemove', (e) => {
     if (state !== 'world') { canvas.style.cursor = ''; return; }
     const [tx, ty] = tileFromEvent(e);
-    canvas.style.cursor = (buildingAt(tx, ty) || signAt(tx, ty) || (npc.x === tx && npc.y === ty)) ? 'pointer' : '';
+    canvas.style.cursor = clickTarget(tx, ty) ? 'pointer' : '';
 });
 
 /* ---------------------------------------------------------
@@ -1309,8 +1606,7 @@ function setLanguage(l) {
     languageSelector.value = l;
     $$('[data-lang]').forEach((b) => b.classList.toggle('is-on', b.dataset.lang === l));
     updateSoundLabel();
-    if (world.ready) bakeWorld();
-    if (battle.active && !bMenu.classList.contains('hidden')) renderBattleMenu(battle.menu);
+    if (battle.active && !bMenu.classList.contains('hidden') && !battle.busy) renderBattleMenu(battle.menu);
 }
 languageSelector.addEventListener('change', (e) => setLanguage(e.target.value));
 
@@ -1323,21 +1619,17 @@ setLanguage(store.get('language') || 'en');
 
 const heroURL = spriteURL(SPR.down, PAL_PLAYER, 8);
 $$('img[data-sprite="hero"]').forEach((img) => { img.src = heroURL; });
-$('#b-player-img').src = spriteURL(SPR.up, PAL_PLAYER, 8);
-$('#title-buddy').src = spriteURL(MON.bug, { k: '#10303a', c: '#3fd0c0', d: '#22968a', w: '#ffffff' }, 8);
+bTrainer.src = spriteURL(SPR.up, PAL_PLAYER, 8);
+$('#title-buddy').src = ART.creature('DATAVIZ');
 
 g.imageSmoothingEnabled = false;
 bakeWorld();
-if (document.fonts) {
-    Promise.all([
-        document.fonts.load("8px 'Press Start 2P'"),
-        document.fonts.load("8px 'DotGothic16'", 'いえポストラボジムさくひん')
-    ]).then(bakeWorld, bakeWorld);
-    if (document.fonts.ready) document.fonts.ready.then(bakeWorld);
-}
 requestAnimationFrame(loop);
 
 // deep links (#about, #portfolio ...) open their panel straight away
 const hashId = location.hash.slice(1);
 if (PANELS.includes(hashId)) openPanel(hashId, 'title');
+
+// small hook for automated checks
+window.__evz = { get state() { return state; }, get scene() { return scene; }, player, party, battle, encounter: startEncounter };
 })();
