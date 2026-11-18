@@ -90,6 +90,10 @@ body.side-collapsed #toc, body.side-collapsed #side .keys{display:none}
 #linkList button:hover{background:rgba(255,255,255,.06)}
 #linkList .n{font-family:var(--mono);font-size:11px;color:var(--faint);min-width:26px}
 #linkList .go{margin-left:auto;color:var(--faint)}
+#linkList .use{margin:0 0 8px;font-size:13px;line-height:1.45;color:#b4bbcb;padding-left:12px;position:relative}
+#linkList .use::before{content:"";position:absolute;left:0;top:.6em;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+#linkList .use + button{margin-top:4px}
+.ap{display:inline-block;margin-left:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tc, var(--accent));border:1px solid currentColor;border-radius:4px;padding:0 4px;vertical-align:1px;opacity:.85}
 
 /* contents overlay */
 #contents{position:fixed;inset:0;z-index:15;background:rgba(8,10,15,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .3s ease;overflow-y:auto}
@@ -344,7 +348,7 @@ body.home .ui{opacity:0;pointer-events:none}
 <div id="contents">
   <div class="cwrap">
     <div class="chead">
-      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twenty-one interactive chapters in ten topics, from the Feynman Lectures to the machines that use them</p></div>
+      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twenty-seven chapters in nine topics. Each topic starts with the physics and ends with where it is used in the real world.</p></div>
       <button id="closeContents" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div id="topicGrid"></div>
@@ -353,9 +357,9 @@ body.home .ui{opacity:0;pointer-events:none}
 <div id="fade"></div>
 <div id="intro">
   <div class="hero">
-    <div class="bar"><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i><i style="background:#9ED1F0;animation-delay:0.80s"></i></div>
+    <div class="bar"><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i></div>
     <h2><span>∂</span>physcx</h2>
-    <p>Twenty-one interactive 3D simulations, from planetary orbits to jet engines, built around <i>The Feynman Lectures on Physics</i>.</p>
+    <p>Twenty-seven interactive 3D simulations built around <i>The Feynman Lectures on Physics</i>, each topic paired with the real machines that use it.</p>
     <div class="hbtns">
       <button class="primary" id="startBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Start from chapter 1.1</button>
       <button class="ghost" id="continueBtn" hidden></button>
@@ -3494,6 +3498,622 @@ AppWind.builtOn = [FeynDry];
 AppWing.builtOn = [FeynDry, FeynWet];
 AppGenerator.builtOn = [Lorentz];
 
+/* =====================================================================
+   MORE APPLICATIONS (one per topic)
+   ===================================================================== */
+const GM_E = 398600.4418, R_E = 6371, ES = 2/R_E;   // km³/s², km, world units per km
+function makeEarth(c){
+  const g = new THREE.Group();
+  const geo = new THREE.SphereGeometry(2, 96, 64), p = geo.attributes.position, col = new Float32Array(p.count*3);
+  const sea = new THREE.Color(0x1b4f8a), land = new THREE.Color(0x3f7d4a), ice = new THREE.Color(0xdfe7ef);
+  for (let i = 0; i < p.count; i++){
+    const x = p.getX(i)/2, y = p.getY(i)/2, z = p.getZ(i)/2;
+    const f = Math.sin(3.1*x + 0.4)*Math.sin(2.3*y + 1.1)*Math.cos(2.7*z) + 0.55*Math.sin(5.3*x - 2.1*z + 0.7)*Math.cos(4.1*y);
+    const cc = Math.abs(y) > 0.9 ? ice : (f > 0.18 ? land : sea);
+    col.set([cc.r, cc.g, cc.b], i*3);
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:.75, metalness:.05, emissive:0x08111f})));
+  g.add(new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.SphereGeometry(2.006, 24, 12)), new THREE.LineBasicMaterial({color:0x9ED1F0, transparent:true, opacity:.08})));
+  c.group.add(g);
+  c.group.add(new THREE.Mesh(new THREE.SphereGeometry(2.14, 48, 32), new THREE.MeshBasicMaterial({color:0x58C4DD, transparent:true, opacity:.09, side:THREE.BackSide, depthWrite:false})));
+  return g;
+}
+function orbitPos(r, inc, raan, u, out = new V3()){
+  out.set(r*Math.cos(u), 0, -r*Math.sin(u));
+  out.applyAxisAngle(new V3(1, 0, 0), inc).applyAxisAngle(new V3(0, 1, 0), raan);
+  return out;
+}
+function orbitRing(r, inc, raan, col, op = .35){
+  const pts = []; for (let i = 0; i <= 160; i++) pts.push(orbitPos(r, inc, raan, i/160*Math.PI*2));
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:col, transparent:true, opacity:op}));
+}
+const fmtDur = s => s < 5400 ? (s/60).toFixed(1) + ' min' : (s/3600).toFixed(2) + ' h';
+
+/* ---------------------------------------------------------------------
+   Mechanics → Satellites in orbit (Kepler's third law)
+   --------------------------------------------------------------------- */
+const AppSatellites = {
+  id:'app-satellites', app:true, bloom:0.5, title:'Satellites in Orbit', sub:'The space station, GPS and geostationary satellites obey Kepler’s laws', accent:C.gold,
+  ref:{label:'Vol. I · Ch. 7', title:'The Theory of Gravitation', url:FLURL + 'I_07.html', related:true},
+  cam:{pos:[0, 12, 30], target:[0, 0, 0]}, portrait:1.3,
+  eq:String.raw`\begin{aligned} T &= 2\pi\sqrt{\frac{r^3}{GM}}\\[2pt] v &= \sqrt{\frac{GM}{r}} \end{aligned}`,
+  params:[
+    {key:'alt', tex:'h', label:'your satellite’s altitude (km)', min:200, max:40000, step:10, value:8000},
+    {key:'inc', tex:'i', label:'orbit tilt (degrees)', min:0, max:90, step:1, value:30},
+    {key:'warp', tex:'\\times', label:'time speed-up', min:300, max:7200, step:60, value:1800},
+  ],
+  steps:[
+    {text:'Every satellite is Newton’s planet from chapter 1.1, falling around Earth instead of the Sun. Low orbits are fast: the space station (ISS) laps Earth in about 92 minutes.', run:c=>{c.setParam('alt',8000,1); c.setParam('inc',30,1);}},
+    {text:'Kepler’s third law, $T^2 \\propto r^3$: GPS satellites, 20,200 km up, take 12 hours. Slide the altitude of your (white) satellite and watch its period change.', run:c=>c.setParam('alt',20200,3)},
+    {text:'At 35,786 km the period equals one turn of the Earth, 23 h 56 min. A satellite there hangs over the same spot on the equator: geostationary orbit, used by TV and weather satellites.', cam:[[0,38,6],[0,0,0]], run:c=>{c.setParam('inc',0,2); c.setParam('alt',35786,3);}},
+    {text:'Orbital speed $v = \\sqrt{GM/r}$ falls with height: about 7.7 km/s for the ISS, but only 3.1 km/s at geostationary height.', cam:[[0,12,30],[0,0,0]]},
+    {text:'The tilt of the orbit decides which parts of Earth a satellite flies over. In a polar orbit the planet turns underneath it, so it eventually sees everywhere, which is how Earth-imaging satellites map the whole globe.', run:c=>{c.setParam('alt',800,3); c.setParam('inc',90,3);}},
+  ],
+  init(c){
+    const d = c.data;
+    d.earth = makeEarth(c);
+    d.station = glowDot(C.red, 0.06); d.station.position.set(2.02, 0, 0); d.earth.add(d.station);
+    d.sats = [];
+    const add = (name, alt, inc, raan, u0, col, label) => {
+      const r = (R_E + alt)*ES, s = {name, alt, inc:inc*Math.PI/180, raan:raan*Math.PI/180, u0, r, col};
+      s.ring = orbitRing(r, s.inc, s.raan, col, name === 'gps' ? .16 : .35); c.group.add(s.ring);
+      s.dot = glowDot(col, name === 'gps' ? 0.11 : 0.13); c.group.add(s.dot);
+      if (label){ s.lab = texLabel(label, col, 14); c.group.add(s.lab); }
+      d.sats.push(s); return s;
+    };
+    add('iss', 420, 51.6, 20, 0, C.teal, '\\text{ISS}');
+    for (let k = 0; k < 6; k++) add('gps', 20200, 55, k*60, k*1.1, C.yellow, k === 0 ? '\\text{GPS}' : '');
+    add('geo', 35786, 0, 0, 0, C.pink, '\\text{geostationary}');
+    d.mine = null; d.t = 0;
+    this.rebuild(c);
+  },
+  rebuild(c){
+    const d = c.data, P = c.params;
+    const nOf = r => Math.sqrt(GM_E/(r/ES)**3);
+    let uNow = 0.5;
+    if (d.mine){ uNow = d.mine.u0 + nOf(d.mine.r)*d.t; c.group.remove(d.mine.ring); disposeTree(d.mine.ring); c.group.remove(d.mine.lab); disposeTree(d.mine.lab); d.sats = d.sats.filter(s => s !== d.mine); }
+    const r = (R_E + P.alt)*ES, s = {name:'mine', alt:P.alt, inc:P.inc*Math.PI/180, raan:-0.6, u0:uNow - nOf(r)*d.t, r, col:C.white};
+    s.ring = orbitRing(r, s.inc, s.raan, C.white, .55); c.group.add(s.ring);
+    s.dot = d.mine ? d.mine.dot : glowDot(C.white, 0.15); c.group.add(s.dot);
+    s.lab = texLabel('\\text{yours}', C.white, 14); c.group.add(s.lab);
+    d.mine = s; d.sats.push(s);
+  },
+  onParam(k, c){ if (k !== 'warp') this.rebuild(c); },
+  reset(c){ c.data.t = 0; },
+  update(dt, c){
+    const d = c.data;
+    if (dt > 0) d.t += dt*c.params.warp;
+    d.earth.rotation.y = 2*Math.PI*d.t/86164;
+    for (const s of d.sats){
+      const u = s.u0 + Math.sqrt(GM_E/(s.r/ES)**3)*d.t;
+      const p = orbitPos(s.r, s.inc, s.raan, u); s.dot.position.copy(p);
+      if (s.lab) s.lab.position.copy(p).add(new V3(0, 0.55, 0));
+    }
+  },
+  readouts(c){
+    const P = c.params, r = R_E + P.alt, T = 2*Math.PI*Math.sqrt(r**3/GM_E), v = Math.sqrt(GM_E/r);
+    return [
+      ['your orbit period $T$', fmtDur(T)],
+      ['your orbit speed $v$', v.toFixed(2) + ' km/s'],
+      ['$T^2/r^3$ (same for every orbit)', (T*T/r**3*1e4).toFixed(4) + '×10⁻⁴'],
+      ['one second here is', fmtDur(P.warp) + ' of orbit'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Relativity → GPS clocks
+   --------------------------------------------------------------------- */
+const AppGPS = {
+  id:'app-gps', app:true, bloom:0.5, title:'GPS and Relativity', sub:'Why satellite clocks would drift 38 microseconds a day', accent:C.maroon,
+  ref:{label:'Vol. I · Ch. 15', title:'The Special Theory of Relativity', url:FLURL + 'I_15.html', related:true},
+  cam:{pos:[3, 9, 27], target:[2.5, 0, 0]}, portrait:1.35,
+  eq:String.raw`\begin{aligned} \frac{\Delta t}{t}\Big|_{\text{speed}} &= -\frac{v^2}{2c^2}\\[2pt] \frac{\Delta t}{t}\Big|_{\text{gravity}} &= \frac{GM}{c^2}\Big(\frac1{R_E} - \frac1r\Big) \end{aligned}`,
+  params:[
+    {key:'alt', tex:'h', label:'satellite altitude (km)', min:1000, max:40000, step:100, value:20200},
+    {key:'corr', label:'relativity correction', type:'select', value:'on', reset:true, options:[{label:'On', value:'on'}, {label:'Off', value:'off'}]},
+    {key:'warp', tex:'\\text{days/s}', label:'time speed-up', min:1, max:30, step:1, value:6},
+  ],
+  steps:[
+    {text:'GPS works by timing. Each satellite broadcasts the time, and your phone turns the delays into distances at the speed of light. One microsecond of clock error means 300 m of position error.', run:c=>{c.setParam('corr','on'); c.setParam('alt',20200,1);}},
+    {text:'GPS satellites move at 3.9 km/s, so by special relativity (chapter 8.1) their clocks tick slow by about 7 microseconds per day (blue bar).'},
+    {text:'They also sit higher in Earth’s gravity, where general relativity makes clocks tick faster, by about 46 microseconds per day (red bar). Overall, the satellite clocks gain about 38 microseconds every day (gold bar).'},
+    {text:'Left uncorrected, that grows into a position error of roughly 11 km per day. Switch the correction off and watch the error circle around the receiver spread.', cam:[[1,7,13],[0,0,1]], run:c=>c.setParam('corr','off')},
+    {text:'So engineers set the satellite clocks to tick slightly slow before launch, at 10.22999999543 MHz instead of 10.23 MHz, and relativity brings them back into step with clocks on the ground.', cam:[[3,9,27],[2.5,0,0]], run:c=>c.setParam('corr','on')},
+  ],
+  shifts(alt){
+    const c2 = 299792.458**2, r = R_E + alt, v2 = GM_E/r;
+    const sr = -v2/(2*c2)*86400e6, gr = GM_E/c2*(1/R_E - 1/r)*86400e6;
+    return {sr, gr, net:sr + gr};
+  },
+  init(c){
+    const d = c.data;
+    d.earth = makeEarth(c);
+    const lat = -6.2*Math.PI/180, lon = 0.4;
+    d.rx = new V3(Math.cos(lat)*Math.cos(lon), Math.sin(lat), Math.cos(lat)*Math.sin(lon)).multiplyScalar(2.01);
+    const rxDot = glowDot(C.green, 0.07); rxDot.position.copy(d.rx); d.earth.add(rxDot);
+    d.ring = new THREE.Mesh(new THREE.RingGeometry(0.93, 1, 72), new THREE.MeshBasicMaterial({color:C.red, transparent:true, opacity:.8, side:THREE.DoubleSide, depthWrite:false}));
+    d.ring.position.copy(d.rx.clone().multiplyScalar(1.004)); d.ring.lookAt(d.rx.clone().multiplyScalar(2)); d.earth.add(d.ring);
+    d.disk = new THREE.Mesh(new THREE.CircleGeometry(1, 72), new THREE.MeshBasicMaterial({color:C.red, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false}));
+    d.disk.position.copy(d.ring.position); d.disk.quaternion.copy(d.ring.quaternion); d.earth.add(d.disk);
+    d.rxL = texLabel('\\text{your phone}', C.green, 14); c.group.add(d.rxL);
+    d.sats = []; d.satG = new THREE.Group(); c.group.add(d.satG);
+    // bars
+    d.bars = {};
+    [['sr', C.blue, 6.2], ['gr', C.red, 7.4], ['net', C.gold, 8.6]].forEach(([k, col, x]) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1, 0.7), new THREE.MeshStandardMaterial({color:col, emissive:col, emissiveIntensity:.3}));
+      m.position.x = x; c.group.add(m);
+      const l = texLabel('', col, 14); c.group.add(l);
+      d.bars[k] = {m, l, x};
+    });
+    const base = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(5.6, 0, 0), new V3(9.2, 0, 0)]), new THREE.LineBasicMaterial({color:0x6b7280}));
+    c.group.add(base);
+    const bl = texLabel('\\mu\\text{s per day}', 0x9aa3b5, 14); bl.position.set(7.4, -3.6, 0); c.group.add(bl);
+    d.t = 0; d.days = 0;
+    this.rebuild(c);
+  },
+  rebuild(c){
+    const d = c.data, P = c.params; clearGroup(d.satG); d.sats = [];
+    const r = (R_E + P.alt)*ES;
+    for (let k = 0; k < 6; k++){
+      const s = {r, inc:55*Math.PI/180, raan:k*Math.PI/3, u0:k*1.1};
+      d.satG.add(orbitRing(r, s.inc, s.raan, C.yellow, .14));
+      s.dot = glowDot(C.yellow, 0.12); d.satG.add(s.dot); d.sats.push(s);
+    }
+    const S = this.shifts(P.alt), k = 0.065;
+    for (const [key, v] of [['sr', S.sr], ['gr', S.gr], ['net', S.net]]){
+      const b = d.bars[key], h = Math.max(Math.abs(v)*k, 0.02);
+      b.m.scale.y = h; b.m.position.y = v >= 0 ? h/2 : -h/2;
+      b.l.position.set(b.x, v >= 0 ? h + 0.4 : -h - 0.4, 0);
+      b.l.element.innerHTML = tex(`${v >= 0 ? '+' : ''}${v.toFixed(1)}`);
+    }
+  },
+  onParam(k, c){ if (k === 'alt') this.rebuild(c); },
+  reset(c){ c.data.days = 0; },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){ d.days += dt*P.warp; d.t += dt*1800; }
+    d.earth.rotation.y = 2*Math.PI*d.t/86164;
+    for (const s of d.sats){
+      const n = Math.sqrt(GM_E/(s.r/ES)**3);
+      s.dot.position.copy(orbitPos(s.r, s.inc, s.raan, s.u0 + n*d.t));
+    }
+    const S = this.shifts(P.alt), errKm = P.corr === 'off' ? Math.abs(S.net)*1e-6*299792.458*d.days : 0;
+    const rad = Math.max(0.001, Math.min(errKm*ES, 2.4));
+    d.ring.scale.setScalar(rad); d.disk.scale.setScalar(rad);
+    d.ring.visible = d.disk.visible = errKm > 0;
+    d.errKm = errKm;
+    const w = d.rx.clone().applyAxisAngle(new V3(0, 1, 0), d.earth.rotation.y);
+    d.rxL.position.copy(w.multiplyScalar(1.2)).add(new V3(0, 0.3, 0));
+  },
+  readouts(c){
+    const d = c.data, P = c.params, S = this.shifts(P.alt);
+    return [
+      ['speed effect (special)', S.sr.toFixed(1) + ' μs/day'],
+      ['gravity effect (general)', '+' + S.gr.toFixed(1) + ' μs/day'],
+      ['net clock drift', (S.net >= 0 ? '+' : '') + S.net.toFixed(1) + ' μs/day'],
+      ['days elapsed', d.days.toFixed(0)],
+      ['position error', P.corr === 'off' ? Math.round(d.errKm || 0) + ' km' : 'corrected'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Oscillations → Tuned mass damper
+   --------------------------------------------------------------------- */
+const AppDamper = {
+  id:'app-damper', app:true, bloom:0.45, title:'Tuned Mass Dampers', sub:'How a giant pendulum keeps a skyscraper from swaying', accent:C.purple,
+  ref:{label:'Vol. I · Ch. 23', title:'Resonance', url:FLURL + 'I_23.html', related:true},
+  cam:{pos:[9, 3, 15], target:[2.2, 0.4, 0]}, portrait:1.45,
+  eq:String.raw`\begin{aligned} M\ddot x + kx &= F\cos\omega t + k_d(y - x)\\[2pt] m\ddot y &= -k_d(y - x)\\[2pt] \omega_d &\approx \frac{\omega_s}{1 + m/M} \end{aligned}`,
+  params:[
+    {key:'w', tex:'\\omega/\\omega_s', label:'push frequency vs the building’s own', min:0.6, max:1.4, step:0.005, value:1},
+    {key:'on', label:'damper', type:'select', value:'off', options:[{label:'Locked', value:'off'}, {label:'Free to swing', value:'on'}]},
+    {key:'mu', tex:'m/M', label:'damper mass ratio', min:0.01, max:0.1, step:0.005, value:0.03},
+  ],
+  steps:[
+    {text:'Every tall building sways at its own natural frequency. Wind gusts or ground shaking that push at that frequency build up a big sway: the resonance of chapter 3.1.', run:c=>{c.setParam('on','off'); c.setParam('w',1,1);}},
+    {text:'A tuned mass damper is a second oscillator hung near the top, tuned to almost the same frequency. Taipei 101 uses a 660-tonne steel ball. Let it swing.', run:c=>c.setParam('on','on')},
+    {text:'At resonance the damper swings opposite to the building and soaks up the energy. The one tall resonance peak (grey) splits into two much lower ones (gold).', cam:[[6,3,13],[5,0.6,-1]]},
+    {text:'The damper’s own friction turns the swaying into heat. The best tuning sits a little below the building’s frequency, $\\omega_d \\approx \\omega_s/(1 + m/M)$, with just enough damping.', cam:[[9,3,15],[2.2,0.4,0]]},
+    {text:'Move the push frequency. Far from resonance the damper hardly matters; near it, the sway drops several times over. A heavier damper (bigger $m/M$) flattens the peaks further.', run:c=>c.setParam('w',0.9,3)},
+  ],
+  H:10, FL:34, F:0.02, ZS:0.01,
+  tune(mu){ const wd = 1/(1 + mu), zd = Math.sqrt(3*mu/(8*(1 + mu)**3)); return {kd:mu*wd*wd, cd:2*zd*mu*wd, wd}; },
+  resp(w, mu, on){
+    const cs = 2*this.ZS;
+    if (!on){ const re = 1 - w*w, im = w*cs; return 1/Math.hypot(re, im); }
+    const t = this.tune(mu);
+    const Z1 = [1 - w*w + t.kd, w*cs + w*t.cd], Z12 = [-t.kd, -w*t.cd], Z2 = [-mu*w*w + t.kd, w*t.cd];
+    const den = Cx.sub(Cx.mul(Z1, Z2), Cx.mul(Z12, Z12));
+    return Cx.abs(Cx.div(Z2, den));
+  },
+  init(c){
+    const d = c.data, H = this.H;
+    const ground = new THREE.GridHelper(30, 30, 0x2a3348, 0x161b27); ground.position.y = -5.2; c.group.add(ground);
+    d.floors = [];
+    const glass = new THREE.MeshStandardMaterial({color:0x2a3a55, metalness:.6, roughness:.25, emissive:0x0d1626});
+    const lit = new THREE.MeshStandardMaterial({color:0x2a3a55, metalness:.5, roughness:.3, emissive:0x3a3420});
+    for (let i = 0; i < this.FL; i++){
+      const m = new THREE.Mesh(new THREE.BoxGeometry(2.2 - 0.5*i/this.FL, 0.25, 2.2 - 0.5*i/this.FL), i % 3 === 1 ? lit : glass);
+      m.position.y = -5 + (i + 0.5)*H/this.FL; c.group.add(m); d.floors.push(m);
+    }
+    d.ball = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 24), new THREE.MeshStandardMaterial({color:C.gold, metalness:.9, roughness:.25}));
+    c.group.add(d.ball);
+    d.cables = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0xcfd6e4}));
+    c.group.add(d.cables);
+    const bl = texLabel('\\text{damper}', C.gold, 14); d.ballL = bl; c.group.add(bl);
+    // response chart
+    const X0 = 4.2, XW = 6, Y0 = -5, YS = 5.2;
+    d.ch = {X0, XW, Y0, YS};
+    const ax1 = makeArrow(0x6b7280, 0.012, 0.9); ax1.userData.arrow.set(new V3(X0, Y0, -1), new V3(XW + 0.4, 0, 0)); c.group.add(ax1);
+    const ax2 = makeArrow(0x6b7280, 0.012, 0.9); ax2.userData.arrow.set(new V3(X0, Y0, -1), new V3(0, YS + 0.6, 0)); c.group.add(ax2);
+    const l1 = texLabel('\\omega/\\omega_s', 0x9aa3b5, 15); l1.position.set(X0 + XW + 0.8, Y0, -1); c.group.add(l1);
+    const l2 = texLabel('\\text{sway}', 0x9aa3b5, 15); l2.position.set(X0, Y0 + YS + 0.9, -1); c.group.add(l2);
+    d.cNo = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0x8b93a7}));
+    d.cOn = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:C.gold}));
+    c.group.add(d.cNo, d.cOn);
+    d.mk = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(0, 0, 0), new V3(0, YS, 0)]), new THREE.LineDashedMaterial({color:C.purple, dashSize:0.12, gapSize:0.08}));
+    d.mk.computeLineDistances(); c.group.add(d.mk);
+    this.curves(c);
+    this.reset(c);
+  },
+  curves(c){
+    const d = c.data, ch = d.ch, mu = c.params.mu, f = r => Math.min(r/55*ch.YS, ch.YS + 0.3);
+    const no = [], on = [];
+    for (let i = 0; i <= 240; i++){
+      const w = 0.6 + 0.8*i/240, x = ch.X0 + ch.XW*i/240;
+      no.push(new V3(x, ch.Y0 + f(this.resp(w, mu, false)), -1)); on.push(new V3(x, ch.Y0 + f(this.resp(w, mu, true)), -0.98));
+    }
+    d.cNo.geometry.dispose(); d.cNo.geometry = new THREE.BufferGeometry().setFromPoints(no);
+    d.cOn.geometry.dispose(); d.cOn.geometry = new THREE.BufferGeometry().setFromPoints(on);
+  },
+  onParam(k, c){ if (k === 'mu') this.curves(c); },
+  reset(c){ const d = c.data; d.x = 0; d.v = 0; d.y = 0; d.u = 0; d.t = 0; d.amp = 0; },
+  update(dt, c){
+    const d = c.data, P = c.params, on = P.on === 'on', t = this.tune(P.mu), cs = 2*this.ZS;
+    if (dt > 0){
+      const T = dt*2.5, n = Math.max(1, Math.ceil(T/0.01)), h = T/n;
+      for (let k = 0; k < n; k++){
+        d.t += h;
+        const fd = on ? t.kd*(d.y - d.x) + t.cd*(d.u - d.v) : 0;
+        const ax = -d.x - cs*d.v + this.F*Math.cos(P.w*d.t) + fd;
+        d.v += ax*h; d.x += d.v*h;
+        if (on){ const ay = -(t.kd*(d.y - d.x) + t.cd*(d.u - d.v))/P.mu; d.u += ay*h; d.y += d.u*h; }
+        else { d.y = d.x; d.u = d.v; }
+      }
+      d.amp += (Math.hypot(d.x, d.v/P.w) - d.amp)*(1 - Math.exp(-dt/0.6));
+    }
+    const S = 1.6, H = this.H;
+    d.floors.forEach((m, i) => { const s = (i + 0.5)/this.FL; m.position.x = d.x*S*Math.pow(s, 1.5); });
+    const top = d.x*S, hang = new V3(top, 4.6, 0), bx = d.y*S;
+    d.ball.position.set(bx, 3.6, 0);
+    const cp = [];
+    for (const z of [-0.35, 0.35]) cp.push(top, 4.7, z, bx, 3.6, 0);
+    d.cables.geometry.dispose(); d.cables.geometry = new THREE.BufferGeometry(); d.cables.geometry.setAttribute('position', new THREE.Float32BufferAttribute(cp, 3));
+    d.ballL.position.set(bx - 1.4, 3.6, 0);
+    d.mk.position.set(d.ch.X0 + d.ch.XW*(P.w - 0.6)/0.8, d.ch.Y0, -0.97);
+  },
+  readouts(c){
+    const d = c.data, P = c.params, a0 = this.resp(P.w, P.mu, false), a1 = this.resp(P.w, P.mu, true);
+    return [
+      ['sway now (× static)', (d.amp/this.F).toFixed(1)],
+      ['steady sway, locked', a0.toFixed(1) + '×'],
+      ['steady sway, damper free', a1.toFixed(1) + '×'],
+      ['reduction', (a0/a1).toFixed(1) + '× less'],
+      ['damper tuned to', (this.tune(P.mu).wd).toFixed(3) + ' ω_s'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Waves & optics → Optical fibre (total internal reflection)
+   --------------------------------------------------------------------- */
+const AppFiber = {
+  id:'app-fiber', app:true, bloom:0.65, title:'Optical Fibers', sub:'Snell’s law traps light inside a glass thread', accent:C.yellow,
+  ref:{label:'Vol. I · Ch. 26', title:'Optics: The Principle of Least Time', url:FLURL + 'I_26.html', related:true},
+  cam:{pos:[1.5, 4.5, 13], target:[0, -0.2, 0]}, portrait:1.7,
+  eq:String.raw`\begin{aligned} n_1\sin\theta_1 &= n_2\sin\theta_2\\[2pt] \sin\theta_c &= n_2/n_1\\[2pt] \sin\theta_{\max} &= \sqrt{n_1^2 - n_2^2} \end{aligned}`,
+  params:[
+    {key:'ang', tex:'\\theta', label:'laser angle (degrees)', min:0, max:40, step:0.5, value:8},
+    {key:'n1', tex:'n_1', label:'core glass index', min:1.44, max:1.7, step:0.005, value:1.47},
+    {key:'n2', tex:'n_2', label:'cladding glass index', min:1.4, max:1.6, step:0.005, value:1.45},
+  ],
+  steps:[
+    {text:'An optical fiber is a thread of glass (the core) wrapped in glass with a slightly lower refractive index (the cladding). Light shone into the end hits the core wall at a grazing angle.', run:c=>{c.setParam('ang',8,1); c.setParam('n1',1.47,0); c.setParam('n2',1.45,0);}},
+    {text:'Snell’s law, from the least-time principle of chapter 4.2: going from $n_1$ into a lower $n_2$, a ray beyond the critical angle $\\sin\\theta_c = n_2/n_1$ has nowhere to go and reflects completely. This is total internal reflection.', cam:[[-6,1.8,5],[-4,0,0]]},
+    {text:'So a fiber only accepts light within a cone at its end, $\\sin\\theta_{\\max} = \\sqrt{n_1^2 - n_2^2}$. Tilt the laser past that and the light leaks out through the walls.', cam:[[1.5,4.5,13],[0,-0.2,0]], run:c=>c.setParam('ang',22,3)},
+    {text:'A bigger index difference gives a wider cone. Real telecom fibers lose only about 0.2 dB per kilometre, so light goes about 15 km before half of it is gone. The internet’s backbone is made of them.', run:c=>{c.setParam('n1',1.6,2.5); }},
+  ],
+  RC:0.55, X0:-9, X1:9,
+  init(c){
+    const d = c.data, RC = this.RC;
+    const core = new THREE.CylinderGeometry(RC, RC, this.X1 - this.X0, 48, 1, true); core.rotateZ(-Math.PI/2);
+    c.group.add(new THREE.Mesh(core, new THREE.MeshStandardMaterial({color:0x9ED1F0, transparent:true, opacity:.14, side:THREE.DoubleSide, depthWrite:false, metalness:.2, roughness:.1})));
+    const clad = new THREE.CylinderGeometry(0.95, 0.95, this.X1 - this.X0, 48, 1, true); clad.rotateZ(-Math.PI/2);
+    c.group.add(new THREE.Mesh(clad, new THREE.MeshStandardMaterial({color:0x58C4DD, transparent:true, opacity:.06, side:THREE.DoubleSide, depthWrite:false})));
+    for (const x of [this.X0, this.X1]){
+      const e = new THREE.Mesh(new THREE.RingGeometry(0, 0.95, 48), new THREE.MeshBasicMaterial({color:0x9ED1F0, transparent:true, opacity:.12, side:THREE.DoubleSide, depthWrite:false}));
+      e.rotation.y = Math.PI/2; e.position.x = x; c.group.add(e);
+    }
+    const lc = texLabel('\\text{core } n_1', 0x9ED1F0, 14); lc.position.set(6, 0.25, 0); c.group.add(lc);
+    const ll = texLabel('\\text{cladding } n_2', 0x58C4DD, 14); ll.position.set(6, 1.25, 0); c.group.add(ll);
+    d.laser = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 1.2, 20), new THREE.MeshStandardMaterial({color:0x3a4256, metalness:.7, roughness:.35}));
+    c.group.add(d.laser);
+    d.rays = new THREE.Group(); c.group.add(d.rays);
+    d.NPH = 60; d.php = new Float32Array(d.NPH*3);
+    const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(d.php, 3).setUsage(THREE.DynamicDrawUsage));
+    d.photons = new THREE.Points(pg, new THREE.PointsMaterial({size:0.2, map:circleTexture(), color:0xff6a5a, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.photons.frustumCulled = false; c.group.add(d.photons);
+    d.t = 0;
+    this.trace(c);
+  },
+  onParam(k, c){ this.trace(c); },
+  reset(c){ c.data.t = 0; },
+  trace(c){
+    const d = c.data, P = c.params, n1 = P.n1, n2 = Math.min(P.n2, P.n1 - 1e-4), RC = this.RC;
+    clearGroup(d.rays); d.paths = []; d.guided = 0;
+    const th = P.ang*Math.PI/180, fans = [1, 0.55, -0.55, -1], planes = [0, 1.05, 2.1];
+    let total = 0;
+    for (const phi of planes) for (const f of fans){
+      const a = th*f, y0 = -0.18*f*RC;
+      const tc = Math.asin(Math.sin(a)/n1);
+      const pts = [new V3(this.X0 - 2.2*Math.cos(a), y0 - 2.2*Math.sin(a), 0), new V3(this.X0, y0, 0)];
+      let x = this.X0, y = y0, dx = Math.cos(tc), dy = Math.sin(tc), leaked = false;
+      for (let b = 0; b < 400 && x < this.X1; b++){
+        if (Math.abs(dy) < 1e-6){ x = this.X1; pts.push(new V3(x, y, 0)); break; }
+        const ty = ((dy > 0 ? RC : -RC) - y)/dy, tx = (this.X1 - x)/dx, s = Math.min(ty, tx);
+        x += dx*s; y += dy*s; pts.push(new V3(x, y, 0));
+        if (s === tx) break;
+        const sinInc = Math.abs(dx);  // angle from the wall normal
+        if (sinInc*n1 > n2){ dy = -dy; }
+        else {
+          const sinOut = sinInc*n1/n2, cosOut = Math.sqrt(Math.max(0, 1 - sinOut*sinOut));
+          pts.push(new V3(x + sinOut*2.2, y + Math.sign(dy)*cosOut*2.2, 0)); leaked = true; break;
+        }
+      }
+      total++; if (!leaked) d.guided++;
+      const q = new THREE.Quaternion().setFromAxisAngle(new V3(1, 0, 0), phi);
+      const wpts = pts.map(p => p.clone().applyQuaternion(q));
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(wpts), new THREE.LineBasicMaterial({color:leaked ? 0xff8a5a : 0xff4a4a, transparent:true, opacity:leaked ? .45 : .8}));
+      d.rays.add(line);
+      let L = 0; const seg = []; for (let i = 1; i < wpts.length; i++){ const l = wpts[i].distanceTo(wpts[i-1]); seg.push(l); L += l; }
+      d.paths.push({pts:wpts, seg, L});
+    }
+    d.total = total;
+    d.laser.position.set(this.X0 - 2.8*Math.cos(th), -2.8*Math.sin(th), 0);
+    d.laser.rotation.z = Math.PI/2 + th;
+  },
+  update(dt, c){
+    const d = c.data;
+    if (dt > 0) d.t += dt*5;
+    for (let i = 0; i < d.NPH; i++){
+      const p = d.paths[i % d.paths.length], s0 = ((d.t + Math.floor(i/d.paths.length)*7) % (p.L + 4));
+      let s = s0, k = 0;
+      while (k < p.seg.length && s > p.seg[k]){ s -= p.seg[k]; k++; }
+      if (k >= p.seg.length){ d.php.set([0, 999, 0], i*3); continue; }
+      const a = p.pts[k], b = p.pts[k + 1], u = s/p.seg[k];
+      d.php.set([a.x + (b.x - a.x)*u, a.y + (b.y - a.y)*u, a.z + (b.z - a.z)*u], i*3);
+    }
+    d.photons.geometry.attributes.position.needsUpdate = true;
+  },
+  readouts(c){
+    const d = c.data, P = c.params, ok = P.n2 < P.n1, NA = ok ? Math.sqrt(P.n1**2 - P.n2**2) : 0;
+    return [
+      ['critical angle $\\theta_c$', ok ? (Math.asin(P.n2/P.n1)*180/Math.PI).toFixed(1) + '° from the normal' : 'none'],
+      ['acceptance angle $\\theta_{\\max}$', ok ? (Math.asin(Math.min(1, NA))*180/Math.PI).toFixed(1) + '°' : '0°'],
+      ['numerical aperture', NA.toFixed(3)],
+      ['rays guided', `${d.guided} of ${d.total}`],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Rotation → Reaction wheels
+   --------------------------------------------------------------------- */
+const AppWheel = {
+  id:'app-wheel', app:true, bloom:0.5, title:'Reaction Wheels', sub:'Turning a space telescope without burning fuel', accent:C.teal,
+  ref:{label:'Vol. I · Ch. 20', title:'Rotation in Space', url:FLURL + 'I_20.html', related:true},
+  cam:{pos:[6, 7, 11], target:[0, 0, 0]}, portrait:1.4,
+  eq:String.raw`\begin{aligned} L_{\text{total}} &= I_s\,\Omega + I_w\,\omega_w = 0\\[2pt] \Omega &= -\frac{I_w}{I_s}\,\omega_w \end{aligned}`,
+  params:[
+    {key:'mode', label:'control', type:'select', value:'manual', options:[{label:'Wheel by hand', value:'manual'}, {label:'Point at target', value:'point'}]},
+    {key:'ws', tex:'\\omega_w', label:'wheel speed (rpm)', min:-6000, max:6000, step:50, value:0},
+    {key:'tgt', tex:'\\theta_t', label:'target direction (degrees)', min:0, max:360, step:1, value:120},
+  ],
+  steps:[
+    {text:'A spacecraft has nothing to push against, yet telescopes like Hubble turn precisely to stare at faint galaxies. They do it with reaction wheels.', run:c=>{c.setParam('mode','manual'); c.setParam('ws',0,0);}},
+    {text:'Angular momentum is conserved (chapter 2.1). Spin a heavy wheel up one way and the whole spacecraft turns the other way: $I_s\\Omega = -I_w\\omega_w$. The arrows show the two equal and opposite angular momenta.', run:c=>c.setParam('ws',3000,3)},
+    {text:'Slow the wheel back down and the turning stops. No fuel is used, only electricity from the solar panels.', run:c=>c.setParam('ws',0,3)},
+    {text:'Point mode: a controller spins the wheel up and then back down, swinging the telescope onto the target star and stopping it there.', run:c=>{c.setParam('mode','point'); c.setParam('tgt',250,0);}},
+    {text:'Small outside torques, such as sunlight pressure, slowly add angular momentum, which piles up in the wheels. Now and then magnetic torquers or thrusters must “dump” it. Change the target and watch it slew again.', run:c=>c.setParam('tgt',40,0)},
+  ],
+  IS:400, IW:0.25, WMAX:628,
+  init(c){
+    const d = c.data;
+    d.body = new THREE.Group(); c.group.add(d.body);
+    const foil = new THREE.MeshStandardMaterial({color:0xc9a24a, metalness:.9, roughness:.3});
+    d.body.add(new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.4, 1.4), foil));
+    const tube = new THREE.CylinderGeometry(0.62, 0.62, 2.6, 40, 1, true); tube.rotateZ(-Math.PI/2); tube.translate(2.2, 0, 0);
+    d.body.add(new THREE.Mesh(tube, new THREE.MeshStandardMaterial({color:0xcfd6e4, metalness:.7, roughness:.3, side:THREE.DoubleSide})));
+    const panel = new THREE.MeshStandardMaterial({color:0x1d3f7a, metalness:.4, roughness:.35, emissive:0x081830});
+    for (const z of [-2.2, 2.2]){ const p = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 2.6), panel); p.position.set(0, 0, z); d.body.add(p); }
+    d.wheel = new THREE.Group(); d.wheel.position.y = 0.95; d.body.add(d.wheel);
+    d.wheel.add(new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.16, 40), new THREE.MeshStandardMaterial({color:0x3a4256, metalness:.8, roughness:.3})));
+    for (let i = 0; i < 4; i++){ const m = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.18, 0.08), new THREE.MeshBasicMaterial({color:i % 2 ? C.teal : C.yellow})); m.rotation.y = i*Math.PI/4; d.wheel.add(m); }
+    const wl = texLabel('\\text{reaction wheel}', 0xcfd6e4, 13); wl.position.set(-1.2, 0.95, 1.1); d.body.add(wl);
+    d.dirLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(3.5, 0, 0), new V3(11, 0, 0)]), new THREE.LineDashedMaterial({color:C.teal, dashSize:0.2, gapSize:0.15, transparent:true, opacity:.6}));
+    d.dirLine.computeLineDistances(); d.body.add(d.dirLine);
+    d.star = new THREE.Sprite(new THREE.SpriteMaterial({map:circleTexture(), color:0xfff4d0, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+    d.star.scale.setScalar(1.1); c.group.add(d.star);
+    d.starL = texLabel('\\text{target}', 0xfff4d0, 14); c.group.add(d.starL);
+    const sg = new THREE.BufferGeometry(), sp = [];
+    for (let i = 0; i < 600; i++){ const v = new V3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(40 + Math.random()*20); sp.push(v.x, v.y, v.z); }
+    sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+    c.group.add(new THREE.Points(sg, new THREE.PointsMaterial({size:0.12, color:0x9aa3b5})));
+    d.LW = makeArrow(C.yellow, 0.035); d.LB = makeArrow(C.red, 0.035); c.group.add(d.LW, d.LB);
+    d.LWl = texLabel('L_{\\text{wheel}}', C.yellow, 15); d.LBl = texLabel('L_{\\text{craft}}', C.red, 15); c.group.add(d.LWl, d.LBl);
+    this.reset(c);
+  },
+  reset(c){ const d = c.data; d.th = 0; d.wr = 0; d.spin = 0; d.Om = 0; },
+  update(dt, c){
+    const d = c.data, P = c.params, IS = this.IS, IW = this.IW;
+    if (dt > 0){
+      const n = Math.max(1, Math.ceil(dt/0.01)), h = dt/n;
+      for (let k = 0; k < n; k++){
+        let target;
+        if (P.mode === 'manual') target = P.ws*2*Math.PI/60;
+        else {
+          let err = P.tgt*Math.PI/180 - d.th; err = Math.atan2(Math.sin(err), Math.cos(err));
+          const Omc = Math.max(-0.35, Math.min(0.35, 1.2*err));
+          target = -Omc*(IS + IW)/IW;
+        }
+        target = Math.max(-this.WMAX, Math.min(this.WMAX, target));
+        const acc = 240, dw = Math.max(-acc*h, Math.min(acc*h, target - d.wr));
+        d.wr += dw;
+        d.Om = -IW*d.wr/(IS + IW);
+        d.th += d.Om*h; d.spin += (d.wr + d.Om)*h;
+      }
+    }
+    d.body.rotation.y = d.th; d.wheel.rotation.y = d.spin - d.th;
+    const tg = P.tgt*Math.PI/180, sv = new V3(Math.cos(tg), 0, -Math.sin(tg)).multiplyScalar(13);
+    d.star.position.copy(sv); d.starL.position.copy(sv).add(new V3(0, 0.9, 0));
+    d.star.visible = d.starL.visible = P.mode === 'point';
+    const Lw = IW*(d.wr + d.Om), Lb = IS*d.Om, k = 3.2/(IW*this.WMAX);
+    d.LW.userData.arrow.set(new V3(0.9, 1.2, 0), new V3(0, Lw*k, 0)); d.LWl.position.set(1.6, 1.2 + Lw*k, 0);
+    d.LB.userData.arrow.set(new V3(-0.9, 1.2, 0), new V3(0, Lb*k, 0)); d.LBl.position.set(-1.6, 1.2 + Lb*k, 0);
+    d.LWl.visible = d.LBl.visible = Math.abs(Lw*k) > 0.15;
+  },
+  readouts(c){
+    const d = c.data, P = c.params;
+    let err = P.tgt*Math.PI/180 - d.th; err = Math.atan2(Math.sin(err), Math.cos(err));
+    return [
+      ['wheel speed', Math.round(d.wr*60/(2*Math.PI)) + ' rpm'],
+      ['spacecraft turn rate', (d.Om*180/Math.PI).toFixed(2) + ' °/s'],
+      ['total angular momentum', (this.IS*d.Om + this.IW*(d.wr + d.Om)).toFixed(3)],
+      [P.mode === 'point' ? 'pointing error' : 'heading', P.mode === 'point' ? Math.abs(err*180/Math.PI).toFixed(1) + '°' : ((d.th*180/Math.PI % 360 + 360) % 360).toFixed(0) + '°'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Quantum → Scanning tunneling microscope
+   --------------------------------------------------------------------- */
+const AppSTM = {
+  id:'app-stm', app:true, bloom:0.55, title:'Seeing Atoms by Tunneling', sub:'The scanning tunneling microscope', accent:C.pink,
+  ref:{label:'Vol. III · Ch. 1', title:'Quantum Behavior', url:FLURL + 'III_01.html', related:true},
+  cam:{pos:[3, 8.5, 13], target:[0, 1.2, -1.5]}, portrait:1.45,
+  eq:String.raw`\begin{aligned} I &\propto V\,e^{-2\kappa d}\\[2pt] \kappa &= \frac{\sqrt{2m\phi}}{\hbar} \approx 1\,\text{Å}^{-1} \end{aligned}`,
+  params:[
+    {key:'speed', tex:'\\text{lines/s}', label:'scan speed', min:1, max:40, step:1, value:20},
+    {key:'gap', tex:'d', label:'tip–surface gap (Å)', min:3, max:8, step:0.1, value:5},
+  ],
+  steps:[
+    {text:'Electrons are waves (chapter 9.1), and a wave doesn’t stop dead at a thin barrier. Part of it leaks through, fading exponentially with distance. That leak is quantum tunneling.'},
+    {text:'Bring a sharp metal tip a few atom-widths above a surface and electrons tunnel across the empty gap. The current falls roughly tenfold for each extra 0.1 nm of gap, so it is exquisitely sensitive to height.', cam:[[2,3.5,6],[0,0.6,0]]},
+    {text:'A feedback loop raises and lowers the tip to keep the current constant. As it scans line by line, the tip rides over the bumps of individual atoms.', cam:[[3,8.5,13],[0,1.2,-1.5]]},
+    {text:'The recorded tip heights form a picture of the atoms, including one missing atom and one extra atom sitting on top. Gerd Binnig and Heinrich Rohrer won the 1986 Nobel Prize in Physics for this microscope.'},
+  ],
+  NA:20, A:0.62, AMP:0.26, SIG:0.2, RES:120, SCAN:5.2,
+  init(c){
+    const d = c.data, NA = this.NA, A = this.A;
+    d.atoms = [];
+    for (let i = 0; i < NA; i++) for (let j = 0; j < NA; j++){
+      const x = (i - (NA - 1)/2)*A, z = (j - (NA - 1)/2)*A;
+      if ((i === 8 && j === 11)) continue;          // vacancy
+      d.atoms.push([x, z, 0]);
+    }
+    d.atoms.push([(13 - (NA - 1)/2)*A + A/2, (6 - (NA - 1)/2)*A + A/2, 0.5]); // adatom
+    const m = new THREE.InstancedMesh(new THREE.SphereGeometry(0.29, 18, 12), new THREE.MeshStandardMaterial({color:0x9aa8c0, metalness:.4, roughness:.4}), d.atoms.length);
+    const o = new THREE.Object3D();
+    d.atoms.forEach(([x, z, h], i) => { o.position.set(x, h, z); o.updateMatrix(); m.setMatrixAt(i, o.matrix); if (h > 0) m.setColorAt(i, new THREE.Color(C.gold)); else m.setColorAt(i, new THREE.Color(0x9aa8c0)); });
+    c.group.add(m);
+    // tip
+    const tipG = new THREE.ConeGeometry(0.35, 2.4, 32); tipG.rotateX(Math.PI); tipG.translate(0, 1.2, 0);
+    d.tip = new THREE.Mesh(tipG, new THREE.MeshStandardMaterial({color:0xcfd6e4, metalness:.9, roughness:.2})); c.group.add(d.tip);
+    d.beam = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1, 10), new THREE.MeshBasicMaterial({color:C.pink, transparent:true, opacity:.8})); c.group.add(d.beam);
+    // image panel
+    d.cv = document.createElement('canvas'); d.cv.width = d.cv.height = this.RES;
+    d.cx2 = d.cv.getContext('2d'); d.cx2.fillStyle = '#0b0d12'; d.cx2.fillRect(0, 0, this.RES, this.RES);
+    d.img = d.cx2.getImageData(0, 0, this.RES, this.RES);
+    d.texture = new THREE.CanvasTexture(d.cv); d.texture.magFilter = THREE.LinearFilter;
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 5.6), new THREE.MeshBasicMaterial({map:d.texture}));
+    panel.position.set(0, 5.4, -7.2); c.group.add(panel);
+    const pl = texLabel('\\text{image: tip height}', 0x9aa3b5, 14); pl.position.set(0, 8.6, -7.2); c.group.add(pl);
+    const edge = new THREE.LineSegments(new THREE.EdgesGeometry(panel.geometry), new THREE.LineBasicMaterial({color:0x3c4252})); edge.position.copy(panel.position); c.group.add(edge);
+    d.box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2*this.SCAN, 0.01, 2*this.SCAN)), new THREE.LineBasicMaterial({color:C.pink, transparent:true, opacity:.35}));
+    d.box.position.y = 0.35; c.group.add(d.box);
+    this.reset(c);
+  },
+  h(d, x, z){
+    let s = 0;
+    for (const [ax, az, ah] of d.atoms){ const dx = x - ax, dz = z - az; if (dx*dx + dz*dz > 0.8) continue; s = Math.max(s, ah + this.AMP*Math.exp(-(dx*dx + dz*dz)/(2*this.SIG*this.SIG))); }
+    return s;
+  },
+  reset(c){ const d = c.data; d.line = 0; d.xs = -this.SCAN; d.tipY = this.h(d, -this.SCAN, -this.SCAN) + 1; d.img.data.fill(0); for (let i = 3; i < d.img.data.length; i += 4) d.img.data[i] = 255; },
+  update(dt, c){
+    const d = c.data, P = c.params, S = this.SCAN, RES = this.RES, gapW = 0.28 + (P.gap - 3)*0.07;
+    const zl = -S + 2*S*d.line/(RES - 1);
+    if (dt > 0){
+      const v = 2*S*P.speed, n = Math.max(1, Math.ceil(dt*v/0.02)), h = dt/n;
+      for (let k = 0; k < n; k++){
+        d.xs += v*h;
+        if (d.xs > S){ d.xs = -S; d.line = (d.line + 1) % RES; if (d.line === 0) d.img.data.fill(0); }
+        const z = -S + 2*S*d.line/(RES - 1), hs = this.h(d, d.xs, z);
+        d.tipY += (hs + gapW - d.tipY)*Math.min(1, h*60);
+        const px = Math.round((d.xs + S)/(2*S)*(RES - 1)), py = d.line, idx = (py*RES + px)*4;
+        const col = gradient([0x10141d, 0x5a2a6a, C.pink, C.gold, 0xfff4dc], (d.tipY - gapW + 0.05)/0.85);
+        d.img.data[idx] = col.r*255; d.img.data[idx+1] = col.g*255; d.img.data[idx+2] = col.b*255; d.img.data[idx+3] = 255;
+      }
+      d.cx2.putImageData(d.img, 0, 0); d.texture.needsUpdate = true;
+    }
+    const z = -S + 2*S*d.line/(RES - 1), hs = this.h(d, d.xs, z);
+    d.tip.position.set(d.xs, d.tipY, z);
+    const realGap = d.tipY - hs;
+    cylBetween(d.beam, new V3(d.xs, hs + 0.02, z), new V3(d.xs, d.tipY, z));
+    d.gapA = P.gap + (realGap - gapW)/0.248;
+    const I = Math.pow(10, -(d.gapA - P.gap));
+    d.I = I; d.beam.material.opacity = Math.min(1, 0.25 + 0.6*I);
+  },
+  readouts(c){
+    const d = c.data, P = c.params;
+    return [
+      ['gap right now', (d.gapA ?? P.gap).toFixed(2) + ' Å'],
+      ['tunneling current', ((d.I ?? 1)*1).toFixed(2) + ' nA'],
+      ['if the gap grew by 1 Å', '≈ 10× less current'],
+      ['scan line', `${d.line + 1} of ${this.RES}`],
+    ];
+  },
+};
+
+AppSatellites.builtOn = [FeynOrbit, Gravity];
+AppWheel.builtOn = [FeynTop, Rigid];
+AppDamper.builtOn = [FeynResonance];
+AppFiber.builtOn = [FeynLight];
+AppGPS.builtOn = [FeynSpaceTime, Gravity];
+AppSTM.builtOn = [FeynQuantum];
+AppJet.app = AppWind.app = AppWing.app = AppGenerator.app = true;
+
+/* real-world uses for every theory chapter (shown in the "In the real world" card and the last narration step) */
+FeynOrbit.uses = ['Spacecraft trajectories and planetary ephemerides are still computed by stepping Newton’s laws forward in small time steps.', 'Weather and climate models do the same for the atmosphere.'];
+Gravity.uses = ['Gravity-assist flybys let probes such as Voyager and Cassini steal speed from planets.', 'Telescopes like JWST park near the Sun–Earth L2 point, a balance point of gravity.'];
+FeynAction.uses = ['Trajectory planners for spacecraft and robot arms search for paths that minimise a cost, the same idea as least action.', 'Engineering software finds how structures bend by minimising energy.'];
+Lorenz.uses = ['Weather forecasts lose skill after one to two weeks because of chaos, so forecasters run ensembles of slightly different starting states.'];
+FeynTop.uses = ['Gyroscopes steady ship compasses, aircraft instruments and the tiny vibrating gyros in every phone.', 'Earth’s own axis precesses once every 26,000 years, like a slow top.'];
+Rigid.uses = ['Spacecraft are spun about their largest or smallest axis; the first US satellite, Explorer 1, slowly tumbled when flexing antennas drained energy.'];
+FeynResonance.uses = ['Quartz watches count the 32,768 Hz resonance of a tiny crystal.', 'Radios tune to one station by resonance, and MRI scanners tune radio waves to the resonance of protons.'];
+Waves.uses = ['Phased-array radars and 5G base stations steer their beams electronically, with no moving parts.', 'Noise-cancelling headphones play the opposite wave so the two cancel.'];
+FeynLight.uses = ['Camera lenses and eyeglasses are designed by tracing rays with Snell’s law.', 'Mirages appear when air of different temperatures bends light along the quickest path.'];
+FeynDry.uses = ['Spinning balls curve in flight (the Magnus effect), and some modern ships use tall spinning rotor sails for propulsion.'];
+FeynWet.uses = ['Cars, aircraft and buildings are designed with computer Navier–Stokes solvers (CFD).', 'Tall chimneys carry spiral strakes to break up vortex shedding that would shake them.'];
+EField.uses = ['Phone touchscreens sense how your finger changes the electric field.', 'Lightning rods use the strong field at a sharp point.'];
+Lorentz.uses = ['Every electric motor, loudspeaker and mass spectrometer uses $q\\vec v\\times\\vec B$.', 'Earth’s magnetic field funnels solar particles to the poles, making the aurora.'];
+FeynRadiation.uses = ['Every antenna, from radio towers to Wi-Fi, works by shaking electrons.', 'The sky is blue because air molecules re-radiate blue light most strongly.'];
+FeynGas.uses = ['Car engines, refrigerators and air conditioners all compress and expand gases.', 'Tyre pressure rises on a hot day for the same reason.'];
+FeynSpaceTime.uses = ['Particle accelerators see fast muons live far longer than slow ones: time dilation.'];
+FeynQuantum.uses = ['Electron microscopes use the short wavelength of electrons to see far smaller things than light can.', 'Lasers, LEDs and the transistors in every chip are quantum devices.'];
+
 // related lectures for the chapters not built directly on one
 const FL = 'https://www.feynmanlectures.caltech.edu/';
 Gravity.ref = {label:'Vol. I · Ch. 7', title:'The Theory of Gravitation', url:FL + 'I_07.html', related:true};
@@ -3503,20 +4123,26 @@ EField.ref  = {label:'Vol. II · Ch. 4', title:'Electrostatics', url:FL + 'II_04
 Lorentz.ref = {label:'Vol. II · Ch. 29', title:'The Motion of Charges in Electric and Magnetic Fields', url:FL + 'II_29.html', related:true};
 
 const TOPICS = [
-  {id:'mech',    name:'Mechanics',        color:C.gold,   blurb:'Forces, orbits, and the paths nature chooses', chapters:[FeynOrbit, Gravity, FeynAction, Lorenz]},
-  {id:'rot',     name:'Rotation',         color:C.teal,   blurb:'Torque, angular momentum, tumbling bodies',     chapters:[FeynTop, Rigid]},
-  {id:'osc',     name:'Oscillations',     color:C.purple, blurb:'Natural frequencies and driven motion',          chapters:[FeynResonance]},
-  {id:'waves',   name:'Waves & Optics',   color:C.yellow, blurb:'Interference and the principle of least time',   chapters:[Waves, FeynLight]},
-  {id:'fluids',  name:'Fluids',           color:C.blue,   blurb:'Ideal flow, viscosity, and Navier–Stokes',       chapters:[FeynDry, FeynWet]},
-  {id:'em',      name:'Electromagnetism', color:C.red,    blurb:'Fields, forces, and radiation',                  chapters:[EField, Lorentz, FeynRadiation]},
-  {id:'heat',    name:'Heat',             color:C.green,  blurb:'Temperature and pressure from moving atoms',      chapters:[FeynGas]},
-  {id:'rel',     name:'Relativity',       color:C.maroon, blurb:'Space and time mixed by motion',                  chapters:[FeynSpaceTime]},
-  {id:'quantum', name:'Quantum',          color:C.pink,   blurb:'Amplitudes, interference, and measurement',       chapters:[FeynQuantum]},
-  {id:'eng',     name:'Engineering',      color:0x9ED1F0, blurb:'Physics at work: engines, turbines, wings, generators', chapters:[AppJet, AppWind, AppWing, AppGenerator]},
+  {id:'mech',    name:'Mechanics',        color:C.gold,   blurb:'Forces, orbits, and the paths nature chooses', chapters:[FeynOrbit, Gravity, FeynAction, Lorenz, AppSatellites]},
+  {id:'rot',     name:'Rotation',         color:C.teal,   blurb:'Torque, angular momentum, tumbling bodies',     chapters:[FeynTop, Rigid, AppWheel]},
+  {id:'osc',     name:'Oscillations',     color:C.purple, blurb:'Natural frequencies and driven motion',          chapters:[FeynResonance, AppDamper]},
+  {id:'waves',   name:'Waves & Optics',   color:C.yellow, blurb:'Interference and the principle of least time',   chapters:[Waves, FeynLight, AppFiber]},
+  {id:'fluids',  name:'Fluids',           color:C.blue,   blurb:'Ideal flow, viscosity, and Navier–Stokes',       chapters:[FeynDry, FeynWet, AppWing, AppWind]},
+  {id:'em',      name:'Electromagnetism', color:C.red,    blurb:'Fields, forces, and radiation',                  chapters:[EField, Lorentz, FeynRadiation, AppGenerator]},
+  {id:'heat',    name:'Heat',             color:C.green,  blurb:'Temperature and pressure from moving atoms',      chapters:[FeynGas, AppJet]},
+  {id:'rel',     name:'Relativity',       color:C.maroon, blurb:'Space and time mixed by motion',                  chapters:[FeynSpaceTime, AppGPS]},
+  {id:'quantum', name:'Quantum',          color:C.pink,   blurb:'Amplitudes, interference, and measurement',       chapters:[FeynQuantum, AppSTM]},
 ];
 const CHAPTERS = [];
 TOPICS.forEach((t, ti) => t.chapters.forEach((ch, k) => { ch.topic = t; ch.num = `${ti+1}.${k+1}`; CHAPTERS.push(ch); }));
 const chapLabel = i => CHAPTERS[i].num;
+const appsFor = ch => CHAPTERS.filter(a => a.builtOn && a.builtOn.includes(ch));
+CHAPTERS.forEach(ch => {
+  if (!ch.uses) return;
+  const apps = appsFor(ch);
+  const see = apps.length ? ` See it at work in ${apps.map(a => `${a.num} <i>${a.title}</i>`).join(' and ')}.` : '';
+  ch.steps.push({text:`<b>In the real world.</b> ${ch.uses.join(' ')}${see}`});
+});
 
 /* =====================================================================
    App state, UI and scene management
@@ -3619,7 +4245,7 @@ function buildNav(){
       const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
       b.className = 'cc'; b.dataset.i = i;
       const badge = ch.ref ? `<span class="cf">Feynman ${ch.ref.label.replace(' · ', ', ')}${ch.ref.related ? ' (related)' : ''}</span>` : '';
-      b.innerHTML = `<span class="cn">${ch.num}</span><span><div class="ct">${ch.title}</div><div class="cs">${ch.sub}</div>${badge}</span>`;
+      b.innerHTML = `<span class="cn">${ch.num}</span><span><div class="ct">${ch.title}${ch.app ? '<span class="ap">applied</span>' : ''}</div><div class="cs">${ch.sub}</div>${badge}</span>`;
       b.onclick = () => { closeContents(); goScene(i); };
       sec.appendChild(b);
     });
@@ -3633,7 +4259,7 @@ function buildNav(){
     t.chapters.forEach(ch => {
       const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
       b.className = 'hr'; b.dataset.i = i; b.style.setProperty('--tc', hexCss(t.color));
-      b.innerHTML = `<span class="n">${ch.num}</span><span><div class="t">${ch.title}</div><div class="s">${ch.sub}</div></span><span class="go">›</span>`;
+      b.innerHTML = `<span class="n">${ch.num}</span><span><div class="t">${ch.title}${ch.app ? '<span class="ap">applied</span>' : ''}</div><div class="s">${ch.sub}</div></span><span class="go">›</span>`;
       b.addEventListener('click', () => enterChapter(i));
       b.addEventListener('mouseenter', () => schedulePreview(i));
       b.addEventListener('focus', () => schedulePreview(i));
@@ -3649,7 +4275,7 @@ function buildToc(){
     t.chapters.forEach(ch => {
       const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
       b.dataset.i = i; b.style.setProperty('--tc', hexCss(t.color));
-      b.innerHTML = `<span class="n">${ch.num}</span><span>${ch.title}</span>`;
+      b.innerHTML = `<span class="n">${ch.num}</span><span>${ch.title}${ch.app ? '<span class="ap">applied</span>' : ''}</span>`;
       b.onclick = () => goScene(i);
       toc.appendChild(b);
     });
@@ -3673,10 +4299,11 @@ async function goScene(i, first=false){
   const tIdx = TOPICS.indexOf(def.topic);
   $('sceneTag').innerHTML = `<b style="color:${hexCss(def.topic.color)}">${def.topic.name}</b> · chapter ${def.num.split('.')[1]} of ${def.topic.chapters.length}`;
   $('refCard').style.display = def.ref ? '' : 'none';
-  const links = def.builtOn || CHAPTERS.filter(ch => ch.builtOn && ch.builtOn.includes(def));
-  $('linkCard').style.display = links.length ? '' : 'none';
+  const links = def.builtOn || appsFor(def);
+  $('linkCard').style.display = links.length || def.uses ? '' : 'none';
   $('linkHead').textContent = def.builtOn ? 'The physics behind it' : 'In the real world';
   $('linkList').innerHTML = '';
+  (def.uses || []).forEach(u => { const p = document.createElement('p'); p.className = 'use'; p.innerHTML = rich(u); $('linkList').appendChild(p); });
   links.forEach(ch => {
     const b = document.createElement('button');
     b.innerHTML = `<span class="n">${ch.num}</span><span>${ch.title}</span><span class="go">›</span>`;

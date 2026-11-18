@@ -3,7 +3,10 @@
 An interactive, narrated 3D physics explorer in the spirit of 3Blue1Brown, built around *The Feynman Lectures on Physics*.
 Everything lives in `index.html` — double-click it to open in Chrome or Edge (needs an internet connection to load three.js, KaTeX and fonts from a CDN).
 
-## Contents — 21 chapters in 10 topics
+## Contents — 27 chapters in 9 topics
+
+Each topic starts with the physics (built on a Feynman lecture) and ends with an **applied** chapter showing a real machine that uses it.
+Every theory chapter also has an "In the real world" card and a closing narration step; applied chapters link back to "The physics behind it".
 
 | # | Chapter | Feynman Lectures |
 |---|---|---|
@@ -12,32 +15,37 @@ Everything lives in `index.html` — double-click it to open in Chrome or Edge (
 | 1.2 | Orbits in a Gravity Well | Vol. I, Ch. 7 (related) |
 | 1.3 | The Principle of Least Action | Vol. II, Ch. 19 |
 | 1.4 | The Lorenz Attractor | — |
+| 1.5 | *Applied:* Satellites in Orbit — ISS, GPS, geostationary, Kepler's third law | Vol. I, Ch. 7 (related) |
 | **2** | **Rotation** | |
 | 2.1 | The Spinning Top | Vol. I, Ch. 20 |
 | 2.2 | The Tennis-Racket Theorem | Vol. I, Ch. 20 (related) |
+| 2.3 | *Applied:* Reaction Wheels — turning a space telescope without fuel | Vol. I, Ch. 20 (related) |
 | **3** | **Oscillations** | |
-| 3.1 | Resonance — driven pendulums and the resonance curve | Vol. I, Ch. 23 |
+| 3.1 | Resonance | Vol. I, Ch. 23 |
+| 3.2 | *Applied:* Tuned Mass Dampers — the Taipei 101 pendulum | Vol. I, Ch. 23 (related) |
 | **4** | **Waves & Optics** | |
 | 4.1 | Superposition of Waves | Vol. I, Ch. 29 (related) |
 | 4.2 | The Principle of Least Time | Vol. I, Ch. 26 |
+| 4.3 | *Applied:* Optical Fibers — total internal reflection | Vol. I, Ch. 26 (related) |
 | **5** | **Fluids** | |
-| 5.1 | The Flow of Dry Water — ideal flow, Bernoulli pressure, Magnus lift | Vol. II, Ch. 40 |
-| 5.2 | The Flow of Wet Water — live Navier–Stokes (lattice Boltzmann) solver, vortex street, Strouhal number | Vol. II, Ch. 41 |
+| 5.1 | The Flow of Dry Water | Vol. II, Ch. 40 |
+| 5.2 | The Flow of Wet Water (live Navier–Stokes) | Vol. II, Ch. 41 |
+| 5.3 | *Applied:* How a Wing Lifts — Joukowski airfoil, Boeing 737 numbers | Vol. II, Ch. 40 (related) |
+| 5.4 | *Applied:* Wind Turbines — the Betz limit | Vol. II, Ch. 40 (related) |
 | **6** | **Electromagnetism** | |
 | 6.1 | Electric Field Lines | Vol. II, Ch. 4 (related) |
 | 6.2 | The Lorentz Force | Vol. II, Ch. 29 (related) |
-| 6.3 | Electromagnetic Radiation — a⊥(t − r/c)/r from a shaken charge | Vol. I, Ch. 28 |
+| 6.3 | Electromagnetic Radiation | Vol. I, Ch. 28 |
+| 6.4 | *Applied:* The Electric Generator — Faraday's law, AC and DC | Vol. II, Ch. 17 (related) |
 | **7** | **Heat** | |
 | 7.1 | The Kinetic Theory of Gases | Vol. I, Ch. 39 |
+| 7.2 | *Applied:* The Jet Engine — ideal turbofan, Brayton cycle | Vol. I, Ch. 44 (related) |
 | **8** | **Relativity** | |
-| 8.1 | Space-Time — light cone, worldlines, Lorentz boost | Vol. I, Ch. 17 |
+| 8.1 | Space-Time | Vol. I, Ch. 17 |
+| 8.2 | *Applied:* GPS and Relativity — the 38 μs/day clock correction | Vol. I, Ch. 15 (related) |
 | **9** | **Quantum** | |
 | 9.1 | Electrons Through Two Slits | Vol. III, Ch. 1 |
-| **10** | **Engineering** — each links to the theory chapters it uses | |
-| 10.1 | The Jet Engine — ideal turbofan (Brayton cycle): stage temperatures, thermal/propulsive efficiency, TSFC | Vol. I, Ch. 44 (related) |
-| 10.2 | Wind Turbines — actuator-disk momentum theory, streamtube, Betz limit 16/27 | Vol. II, Ch. 40 (related) |
-| 10.3 | How a Wing Lifts — Joukowski airfoil, Kutta condition, lift vs a Boeing 737-800's weight | Vol. II, Ch. 40 (related) |
-| 10.4 | The Electric Generator — rotating coil, Faraday's law, AC slip rings vs DC commutator | Vol. II, Ch. 17 (related) |
+| 9.2 | *Applied:* Seeing Atoms by Tunneling — the scanning tunneling microscope | Vol. III, Ch. 1 (related) |
 
 Each chapter has step-by-step narration with equations, live sliders, live readouts, and a link to its lecture.
 
@@ -46,7 +54,7 @@ Each chapter has step-by-step narration with equations, live sliders, live reado
 |---|---|
 | Contents (all chapters by topic) | `M` or the Contents button |
 | Previous / next chapter | `[` / `]` (or the « » buttons) |
-| Jump to a topic | `1` – `9`, `0` for Engineering |
+| Jump to a topic | `1` – `9` |
 | Next / previous narration step | `→` / `←` |
 | Orbit / zoom / pan | drag · scroll · right-drag |
 | Play / pause | `Space` |
