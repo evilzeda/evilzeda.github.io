@@ -86,6 +86,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 body.side-collapsed #toc, body.side-collapsed #side .keys{display:none}
 @media (max-width:1250px){ #side{width:260px} #side .chapter h1{font-size:22px} }
 
+#linkList button{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;padding:7px 8px;border-radius:8px;font-size:13.5px;color:var(--ink);transition:background .2s}
+#linkList button:hover{background:rgba(255,255,255,.06)}
+#linkList .n{font-family:var(--mono);font-size:11px;color:var(--faint);min-width:26px}
+#linkList .go{margin-left:auto;color:var(--faint)}
+
 /* contents overlay */
 #contents{position:fixed;inset:0;z-index:15;background:rgba(8,10,15,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .3s ease;overflow-y:auto}
 body.contents-open #contents{opacity:1;pointer-events:auto}
@@ -268,10 +273,7 @@ body.home .ui{opacity:0;pointer-events:none}
   #panel{top:auto;bottom:70px;right:10px;left:10px;width:auto;max-height:46vh;transform:translateY(calc(100% + 90px));transition:transform .35s ease}
   body.panel-open #panel{transform:none}
   #panel{max-height:62vh;background:rgba(11,13,18,.9);border-radius:16px;padding:4px}
-  #panel > section:nth-child(3){order:1}
-  #panel > section:nth-child(4){order:2}
-  #panel > section:nth-child(2){order:3}
-  #panel > section:nth-child(1){order:4}
+  #paramCard{order:1} #liveCard{order:2} #linkCard{order:3} #eqCard{order:4} #refCard{order:5}
   body.panel-open #caption{opacity:0;pointer-events:none}
   #panelBtn{display:flex!important}
   #caption{width:calc(100vw - 24px);bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
@@ -305,9 +307,10 @@ body.home .ui{opacity:0;pointer-events:none}
 
 <aside id="panel" class="ui">
   <section class="card" id="refCard"><h3 id="refHead">From the Feynman Lectures</h3><div class="rl" id="refLabel"></div><div class="rt" id="refTitle"></div><a class="read" id="refLink" target="_blank" rel="noopener">Read the lecture ↗</a></section>
-  <section class="card"><h3>Governing equations</h3><div id="eq"></div></section>
-  <section class="card"><h3>Parameters</h3><div id="params"></div></section>
-  <section class="card"><h3>Live</h3><div id="readouts"></div></section>
+  <section class="card" id="linkCard"><h3 id="linkHead">The physics behind it</h3><div id="linkList"></div></section>
+  <section class="card" id="eqCard"><h3>Governing equations</h3><div id="eq"></div></section>
+  <section class="card" id="paramCard"><h3>Parameters</h3><div id="params"></div></section>
+  <section class="card" id="liveCard"><h3>Live</h3><div id="readouts"></div></section>
 </aside>
 
 <div id="caption" class="ui">
@@ -341,7 +344,7 @@ body.home .ui{opacity:0;pointer-events:none}
 <div id="contents">
   <div class="cwrap">
     <div class="chead">
-      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Seventeen interactive chapters in nine topics, most of them built on a lecture from <i>The Feynman Lectures on Physics</i></p></div>
+      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twenty-one interactive chapters in ten topics, from the Feynman Lectures to the machines that use them</p></div>
       <button id="closeContents" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div id="topicGrid"></div>
@@ -350,9 +353,9 @@ body.home .ui{opacity:0;pointer-events:none}
 <div id="fade"></div>
 <div id="intro">
   <div class="hero">
-    <div class="bar"><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i></div>
+    <div class="bar"><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i><i style="background:#9ED1F0;animation-delay:0.80s"></i></div>
     <h2><span>∂</span>physcx</h2>
-    <p>Seventeen interactive 3D simulations, from planetary orbits to the Navier–Stokes equation, built around <i>The Feynman Lectures on Physics</i>.</p>
+    <p>Twenty-one interactive 3D simulations, from planetary orbits to jet engines, built around <i>The Feynman Lectures on Physics</i>.</p>
     <div class="hbtns">
       <button class="primary" id="startBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Start from chapter 1.1</button>
       <button class="ghost" id="continueBtn" hidden></button>
@@ -473,7 +476,8 @@ function updateTweens(dt){
 }
 let camTok = 0;
 function fitCam(p, t){
-  const f = Math.max(1, Math.min(2.2, 0.9/camera.aspect));
+  const boost = camera.aspect < 1 ? (CHAPTERS[state.idx]?.portrait ?? 1) : 1;
+  const f = Math.max(1, Math.min(2.2, 0.9/camera.aspect))*boost;
   return p.sub(t).multiplyScalar(f).add(t);
 }
 function flyTo(pos, target, dur=1.8){
@@ -2919,6 +2923,577 @@ const FeynRadiation = {
   },
 };
 
+/* =====================================================================
+   ENGINEERING: physics at work
+   ===================================================================== */
+const Cx = {
+  add:(a, b) => [a[0] + b[0], a[1] + b[1]],
+  sub:(a, b) => [a[0] - b[0], a[1] - b[1]],
+  mul:(a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]],
+  div:(a, b) => { const d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]; },
+  exp:t => [Math.cos(t), Math.sin(t)],
+  sqrt:a => { const r = Math.hypot(a[0], a[1]); const re = Math.sqrt(Math.max(0, (r + a[0])/2)); let im = Math.sqrt(Math.max(0, (r - a[0])/2)); if (a[1] < 0) im = -im; return [re, im]; },
+  abs:a => Math.hypot(a[0], a[1]),
+};
+const lerpKnots = (K, x, col) => {
+  if (x <= K[0][0]) return K[0][col];
+  for (let i = 1; i < K.length; i++) if (x <= K[i][0]){ const a = K[i-1], b = K[i], t = (x - a[0])/(b[0] - a[0]); return a[col] + (b[col] - a[col])*t; }
+  return K[K.length - 1][col];
+};
+const tempColor = T => gradient([0x3462d8, C.blue, C.teal, C.red, C.gold, C.yellow, 0xfff4dc], (T - 200)/1800);
+
+/* ---------------------------------------------------------------------
+   The jet engine (ideal turbofan, Brayton cycle)
+   --------------------------------------------------------------------- */
+const AppJet = {
+  id:'app-jet', bloom:0.55, title:'The Jet Engine', sub:'A Brayton cycle in a tube: squeeze, burn, expand, push', accent:C.gold,
+  ref:{label:'Vol. I · Ch. 44', title:'The Laws of Thermodynamics', url:FLURL + 'I_44.html', related:true},
+  cam:{pos:[3.2, 6.2, 13.5], target:[0.6, -0.4, 0]},
+  eq:String.raw`\begin{aligned} F &= \dot m\,(v_{\text{exit}} - v_{\text{flight}})\\[2pt] \frac{T_3}{T_2} &= \Big(\frac{p_3}{p_2}\Big)^{(\gamma-1)/\gamma}\\[2pt] \eta_{\text{th}} &= 1 - \frac{T_2}{T_3} \end{aligned}`,
+  params:[
+    {key:'pc', tex:'\\pi_c', label:'overall pressure ratio', min:5, max:60, step:1, value:30},
+    {key:'T4', tex:'T_4', label:'turbine entry temperature (K)', min:1100, max:1900, step:10, value:1600},
+    {key:'bpr', tex:'\\alpha', label:'bypass ratio', min:0, max:12, step:0.1, value:5},
+    {key:'M0', tex:'M', label:'flight Mach number', min:0.1, max:0.85, step:0.01, value:0.8},
+  ],
+  steps:[
+    {text:'A jet engine runs the Brayton cycle in a tube: squeeze the air, burn fuel in it, let it expand through a turbine, and throw it out the back. Thrust is momentum: $F = \\dot m\\,(v_{\\text{exit}} - v_{\\text{flight}})$.', run:c=>{c.setParam('pc',30,1); c.setParam('bpr',5,1); c.setParam('T4',1600,1);}},
+    {text:'Rows of compressor blades squeeze the air about 30 times. Compression heats it, just like the piston in chapter 7.1: $T_3/T_2 = (p_3/p_2)^{(\\gamma-1)/\\gamma}$. The colors show temperature.', cam:[[-0.6,3.4,7.5],[-1.4,0,0]]},
+    {text:'In the combustor, burning fuel raises the gas to $T_4 \\approx 1600$ K, hotter than the melting point of the turbine blades, which survive on films of cooling air. The turbine takes out just enough work to drive the compressor and fan.', cam:[[2.8,3.4,7.5],[2,0,0]]},
+    {text:'Ideal thermal efficiency depends only on the pressure ratio, $\\eta_{\\text{th}} = 1 - T_2/T_3$. That is why pressure ratios climbed from about 3 in the first jet engines of the 1940s to around 60 today.', cam:[[3.2,6.2,13.5],[0.6,-0.4,0]], run:c=>c.setParam('pc',55,3)},
+    {text:'The big fan matters just as much. Pushing a lot of air a little is more efficient than pushing a little air a lot: propulsive efficiency is $2/(1 + v_{\\text{exit}}/v_{\\text{flight}})$. Airliner fans now move around 10 times more air around the core than through it.', run:c=>c.setParam('bpr',11,3)},
+  ],
+  NP:2200,
+  calc(P){
+    const g = 1.4, cp = 1004, T0 = 220, a0 = Math.sqrt(g*287*T0), h = 42.8e6, k = (g - 1)/g;
+    const tr = 1 + (g - 1)/2*P.M0*P.M0, tl = P.T4/T0, tc = Math.pow(P.pc, k), tf = Math.pow(1.6, k), al = P.bpr;
+    const work = tc - 1 + al*(tf - 1), tt = 1 - tr/tl*work;
+    const inner = 2/(g - 1)*(tl - tr*work - tl/(tr*tc));
+    const ok = inner > 0 && tt > 0;
+    const v9 = ok ? a0*Math.sqrt(inner) : 0, v19 = al > 0 ? a0*Math.sqrt(2/(g - 1)*(tr*tf - 1)) : 0, v0 = a0*P.M0;
+    const Fs = (v9 - v0 + al*(v19 - v0))/(1 + al);
+    const f = cp*T0/h*(tl - tr*tc);
+    const S = Fs > 0 ? f/((1 + al)*Fs) : NaN;
+    const eth = 1 - 1/(tr*tc);
+    const den = v9*v9 - v0*v0 + al*(v19*v19 - v0*v0);
+    const eP = ok && den > 0 ? 2*v0*(v9 - v0 + al*(v19 - v0))/den : 0;
+    const T2 = T0*tr, T3 = T2*tc, T13 = T2*tf, T5 = P.T4*Math.max(tt, 0.05), T9 = Math.max(T5 - v9*v9/(2*cp), 200);
+    return {T0, T2, T3, T13, T4:P.T4, T5, T9, v0, v9, v19, Fs, S, eth, eP, ok, f};
+  },
+  init(c){
+    const d = c.data;
+    const shell = (r0, r1, x0, x1, mat) => {
+      const gm = new THREE.CylinderGeometry(r1, r0, x1 - x0, 72, 1, true, Math.PI/2, Math.PI);
+      gm.rotateZ(-Math.PI/2); gm.translate((x0 + x1)/2, 0, 0);
+      const m = new THREE.Mesh(gm, mat); c.group.add(m); return m;
+    };
+    const skin = new THREE.MeshStandardMaterial({color:0x8b93a7, metalness:.6, roughness:.35, transparent:true, opacity:.3, side:THREE.DoubleSide, depthWrite:false});
+    const casing = new THREE.MeshStandardMaterial({color:0x6b7488, metalness:.6, roughness:.35, transparent:true, opacity:.42, side:THREE.DoubleSide, depthWrite:false});
+    shell(2.12, 2.05, -5.2, 1.6, skin);
+    shell(1.05, 1.05, -3.15, 3.6, casing); shell(1.05, 0.68, 3.6, 6.0, casing);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(2.12, 0.07, 10, 72, Math.PI), new THREE.MeshStandardMaterial({color:0xb8c0d0, metalness:.7, roughness:.3}));
+    lip.rotation.y = Math.PI/2; lip.rotation.x = Math.PI; lip.position.x = -5.2; c.group.add(lip);
+    const metal = new THREE.MeshStandardMaterial({color:0x4a5366, metalness:.7, roughness:.35});
+    const hubG = new THREE.CylinderGeometry(0.5, 0.42, 7.8, 36); hubG.rotateZ(-Math.PI/2); hubG.translate(-0.3, 0, 0);
+    c.group.add(new THREE.Mesh(hubG, metal));
+    const plug = new THREE.ConeGeometry(0.5, 2.6, 36); plug.rotateZ(-Math.PI/2); plug.translate(4.9, 0, 0); c.group.add(new THREE.Mesh(plug, metal));
+    const spin = new THREE.ConeGeometry(0.42, 1.0, 36); spin.rotateZ(Math.PI/2); spin.translate(-4.7, 0, 0);
+    c.group.add(new THREE.Mesh(spin, new THREE.MeshStandardMaterial({color:0xcfd6e4, metalness:.8, roughness:.25})));
+    // spools of blades
+    d.lp = new THREE.Group(); d.hp = new THREE.Group(); c.group.add(d.lp, d.hp);
+    const stage = (spool, x, hub, tip, n, chord, twist, color) => {
+      const m = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 1, chord), new THREE.MeshStandardMaterial({color, metalness:.75, roughness:.3}), n);
+      const o = new THREE.Object3D();
+      for (let i = 0; i < n; i++){
+        const ph = i/n*Math.PI*2, rm = (hub + tip)/2;
+        o.position.set(0, rm*Math.cos(ph), rm*Math.sin(ph));
+        o.quaternion.setFromAxisAngle(new V3(1, 0, 0), ph).multiply(new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), twist));
+        o.scale.set(1, tip - hub, 1); o.updateMatrix(); m.setMatrixAt(i, o.matrix);
+      }
+      m.position.x = x; spool.add(m);
+    };
+    stage(d.lp, -4.15, 0.45, 2.0, 22, 0.5, 0.65, 0xb8c0d0);
+    stage(d.lp, -3.35, 0.47, 0.99, 30, 0.22, 0.5, 0xb8c0d0); stage(d.lp, -2.9, 0.48, 0.97, 32, 0.2, 0.5, 0xb8c0d0);
+    for (let i = 0; i < 6; i++){ const t = i/5; stage(d.hp, -2.3 + i*0.38, 0.5, 0.95 - 0.28*t, 36, 0.16, 0.45, 0xd5dbe6); }
+    stage(d.hp, 1.68, 0.52, 0.8, 40, 0.16, -0.5, 0xc98a5a); stage(d.hp, 1.98, 0.52, 0.82, 40, 0.16, -0.5, 0xc98a5a);
+    for (let i = 0; i < 4; i++) stage(d.lp, 2.35 + i*0.33, 0.52, 0.86 + 0.04*i, 44, 0.18, -0.5, 0xb07a4a);
+    // combustor glow
+    d.burn = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.15, 16, 72), new THREE.MeshBasicMaterial({color:C.gold, transparent:true, opacity:.8}));
+    d.burn.rotation.y = Math.PI/2; d.burn.scale.set(1, 1, 4.5); d.burn.position.x = 0.75; c.group.add(d.burn);
+    d.light = new THREE.PointLight(0xffa040, 3, 6, 1.5); d.light.position.set(0.75, 0, 0); c.group.add(d.light);
+    // labels
+    d.labs = {};
+    [['fan', -4.6, 2.6], ['comp', -1.5, 2.15], ['burn', 0.75, -1.75], ['turb', 2.8, 2.15], ['noz', 5.6, 1.35], ['byp', -1.2, 3.05]].forEach(([k, x, y]) => {
+      const l = texLabel('', 0xcfd6e4, 14); l.position.set(x, y, 0); c.group.add(l); d.labs[k] = l;
+    });
+    // particles
+    d.px = new Float32Array(this.NP); d.pth = new Float32Array(this.NP); d.prf = new Float32Array(this.NP); d.pk = new Uint8Array(this.NP);
+    d.pp = new Float32Array(this.NP*3); d.pc = new Float32Array(this.NP*3);
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.BufferAttribute(d.pp, 3).setUsage(THREE.DynamicDrawUsage));
+    pg.setAttribute('color', new THREE.BufferAttribute(d.pc, 3).setUsage(THREE.DynamicDrawUsage));
+    d.parts = new THREE.Points(pg, new THREE.PointsMaterial({size:0.075, map:circleTexture(), vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.parts.frustumCulled = false; c.group.add(d.parts);
+    for (let i = 0; i < this.NP; i++) this.spawn(c, i, true);
+    d.labT = 1;
+    reveal(d.lp, 1); reveal(d.hp, 1);
+  },
+  coreK:[[-9,0.05,0.95],[-4.6,0.3,0.95],[-4.15,0.46,0.98],[-2.6,0.49,0.96],[-0.3,0.52,0.67],[0.1,0.52,0.86],[1.45,0.52,0.86],[1.65,0.53,0.8],[3.4,0.55,1.0],[3.6,0.52,1.0],[6.0,0.12,0.66],[15,0.05,1.2]],
+  bypK:[[-9,1.08,1.95],[-4.15,1.08,1.98],[1.6,1.1,1.98],[4.5,1.12,2.5],[15,1.15,3.4]],
+  spawn(c, i, anywhere){
+    const d = c.data, frac = Math.min(0.85, c.params.bpr/(1 + c.params.bpr));
+    d.pk[i] = Math.random() < frac ? 1 : 0;
+    d.px[i] = anywhere ? -9 + Math.random()*24 : -9 - Math.random()*0.5;
+    d.pth[i] = Math.random()*Math.PI*2; d.prf[i] = Math.random();
+  },
+  reset(c){ for (let i = 0; i < this.NP; i++) this.spawn(c, i, true); },
+  update(dt, c){
+    const d = c.data, P = c.params, R = this.calc(P);
+    const k9 = 2 + 6*R.v9/1000, k19 = 2 + 6*R.v19/1000;
+    const coreV = [[-9,3],[-4.2,3],[-0.3,1.8],[0.2,2.2],[1.45,3],[3.4,4],[6,k9],[15,k9]];
+    const bypV = [[-9,3],[-4.2,3.2],[1.6,k19],[15,k19]];
+    const coreT = [[-9,R.T0],[-4.6,R.T2],[-4.0,R.T13],[-0.3,R.T3],[0.15,R.T3],[1.3,R.T4],[1.65,R.T4],[3.4,R.T5],[6,R.T9],[15,(R.T9 + R.T0)/2]];
+    const bypT = [[-9,R.T0],[-4.6,R.T2],[-4.0,R.T13],[15,R.T13]];
+    if (dt > 0){
+      const spinK = R.ok ? 1 : 0.3;
+      d.lp.rotation.x += dt*5*spinK; d.hp.rotation.x += dt*9*spinK;
+      for (let i = 0; i < this.NP; i++){
+        const byp = d.pk[i] === 1, x = d.px[i];
+        d.px[i] = x + lerpKnots(byp ? bypV : coreV, x, 1)*dt*0.9*(R.ok ? 1 : 0.4);
+        if (d.px[i] > 15) this.spawn(c, i, false);
+      }
+    }
+    for (let i = 0; i < this.NP; i++){
+      const byp = d.pk[i] === 1, x = d.px[i], K = byp ? this.bypK : this.coreK;
+      const r = lerpKnots(K, x, 1) + (lerpKnots(K, x, 2) - lerpKnots(K, x, 1))*d.prf[i];
+      d.pp[i*3] = x; d.pp[i*3+1] = r*Math.cos(d.pth[i]); d.pp[i*3+2] = r*Math.sin(d.pth[i]);
+      const col = tempColor(lerpKnots(byp ? bypT : coreT, x, 1));
+      d.pc[i*3] = col.r; d.pc[i*3+1] = col.g; d.pc[i*3+2] = col.b;
+    }
+    d.parts.geometry.attributes.position.needsUpdate = true; d.parts.geometry.attributes.color.needsUpdate = true;
+    const hot = (P.T4 - 1100)/800;
+    d.burn.material.color.copy(tempColor(P.T4)); d.light.intensity = 2 + 3*hot;
+    d.labT += dt;
+    if (d.labT > 0.3){
+      d.labT = 0; const K = v => Math.round(v) + '\\,\\text{K}';
+      const set = (k, s) => { d.labs[k].element.innerHTML = tex(s); };
+      set('fan', `\\text{fan}`);
+      set('comp', `\\text{compressor}\\;\\; T_3 = ${K(R.T3)}`);
+      set('burn', `\\text{combustor}\\;\\; T_4 = ${K(R.T4)}`);
+      set('turb', `\\text{turbine}\\;\\; T_5 = ${K(R.T5)}`);
+      set('noz', `\\text{jet}\\;\\; ${Math.round(R.v9)}\\,\\text{m/s}`);
+      set('byp', P.bpr > 0 ? `\\text{bypass air}\\;\\; ${Math.round(R.v19)}\\,\\text{m/s}` : '');
+    }
+  },
+  readouts(c){
+    const R = this.calc(c.params), pc = v => (v*100).toFixed(1) + '%';
+    if (!R.ok) return [['status', 'turbine can’t drive this fan'], ['try', 'raise $T_4$ or lower $\\alpha$'], ['thermal efficiency', pc(R.eth)]];
+    return [
+      ['thermal efficiency $\\eta_{\\text{th}}$', pc(R.eth)],
+      ['propulsive efficiency $\\eta_p$', pc(R.eP)],
+      ['overall efficiency', pc(R.eth*R.eP)],
+      ['thrust per kg/s of air', Math.round(R.Fs) + ' N'],
+      ['fuel burn (TSFC)', (R.S*1e6).toFixed(1) + ' g/(kN·s)'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   Wind turbines and the Betz limit (actuator-disk momentum theory)
+   --------------------------------------------------------------------- */
+const AppWind = {
+  id:'app-wind', bloom:0.45, title:'Wind Turbines', sub:'How much of the wind a rotor can catch: the Betz limit', accent:C.teal,
+  ref:{label:'Vol. II · Ch. 40', title:'The Flow of Dry Water', url:FLURL + 'II_40.html', related:true},
+  cam:{pos:[-5, 3.4, 17], target:[1.6, -1.2, -1]},
+  eq:String.raw`\begin{aligned} P &= \tfrac12\rho A v^3\, C_p\\[2pt] C_p &= 4a(1-a)^2 \;\le\; \tfrac{16}{27} \end{aligned}`,
+  params:[
+    {key:'v', tex:'v', label:'wind speed (m/s)', min:3, max:25, step:0.1, value:11},
+    {key:'a', tex:'a', label:'how much the rotor slows the wind', min:0, max:0.45, step:0.005, value:0.2},
+    {key:'D', tex:'D', label:'rotor diameter (m)', min:40, max:240, step:1, value:150},
+  ],
+  steps:[
+    {text:'A wind turbine slows the wind down and keeps the kinetic energy it takes out. The wind carries $P = \\tfrac12\\rho A v^3$, so doubling the wind speed gives eight times the power.', run:c=>{c.setParam('a',0.2,1); c.setParam('D',150,0);}},
+    {text:'The rotor can’t stop the air completely, because the air has to leave. As it slows, it spreads out: the pale streamtube widens, since $A\\,v$ is the same all along it.', cam:[[0.5,12,6],[1,-1,0]]},
+    {text:'Momentum theory gives the fraction caught, $C_p = 4a(1-a)^2$, where $a$ is how much the rotor slows the wind. Too little braking wastes the wind; too much and the air piles up and spills around the rotor.', cam:[[-5,3.4,17],[1.6,-1.2,-1]], run:c=>c.setParam('a',1/3,3)},
+    {text:'The best is $a = 1/3$. The wake leaves at a third of the wind speed and $C_p = 16/27 \\approx 59.3\\%$: the Betz limit, found in 1919. Real turbines reach about 45–50%.'},
+    {text:'Since $P \\propto D^2 v^3$, bigger rotors in windier places win. The largest offshore turbines today have rotors more than 200 m across.', run:c=>c.setParam('D',236,3)},
+  ],
+  RV:3, XR:14, NI:1500, NO:500,
+  uOf(x, a){ return 1 - a*(1 + x/Math.sqrt(x*x + this.RV*this.RV)); },
+  rTube(x, a){ return this.RV*Math.sqrt((1 - a)/Math.max(this.uOf(x, a), 0.05)); },
+  init(c){
+    const d = c.data, RV = this.RV;
+    const ground = new THREE.GridHelper(40, 40, 0x2a3348, 0x161b27); ground.position.y = -6.5; c.group.add(ground);
+    const metal = new THREE.MeshStandardMaterial({color:0xdde3ec, metalness:.3, roughness:.45});
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.3, 6.3, 24), metal); tower.position.set(0.6, -3.35, 0); c.group.add(tower);
+    const nac = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.6), metal); nac.position.set(0.8, 0, 0); c.group.add(nac);
+    const sp = new THREE.ConeGeometry(0.32, 0.7, 24); sp.rotateZ(Math.PI/2); sp.translate(-0.35, 0, 0); c.group.add(new THREE.Mesh(sp, metal));
+    d.rotor = new THREE.Group(); c.group.add(d.rotor);
+    for (let i = 0; i < 3; i++){
+      const g = new THREE.BoxGeometry(0.07, RV, 0.55, 1, 10, 1); g.translate(0, RV/2 + 0.15, 0);
+      const p = g.attributes.position;
+      for (let k = 0; k < p.count; k++){ const y = p.getY(k), s = 1 - 0.75*y/RV; p.setZ(k, p.getZ(k)*s); }
+      g.computeVertexNormals();
+      const b = new THREE.Mesh(g, metal); b.rotation.y = 0.25;
+      const holder = new THREE.Group(); holder.rotation.x = i*2*Math.PI/3; holder.add(b);
+      d.rotor.add(holder);
+    }
+    d.tube = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({color:C.teal, transparent:true, opacity:.035, side:THREE.DoubleSide, depthWrite:false}));
+    c.group.add(d.tube);
+    d.tubeW = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:C.teal, transparent:true, opacity:.07}));
+    c.group.add(d.tubeW);
+    const N = this.NI + this.NO;
+    d.px = new Float32Array(N); d.pr = new Float32Array(N); d.pth = new Float32Array(N);
+    d.pp = new Float32Array(N*3); d.pc = new Float32Array(N*3);
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.BufferAttribute(d.pp, 3).setUsage(THREE.DynamicDrawUsage));
+    pg.setAttribute('color', new THREE.BufferAttribute(d.pc, 3).setUsage(THREE.DynamicDrawUsage));
+    d.parts = new THREE.Points(pg, new THREE.PointsMaterial({size:0.08, map:circleTexture(), vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.parts.frustumCulled = false; c.group.add(d.parts);
+    for (let i = 0; i < N; i++) this.spawn(d, i, true);
+    // Cp chart on the back wall
+    const X0 = 5, XW = 6.5, Y0 = -6.4, YS = 7.5, Z = -6;
+    d.chart = {X0, XW, Y0, YS, Z};
+    const ax1 = makeArrow(0x6b7280, 0.012, 0.9); ax1.userData.arrow.set(new V3(X0, Y0, Z), new V3(XW + 0.4, 0, 0)); c.group.add(ax1);
+    const ax2 = makeArrow(0x6b7280, 0.012, 0.9); ax2.userData.arrow.set(new V3(X0, Y0, Z), new V3(0, 5.2, 0)); c.group.add(ax2);
+    const la = texLabel('a', 0x9aa3b5, 16); la.position.set(X0 + XW + 0.7, Y0, Z); c.group.add(la);
+    const lc = texLabel('C_p', 0x9aa3b5, 16); lc.position.set(X0, Y0 + 5.5, Z); c.group.add(lc);
+    const pts = []; for (let i = 0; i <= 100; i++){ const a = 0.5*i/100; pts.push(new V3(X0 + XW*a/0.5, Y0 + YS*4*a*(1 - a)**2, Z)); }
+    c.group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:C.gold})));
+    const by = Y0 + YS*16/27;
+    const betz = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(X0, by, Z), new V3(X0 + XW, by, Z)]), new THREE.LineDashedMaterial({color:C.red, dashSize:0.15, gapSize:0.1}));
+    betz.computeLineDistances(); c.group.add(betz);
+    const bl = texLabel('\\text{Betz limit } 16/27', C.red, 14); bl.position.set(X0 + XW*0.62, by + 0.35, Z); c.group.add(bl);
+    d.mark = glowDot(C.teal, 0.13); c.group.add(d.mark);
+    d.windL = texLabel('\\text{wind} \\rightarrow', 0x9aa3b5, 16); d.windL.position.set(-12, 3.6, 0); c.group.add(d.windL);
+    reveal(d.rotor, 1);
+    this.rebuild(c);
+  },
+  spawn(d, i, anywhere){
+    const inside = i < this.NI, a = 0;
+    d.px[i] = anywhere ? -this.XR + Math.random()*2*this.XR : -this.XR - Math.random();
+    d.pth[i] = Math.random()*Math.PI*2;
+    d.pr[i] = inside ? Math.sqrt(Math.random()) : 0;
+    if (!inside) d.pr[i] = this.RV*1.05 + Math.random()*4.5; // far-upstream radius, outside the tube
+  },
+  reset(c){ const d = c.data; for (let i = 0; i < this.NI + this.NO; i++) this.spawn(d, i, true); this.rebuild(c); },
+  onParam(k, c){ if (k === 'a') this.rebuild(c); },
+  rebuild(c){
+    const d = c.data, a = c.params.a, pts = [];
+    for (let i = 0; i <= 80; i++){ const x = -this.XR + 2*this.XR*i/80; pts.push(new THREE.Vector2(this.rTube(x, a), x)); }
+    const g = new THREE.LatheGeometry(pts, 64); g.rotateZ(-Math.PI/2);
+    d.tube.geometry.dispose(); d.tube.geometry = g;
+    const wpts = []; for (let i = 0; i <= 80; i += 8) wpts.push(pts[i]);
+    const wg = new THREE.WireframeGeometry(new THREE.LatheGeometry(pts.filter((_, i) => i % 8 === 0), 16)); wg.rotateZ(-Math.PI/2);
+    d.tubeW.geometry.dispose(); d.tubeW.geometry = wg;
+    const ch = d.chart; d.mark.position.set(ch.X0 + ch.XW*a/0.5, ch.Y0 + ch.YS*4*a*(1 - a)**2, ch.Z);
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, a = P.a, vis = 0.35*P.v, rUp = this.rTube(-1e6, a);
+    if (dt > 0){
+      d.rotor.rotation.x -= dt*0.12*P.v*(0.3 + 2*a);
+      for (let i = 0; i < this.NI + this.NO; i++){
+        const inside = i < this.NI, x = d.px[i];
+        d.px[i] = x + vis*(inside ? this.uOf(x, a) : 1)*dt;
+        if (d.px[i] > this.XR) this.spawn(d, i, false);
+      }
+    }
+    for (let i = 0; i < this.NI + this.NO; i++){
+      const inside = i < this.NI, x = d.px[i], rt = this.rTube(x, a);
+      const r = inside ? d.pr[i]*rt : Math.sqrt(d.pr[i]**2 + rt*rt - rUp*rUp);
+      d.pp[i*3] = x; d.pp[i*3+1] = r*Math.cos(d.pth[i]); d.pp[i*3+2] = r*Math.sin(d.pth[i]);
+      const col = inside ? gradient([C.red, C.gold, C.teal], (this.uOf(x, a) - 0.1)/0.9) : new THREE.Color(0x4a5a78);
+      d.pc[i*3] = col.r; d.pc[i*3+1] = col.g; d.pc[i*3+2] = col.b;
+    }
+    d.parts.geometry.attributes.position.needsUpdate = true; d.parts.geometry.attributes.color.needsUpdate = true;
+  },
+  readouts(c){
+    const P = c.params, a = P.a, Cp = 4*a*(1 - a)**2, A = Math.PI*(P.D/2)**2, Pw = 0.5*1.225*A*P.v**3;
+    return [
+      ['power coefficient $C_p$', (Cp*100).toFixed(1) + '%'],
+      ['power caught', (Pw*Cp/1e6).toFixed(2) + ' MW'],
+      ['power in the wind', (Pw/1e6).toFixed(2) + ' MW'],
+      ['wake speed $(1-2a)v$', ((1 - 2*a)*P.v).toFixed(1) + ' m/s'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   How a wing lifts (Joukowski airfoil, Kutta condition)
+   --------------------------------------------------------------------- */
+const AppWing = {
+  id:'app-wing', bloom:0.45, title:'How a Wing Lifts', sub:'Circulation, the Kutta condition, and Bernoulli on a real airfoil', accent:C.blue,
+  ref:{label:'Vol. II · Ch. 40', title:'The Flow of Dry Water', url:FLURL + 'II_40.html', related:true},
+  cam:{pos:[1.5, 4.2, 15], target:[0, 0, 0]},
+  eq:String.raw`\begin{aligned} L' &= \rho\, V\, \Gamma\\[2pt] C_L &\approx 2\pi\,\sin\alpha\\[2pt] p + \tfrac12\rho v^2 &= \text{const} \end{aligned}`,
+  params:[
+    {key:'alpha', tex:'\\alpha', label:'angle of attack (degrees)', min:-4, max:18, step:0.1, value:5},
+    {key:'camber', tex:'f', label:'camber (curve of the wing)', min:0, max:0.2, step:0.005, value:0.06},
+    {key:'V', tex:'V', label:'airspeed (m/s)', min:40, max:250, step:1, value:75},
+  ],
+  steps:[
+    {text:'Feynman’s ideal flow (chapter 5.1) pushes nothing sideways unless the air also circulates around the body. A wing’s job is to set up that circulation $\\Gamma$, and its sharp trailing edge fixes exactly how much. This is the Kutta condition.', run:c=>{c.setParam('alpha',5,1); c.setParam('camber',0.06,1);}},
+    {text:'Lift per metre of span is $L\' = \\rho V \\Gamma$ (Kutta–Joukowski). Tilt the nose up and the circulation grows: for a thin wing $C_L \\approx 2\\pi \\sin\\alpha$.', run:c=>c.setParam('alpha',10,2.5)},
+    {text:'Colors show pressure from Bernoulli’s law: strong suction over the top (blue), a smaller push underneath (red). Most of the lift is the top surface being pulled up.', cam:[[0.5,1.4,10.5],[0,0,0]]},
+    {text:'Real numbers: a Boeing 737-800 has 125 m² of wing and can weigh 79 tonnes at takeoff. Flaps add camber; at about 75 m/s the live panel compares lift with that weight.', cam:[[1.5,4.2,15],[0,0,0]], run:c=>{c.setParam('V',75,0); c.setParam('camber',0.12,2.5);}},
+    {text:'Past about 15° a real wing stalls: the flow tears away from the top surface and lift collapses. Ideal “dry” flow can’t show that; it takes viscosity, as in chapter 5.2.', run:c=>c.setParam('alpha',17,2.5)},
+  ],
+  S:1.35, SPAN:4, NP:1800,
+  geom(P){
+    const eps = 0.1, del = P.camber, mu = [-eps, del], R = Math.hypot(1 + eps, del), beta = Math.asin(del/R), al = P.alpha*Math.PI/180;
+    return {mu, R, beta, al, G:4*Math.PI*R*Math.sin(al + beta)};
+  },
+  Wz(z, g){
+    const zm = Cx.sub(z, g.mu);
+    const dF = Cx.add(Cx.sub(Cx.exp(-g.al), Cx.div(Cx.mul([g.R*g.R, 0], Cx.exp(g.al)), Cx.mul(zm, zm))), Cx.div([0, g.G/(2*Math.PI)], zm));
+    return Cx.div(dF, Cx.sub([1, 0], Cx.div([1, 0], Cx.mul(z, z))));
+  },
+  toZ(zeta){ return Cx.add(zeta, Cx.div([1, 0], zeta)); },
+  toZeta(z, g){
+    const s = Cx.sqrt(Cx.sub(Cx.mul(z, z), [4, 0]));
+    const a = Cx.mul(Cx.add(z, s), [0.5, 0]), b = Cx.mul(Cx.sub(z, s), [0.5, 0]);
+    return Cx.abs(Cx.sub(a, g.mu)) >= Cx.abs(Cx.sub(b, g.mu)) ? a : b;
+  },
+  zetaVel(zeta, g){ // dζ/dt
+    const W = this.Wz(zeta, g), v = [W[0], -W[1]];
+    return Cx.div(v, Cx.sub([1, 0], Cx.div([1, 0], Cx.mul(zeta, zeta))));
+  },
+  init(c){
+    const d = c.data;
+    d.frame = new THREE.Group(); c.group.add(d.frame);
+    d.wing = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({vertexColors:true, metalness:.25, roughness:.45}));
+    d.frame.add(d.wing);
+    d.lines = new THREE.Group(); d.frame.add(d.lines);
+    d.zeta = new Array(this.NP); d.pz = new Float32Array(this.NP);
+    d.pp = new Float32Array(this.NP*3); d.pc = new Float32Array(this.NP*3);
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.BufferAttribute(d.pp, 3).setUsage(THREE.DynamicDrawUsage));
+    pg.setAttribute('color', new THREE.BufferAttribute(d.pc, 3).setUsage(THREE.DynamicDrawUsage));
+    d.parts = new THREE.Points(pg, new THREE.PointsMaterial({size:0.07, map:circleTexture(), vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+    d.parts.frustumCulled = false; d.frame.add(d.parts);
+    d.lift = makeArrow(C.yellow, 0.05); c.group.add(d.lift);
+    d.liftL = texLabel('\\vec L', C.yellow, 20); c.group.add(d.liftL);
+    d.windL = texLabel('\\text{airflow} \\rightarrow', 0x9aa3b5, 16); d.windL.position.set(-8.6, 3.4, 0); c.group.add(d.windL);
+    d.stall = texLabel('\\text{a real wing would stall here}', C.red, 16); d.stall.position.set(0, -3.2, 0); c.group.add(d.stall);
+    this.rebuild(c);
+    d.g = this.geom(c.params);
+    for (let i = 0; i < this.NP; i++) this.spawn(c, i, true);
+  },
+  spawn(c, i, anywhere){
+    const d = c.data, g = d.g || this.geom(c.params), S = this.S;
+    let zw;
+    for (let tries = 0; tries < 20; tries++){
+      const xw = anywhere ? -9.5 + Math.random()*19 : -9.5 - Math.random()*0.4, yw = (Math.random()*2 - 1)*3.6;
+      // world (display) → frame coords: rotate by +α
+      const ca = Math.cos(g.al), sa = Math.sin(g.al);
+      zw = [(xw*ca - yw*sa)/S, (xw*sa + yw*ca)/S];
+      const zeta = this.toZeta(zw, g);
+      if (Cx.abs(Cx.sub(zeta, g.mu)) > g.R*1.04){ d.zeta[i] = zeta; d.pz[i] = (Math.random()*2 - 1)*this.SPAN*0.95; return; }
+    }
+    d.zeta[i] = this.toZeta([-12, 0], g);
+  },
+  reset(c){ c.data.g = this.geom(c.params); for (let i = 0; i < this.NP; i++) this.spawn(c, i, true); },
+  onParam(k, c){ if (k !== 'V') this.rebuild(c); },
+  rebuild(c){
+    const d = c.data, g = this.geom(c.params), S = this.S, N = 180;
+    d.g = g;
+    const zs = [], cps = [];
+    for (let i = 0; i < N; i++){
+      const th = -g.beta + 2*Math.PI*(i + 0.5)/N, zeta = Cx.add(g.mu, [g.R*Math.cos(th), g.R*Math.sin(th)]);
+      const z = this.toZ(zeta), W = this.Wz(zeta, g);
+      zs.push([z[0]*S, z[1]*S]); cps.push(1 - (W[0]*W[0] + W[1]*W[1]));
+    }
+    let xmin = Infinity, xmax = -Infinity; for (const p of zs){ xmin = Math.min(xmin, p[0]); xmax = Math.max(xmax, p[0]); }
+    d.chord = (xmax - xmin)/S; d.CL = 2*g.G/d.chord;
+    const shape = new THREE.Shape(zs.map(p => new THREE.Vector2(p[0], p[1])));
+    const geo = new THREE.ExtrudeGeometry(shape, {depth:2*this.SPAN, bevelEnabled:false, steps:1});
+    geo.translate(0, 0, -this.SPAN);
+    const pos = geo.attributes.position, col = new Float32Array(pos.count*3), tmp = new THREE.Color();
+    const neg = new THREE.Color(C.blue), mid = new THREE.Color(0xc8ceda), hi = new THREE.Color(C.red);
+    for (let k = 0; k < pos.count; k++){
+      const x = pos.getX(k), y = pos.getY(k); let best = 0, bd = Infinity;
+      for (let i = 0; i < N; i++){ const dd = (zs[i][0] - x)**2 + (zs[i][1] - y)**2; if (dd < bd){ bd = dd; best = i; } }
+      const cp = Math.max(-3, Math.min(1, cps[best]));
+      if (cp < 0) tmp.copy(mid).lerp(neg, Math.pow(-cp/3, 0.6)); else tmp.copy(mid).lerp(hi, cp);
+      col[k*3] = tmp.r; col[k*3+1] = tmp.g; col[k*3+2] = tmp.b;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+    d.wing.geometry.dispose(); d.wing.geometry = geo;
+    // streamlines on the plane just past the wing tip
+    clearGroup(d.lines);
+    const mat = new THREE.LineBasicMaterial({color:0xcfd6e4, transparent:true, opacity:.4});
+    const ca = Math.cos(g.al), sa = Math.sin(g.al);
+    for (let yw = -3.2; yw <= 3.21; yw += 0.4){
+      let zeta = this.toZeta([(-9.5*ca - yw*sa)/S, (-9.5*sa + yw*ca)/S], g);
+      const pts = [];
+      for (let k = 0; k < 700; k++){
+        const z = this.toZ(zeta); pts.push(new V3(z[0]*S, z[1]*S, this.SPAN + 0.15));
+        const xw = (z[0]*ca + z[1]*sa)*S; if (xw > 9.5) break;
+        const v1 = this.zetaVel(zeta, g), m1 = Cx.abs(v1); if (!(m1 > 1e-5)) break;
+        const h = 0.03/Math.max(Cx.abs(this.Wz(zeta, g)), 0.2);
+        const mid = Cx.add(zeta, Cx.mul(v1, [h/2, 0]));
+        const v2 = this.zetaVel(mid, g); zeta = Cx.add(zeta, Cx.mul(v2, [h, 0]));
+        if (Cx.abs(Cx.sub(zeta, g.mu)) < g.R) break;
+      }
+      if (pts.length > 1) d.lines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+    }
+    d.frame.rotation.z = -g.al;
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, g = d.g, S = this.S, ca = Math.cos(g.al), sa = Math.sin(g.al);
+    if (dt > 0){
+      const h = dt*1.6/S;
+      for (let i = 0; i < this.NP; i++){
+        let zeta = d.zeta[i];
+        const v1 = this.zetaVel(zeta, g), mid = Cx.add(zeta, Cx.mul(v1, [h/2, 0])), v2 = this.zetaVel(mid, g);
+        zeta = Cx.add(zeta, Cx.mul(v2, [h, 0]));
+        const z = this.toZ(zeta), xw = (z[0]*ca + z[1]*sa)*S;
+        if (!isFinite(z[0]) || xw > 9.5 || Cx.abs(Cx.sub(zeta, g.mu)) < g.R*1.002){ this.spawn(c, i, false); continue; }
+        d.zeta[i] = zeta;
+      }
+    }
+    for (let i = 0; i < this.NP; i++){
+      const z = this.toZ(d.zeta[i]), W = this.Wz(d.zeta[i], g), sp = Math.hypot(W[0], W[1]);
+      d.pp[i*3] = z[0]*S; d.pp[i*3+1] = z[1]*S; d.pp[i*3+2] = d.pz[i];
+      const col = gradient([C.red, 0x8b93a7, C.teal, C.blue], (sp - 0.4)/1.4);
+      d.pc[i*3] = col.r; d.pc[i*3+1] = col.g; d.pc[i*3+2] = col.b;
+    }
+    d.parts.geometry.attributes.position.needsUpdate = true; d.parts.geometry.attributes.color.needsUpdate = true;
+    const Lv = new V3(0, Math.max(0, d.CL)*1.5, 0);
+    d.lift.userData.arrow.set(new V3(0, 0.7, 0), Lv); d.lift.visible = d.CL > 0.02;
+    d.liftL.position.set(0.4, 0.7 + Lv.y + 0.3, 0);
+    d.stall.visible = P.alpha > 15;
+  },
+  readouts(c){
+    const d = c.data, P = c.params, q = 0.5*1.225*P.V*P.V, L = q*125*d.CL, W = 79000*9.81;
+    return [
+      ['lift coefficient $C_L$', d.CL.toFixed(2)],
+      ['circulation $\\Gamma$ (per $Vc$)', (d.g.G/d.chord).toFixed(3)],
+      ['lift on a 737 wing (125 m²)', (L/1000).toFixed(0) + ' kN'],
+      ['737 max takeoff weight', (W/1000).toFixed(0) + ' kN'],
+      ['lift ÷ weight', (L/W).toFixed(2) + (P.alpha > 15 ? ' (stalled in reality)' : '')],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------------
+   The electric generator (Faraday's law)
+   --------------------------------------------------------------------- */
+const AppGenerator = {
+  id:'app-generator', bloom:0.5, title:'The Electric Generator', sub:'Turbines spin coils; Faraday’s law makes the voltage', accent:C.yellow,
+  ref:{label:'Vol. II · Ch. 17', title:'The Laws of Induction', url:FLURL + 'II_17.html', related:true},
+  cam:{pos:[6.5, 4.6, 10.5], target:[0, 0.4, 0]},
+  eq:String.raw`\begin{aligned} \mathcal E &= -\frac{d\Phi}{dt}\\[2pt] \Phi &= N B A \sin\omega t\\[2pt] \mathcal E_0 &= N B A\, \omega \end{aligned}`,
+  params:[
+    {key:'f', tex:'f', label:'turns per second', min:0.1, max:2, step:0.01, value:0.6},
+    {key:'B', tex:'B', label:'magnetic field (tesla)', min:0.1, max:1.2, step:0.01, value:0.8},
+    {key:'N', tex:'N', label:'turns of wire', min:10, max:500, step:10, value:400},
+    {key:'mode', label:'output', type:'select', value:'ac', reset:true, options:[{label:'Slip rings (AC)', value:'ac'}, {label:'Commutator (DC)', value:'dc'}]},
+  ],
+  steps:[
+    {text:'Nearly all of the world’s electricity comes from one trick: spin a coil of wire in a magnetic field. Steam, gas, water and wind turbines do the spinning.', run:c=>{c.setParam('mode','ac'); c.setParam('f',0.6,1);}},
+    {text:'Faraday’s law: the voltage around the coil is $\\mathcal E = -d\\Phi/dt$. As the coil turns, the flux through it goes like $\\sin\\omega t$, so the voltage comes out as a smooth wave (the trace).', cam:[[1,3.6,12],[0,1.6,-1]]},
+    {text:'The voltage peaks when the coil’s face lies along the field (green arrow across the field). At that moment no flux passes through it, but the flux is changing fastest.', cam:[[0.5,9,3],[0,0,0]], run:c=>c.setParam('f',0.25,2)},
+    {text:'Spin faster or use a stronger field and the voltage grows: $\\mathcal E_0 = NBA\\omega$. Power-station generators turn 50 or 60 times a second to match the grid frequency.', cam:[[6.5,4.6,10.5],[0,0.4,0]], run:c=>c.setParam('f',1.4,2.5)},
+    {text:'Swap the slip rings for a split-ring commutator and the output flips every half turn: pulsating DC. That was the trick inside the first dynamos, and it is how a DC motor works in reverse.', run:c=>{c.setParam('f',0.6,1.5); c.setParam('mode','dc');}},
+  ],
+  A:0.05, REF:150,
+  init(c){
+    const d = c.data;
+    const pole = (x, col, s) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(1.1, 3.6, 3.6), new THREE.MeshStandardMaterial({color:col, metalness:.4, roughness:.45}));
+      m.position.set(x, 0, 0); c.group.add(m);
+      const l = texLabel(s, 0xffffff, 26); l.position.set(x, 2.3, 0); c.group.add(l);
+    };
+    pole(-3.2, 0xb8434a, '\\mathbf N'); pole(3.2, 0x3f6fb0, '\\mathbf S');
+    d.field = [];
+    for (const y of [-1.3, 0, 1.3]) for (const z of [-1.3, 0, 1.3]){
+      const a = makeArrow(C.blue, 0.012, 0.35); a.userData.arrow.set(new V3(-2.6, y, z), new V3(5.2, 0, 0)); c.group.add(a); d.field.push(a);
+    }
+    const bl = texLabel('\\vec B', C.blue, 20); bl.position.set(0, 2.0, 1.9); c.group.add(bl);
+    // rotating coil + axle
+    d.rot = new THREE.Group(); c.group.add(d.rot);
+    const cu = new THREE.MeshStandardMaterial({color:0xd08a4a, metalness:.8, roughness:.3});
+    const W = 1.5, H = 1.2;
+    for (const off of [-0.07, 0, 0.07]){
+      const c4 = [new V3(-W, -H, off), new V3(W, -H, off), new V3(W, H, off), new V3(-W, H, off)];
+      for (let k = 0; k < 4; k++){
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 10), cu);
+        cylBetween(m, c4[k], c4[(k + 1)%4]); d.rot.add(m);
+      }
+    }
+    const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 4.4, 12), new THREE.MeshStandardMaterial({color:0x8b93a7, metalness:.8, roughness:.3}));
+    axle.position.y = -1.0; d.rot.add(axle);
+    const ringM = new THREE.MeshStandardMaterial({color:0xe0b070, metalness:.9, roughness:.2});
+    d.slip = new THREE.Group(); d.rot.add(d.slip);
+    for (const y of [-2.2, -2.7]){ const r = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.06, 10, 40), ringM); r.rotation.x = Math.PI/2; r.position.y = y; d.slip.add(r); }
+    d.comm = new THREE.Group(); d.rot.add(d.comm);
+    for (const s of [0, Math.PI]){ const r = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.07, 10, 30, Math.PI - 0.35), ringM); r.rotation.x = Math.PI/2; r.rotation.z = s + 0.175; r.position.y = -2.45; d.comm.add(r); }
+    const brushM = new THREE.MeshStandardMaterial({color:0x2a2f3a, roughness:.8});
+    d.brushes = [];
+    for (const [x, y] of [[0.47, -2.2], [-0.47, -2.7]]){ const b = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.14), brushM); b.position.set(x, y, 0); c.group.add(b); d.brushes.push(b); }
+    // wires and bulb
+    const wire = new THREE.LineBasicMaterial({color:0x9aa3b5});
+    d.bulbPos = new V3(3.6, -3.4, 1.8);
+    c.group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(0.58, -2.2, 0), new V3(2.2, -2.2, 0), new V3(3.4, -3.0, 1.8)]), wire));
+    c.group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(-0.58, -2.7, 0), new V3(-1.2, -3.8, 0), new V3(3.6, -3.8, 1.8)]), wire));
+    d.bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 24, 16), new THREE.MeshBasicMaterial({color:C.yellow}));
+    d.bulb.position.copy(d.bulbPos); c.group.add(d.bulb);
+    d.glow = new THREE.Sprite(new THREE.SpriteMaterial({map:circleTexture(), color:C.yellow, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false}));
+    d.glow.position.copy(d.bulbPos); d.glow.scale.setScalar(2.4); c.group.add(d.glow);
+    const ll = texLabel('\\text{lamp}', 0x9aa3b5, 14); ll.position.copy(d.bulbPos).add(new V3(0, 0.6, 0)); c.group.add(ll);
+    d.nA = makeArrow(C.green, 0.03); c.group.add(d.nA);
+    d.nL = texLabel('\\hat n', C.green, 18); c.group.add(d.nL);
+    // oscilloscope
+    const sc = new THREE.Mesh(new THREE.PlaneGeometry(9.6, 2.9), new THREE.MeshBasicMaterial({color:0x0f1d18, transparent:true, opacity:.85}));
+    sc.position.set(0, 3.9, -3.4); c.group.add(sc);
+    const se = new THREE.LineSegments(new THREE.EdgesGeometry(sc.geometry), new THREE.LineBasicMaterial({color:0x2c4a3c})); se.position.copy(sc.position); c.group.add(se);
+    c.group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(-4.6, 3.9, -3.38), new V3(4.6, 3.9, -3.38)]), new THREE.LineBasicMaterial({color:0x2c4a3c})));
+    const sl = texLabel('\\mathcal E(t)', C.green, 16); sl.position.set(-4.3, 5.55, -3.4); c.group.add(sl);
+    d.trace = new Float32Array(400*3);
+    const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(d.trace, 3).setUsage(THREE.DynamicDrawUsage));
+    d.traceL = new THREE.Line(tg, new THREE.LineBasicMaterial({color:C.green})); d.traceL.frustumCulled = false; c.group.add(d.traceL);
+    d.hist = []; d.th = 0; d.t = 0;
+    this.reset(c);
+  },
+  reset(c){ const d = c.data; d.hist = []; d.slip.visible = c.params.mode === 'ac'; d.comm.visible = c.params.mode === 'dc'; d.brushes[0].position.y = c.params.mode === 'ac' ? -2.2 : -2.45; d.brushes[1].position.y = c.params.mode === 'ac' ? -2.7 : -2.45; },
+  emf(c, th){ const P = c.params, w = 2*Math.PI*P.f, e = -P.N*P.B*this.A*w*Math.cos(th); return P.mode === 'dc' ? Math.abs(e) : e; },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){ d.th += 2*Math.PI*P.f*dt; d.t += dt; d.hist.push([d.t, this.emf(c, d.th)]); while (d.hist.length && d.hist[0][0] < d.t - 4) d.hist.shift(); }
+    d.rot.rotation.y = d.th;
+    const n = new V3(Math.sin(d.th), 0, Math.cos(d.th));
+    d.nA.userData.arrow.set(new V3(0, 0, 0), n.clone().multiplyScalar(1.9)); d.nL.position.copy(n).multiplyScalar(2.2);
+    for (const a of d.field) a.userData.arrow.mat.opacity = 0.12 + 0.35*P.B/1.2;
+    const e = this.emf(c, d.th), m = Math.min(1, Math.abs(e)/this.REF);
+    d.glow.material.opacity = 0.9*m*m + 0.02; d.bulb.material.color.copy(new THREE.Color(0x3a3420)).lerp(new THREE.Color(C.yellow), Math.min(1, m*1.6));
+    const N = d.hist.length;
+    for (let i = 0; i < 400; i++){
+      const h = d.hist[Math.min(N - 1, Math.floor(i*N/400))];
+      if (!h){ d.trace[i*3] = -4.6; d.trace[i*3+1] = 3.9; d.trace[i*3+2] = -3.37; continue; }
+      d.trace[i*3] = -4.6 + 9.2*(h[0] - (d.t - 4))/4;
+      d.trace[i*3+1] = 3.9 + Math.max(-1.3, Math.min(1.3, h[1]/this.REF*1.2));
+      d.trace[i*3+2] = -3.37;
+    }
+    d.traceL.geometry.attributes.position.needsUpdate = true;
+  },
+  readouts(c){
+    const d = c.data, P = c.params, w = 2*Math.PI*P.f, e0 = P.N*P.B*this.A*w;
+    return [
+      ['flux linkage $N\\Phi$', (P.N*P.B*this.A*Math.sin(d.th)).toFixed(2) + ' Wb'],
+      ['voltage now $\\mathcal E$', this.emf(c, d.th).toFixed(1) + ' V'],
+      ['peak $\\mathcal E_0 = NBA\\omega$', e0.toFixed(1) + ' V'],
+      ['same coil at 50 Hz', (P.N*P.B*this.A*2*Math.PI*50).toFixed(0) + ' V peak'],
+    ];
+  },
+};
+
+AppJet.builtOn = [FeynGas, FeynDry];
+AppJet.portrait = 1.5; AppWind.portrait = 1.3; AppWing.portrait = 1.2;
+AppWind.builtOn = [FeynDry];
+AppWing.builtOn = [FeynDry, FeynWet];
+AppGenerator.builtOn = [Lorentz];
+
 // related lectures for the chapters not built directly on one
 const FL = 'https://www.feynmanlectures.caltech.edu/';
 Gravity.ref = {label:'Vol. I · Ch. 7', title:'The Theory of Gravitation', url:FL + 'I_07.html', related:true};
@@ -2937,6 +3512,7 @@ const TOPICS = [
   {id:'heat',    name:'Heat',             color:C.green,  blurb:'Temperature and pressure from moving atoms',      chapters:[FeynGas]},
   {id:'rel',     name:'Relativity',       color:C.maroon, blurb:'Space and time mixed by motion',                  chapters:[FeynSpaceTime]},
   {id:'quantum', name:'Quantum',          color:C.pink,   blurb:'Amplitudes, interference, and measurement',       chapters:[FeynQuantum]},
+  {id:'eng',     name:'Engineering',      color:0x9ED1F0, blurb:'Physics at work: engines, turbines, wings, generators', chapters:[AppJet, AppWind, AppWing, AppGenerator]},
 ];
 const CHAPTERS = [];
 TOPICS.forEach((t, ti) => t.chapters.forEach((ch, k) => { ch.topic = t; ch.num = `${ti+1}.${k+1}`; CHAPTERS.push(ch); }));
@@ -3097,6 +3673,16 @@ async function goScene(i, first=false){
   const tIdx = TOPICS.indexOf(def.topic);
   $('sceneTag').innerHTML = `<b style="color:${hexCss(def.topic.color)}">${def.topic.name}</b> · chapter ${def.num.split('.')[1]} of ${def.topic.chapters.length}`;
   $('refCard').style.display = def.ref ? '' : 'none';
+  const links = def.builtOn || CHAPTERS.filter(ch => ch.builtOn && ch.builtOn.includes(def));
+  $('linkCard').style.display = links.length ? '' : 'none';
+  $('linkHead').textContent = def.builtOn ? 'The physics behind it' : 'In the real world';
+  $('linkList').innerHTML = '';
+  links.forEach(ch => {
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="n">${ch.num}</span><span>${ch.title}</span><span class="go">›</span>`;
+    b.onclick = () => goScene(CHAPTERS.indexOf(ch));
+    $('linkList').appendChild(b);
+  });
   if (def.ref){
     $('refHead').textContent = def.ref.related ? 'Related Feynman lecture' : 'From the Feynman Lectures';
     $('refLabel').textContent = def.ref.label; $('refTitle').textContent = def.ref.title; $('refLink').href = def.ref.url;
@@ -3185,7 +3771,7 @@ addEventListener('keydown', e => {
   if (k === ' '){ e.preventDefault(); togglePlay(); }
   else if (k === 'ArrowRight'){ nextStep(); }
   else if (k === 'ArrowLeft'){ prevStep(); }
-  else if (k.length === 1 && k >= '1' && k <= String(TOPICS.length)){ goScene(CHAPTERS.indexOf(TOPICS[+k - 1].chapters[0])); }
+  else if (k.length === 1 && k >= '0' && k <= '9'){ const t = TOPICS[k === '0' ? 9 : +k - 1]; if (t) goScene(CHAPTERS.indexOf(t.chapters[0])); }
   else if (k === 'm' || k === 'M'){ openContents(); }
   else if (k === 'l' || k === 'L'){ document.body.classList.toggle('side-collapsed'); }
   else if (k === ']' || k === 'PageDown'){ goScene((state.idx + 1) % CHAPTERS.length); }

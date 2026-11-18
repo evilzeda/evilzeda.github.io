@@ -3,7 +3,7 @@
 An interactive, narrated 3D physics explorer in the spirit of 3Blue1Brown, built around *The Feynman Lectures on Physics*.
 Everything lives in `index.html` — double-click it to open in Chrome or Edge (needs an internet connection to load three.js, KaTeX and fonts from a CDN).
 
-## Contents — 17 chapters in 9 topics
+## Contents — 21 chapters in 10 topics
 
 | # | Chapter | Feynman Lectures |
 |---|---|---|
@@ -33,6 +33,11 @@ Everything lives in `index.html` — double-click it to open in Chrome or Edge (
 | 8.1 | Space-Time — light cone, worldlines, Lorentz boost | Vol. I, Ch. 17 |
 | **9** | **Quantum** | |
 | 9.1 | Electrons Through Two Slits | Vol. III, Ch. 1 |
+| **10** | **Engineering** — each links to the theory chapters it uses | |
+| 10.1 | The Jet Engine — ideal turbofan (Brayton cycle): stage temperatures, thermal/propulsive efficiency, TSFC | Vol. I, Ch. 44 (related) |
+| 10.2 | Wind Turbines — actuator-disk momentum theory, streamtube, Betz limit 16/27 | Vol. II, Ch. 40 (related) |
+| 10.3 | How a Wing Lifts — Joukowski airfoil, Kutta condition, lift vs a Boeing 737-800's weight | Vol. II, Ch. 40 (related) |
+| 10.4 | The Electric Generator — rotating coil, Faraday's law, AC slip rings vs DC commutator | Vol. II, Ch. 17 (related) |
 
 Each chapter has step-by-step narration with equations, live sliders, live readouts, and a link to its lecture.
 
@@ -41,7 +46,7 @@ Each chapter has step-by-step narration with equations, live sliders, live reado
 |---|---|
 | Contents (all chapters by topic) | `M` or the Contents button |
 | Previous / next chapter | `[` / `]` (or the « » buttons) |
-| Jump to a topic | `1` – `9` |
+| Jump to a topic | `1` – `9`, `0` for Engineering |
 | Next / previous narration step | `→` / `←` |
 | Orbit / zoom / pan | drag · scroll · right-drag |
 | Play / pause | `Space` |
