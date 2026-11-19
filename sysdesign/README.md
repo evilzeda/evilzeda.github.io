@@ -1,11 +1,11 @@
 # System Design, step by step
 
-Interactive, Notion-styled system design lessons. Single self-contained `index.html`, no build step and no dependencies.
+An interactive system design course with 40 lessons in 9 modules, each a step-by-step story told with animated isometric diagrams. It uses Notion's colour palette (light and dark) and is plain HTML/JS with no build step.
 
-1. **How a Request Travels**: DNS, TCP/TLS, load balancer, cache, database, with a live latency budget.
-2. **Scaling Out**: one server → load balancer, stateless fleet, cache-aside, CDN, read replicas.
-3. **Queues & Async Work**: queues, workers, bursts, retries, dead-letter queues, idempotency.
+- `index.html`: layout and styles
+- `js/engine.js`: course catalog, isometric renderer, step player, cheatsheet, progress
+- `js/lessons-*.js`: lesson content (one file per module)
 
-Each lesson has a step-by-step animated diagram and a playground (waterfall calculator, traffic simulator, queue simulator).
+Deep links: `#/load-balancing/5`, `#/cheatsheet`. Keys: ← → step · R replay · Space pause · T theme · Ctrl K search.
 
-Keys: `←`/`→` step · `Space` pause · `R` replay · `T` theme. Deep links: `#/scaling-out/4`.
+Topics follow the curriculum of designed-to-scale.vercel.app by Dilum Sanjaya; all text, diagrams and code here are original.

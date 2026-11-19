@@ -1,0 +1,88 @@
+/* 08 · Shipping */
+(function(){const {B,D,DB,CR,Q,Z,G,E}=SD.H;
+
+SD.add({id:'testing',title:'Testing',min:10,lvl:'Beginner',
+sub:'A fast, layered safety net: many unit tests, fewer integration tests, a handful of end-to-end checks.',
+keys:'unit integration e2e contract test pyramid load testing',
+learn:['The test pyramid and why its shape matters','Unit, integration and end-to-end tests','Contract tests between services','Load and failure testing'],
+cheat:['Many fast unit tests; fewer integration; few E2E. Speed = feedback.','Integration tests use real dependencies (DB in a container).','Contract tests catch API breaks between services without full E2E.','Load-test before launches; practise failure (chaos) in safe ways.'],
+met:[['time','Suite time','clock'],['flaky','Flaky tests','alert'],['conf','Confidence','shield']],
+nodes:{
+  dev:D(-26,4,'developer'),
+  ci:B(-8,4,'blue','test',['Test','runner']),
+  unit:B(10,6,'green','check',['Unit tests'],{w:6,h:1.5,s:'2,000 · 40 s'}),
+  integ:B(10,6,'yellow','layers',['Integration'],{w:4.2,h:1.5,z:1.5,s:'200 · 3 min'}),
+  e2e:B(10,6,'red','eye',['E2E'],{w:2.4,h:1.5,z:3,s:'20 · 6 min'}),
+  db:DB(30,14,'test DB',{w:2.2}),
+  load:CR(26,-16,10,'simulated users',{w:4.4,d:3.2})
+},
+steps:[
+ {k:'setup',t:'Why tests?',short:'Why',v:'dev ci',
+  b:'Every change risks breaking something. Tests let you change code quickly <i>and</i> confidently, because a machine re-checks hundreds of behaviours on every commit.\n\nThe trick is a suite that’s fast, reliable and catches real bugs.',
+  ch:['+ Tests run on every push'],e:[E('dev','ci','req','git push')],m:{time:'—',flaky:'—',conf:'—'}},
+ {k:'technique',t:'Unit tests',short:'Unit',v:'unit',
+  b:'<b>Unit tests</b> check one function or class in isolation: “discount of 10% on $50 is $45”. They run in milliseconds, need no network or database, and pinpoint exactly what broke.\n\nThey form the wide base of the pyramid.',
+  ch:['+ 2,000 unit tests in 40 s'],e:[E('ci','unit','req','')],m:{time:'40 s',conf:'logic'}},
+ {k:'technique',t:'Integration tests',short:'Integration',v:'integ db',
+  b:'<b>Integration tests</b> check that pieces work together for real: your repository code against an actual PostgreSQL in a container, your HTTP handler with its middleware.\n\nSlower, but they catch the bugs mocks hide (wrong SQL, bad config).',
+  ch:['+ Real DB in a container'],e:[E('ci','integ','req',''),E('integ','db','both','real SQL')],m:{time:'3.7 min',conf:'+ wiring'}},
+ {k:'technique',t:'End-to-end tests',short:'E2E',v:'e2e',
+  b:'<b>E2E tests</b> drive the whole system like a user: open the browser, add to cart, check out. They give the most confidence per test, but they’re slow and the most likely to be <b>flaky</b>.\n\nKeep a small set covering critical journeys.',
+  ch:['+ 20 critical user journeys','! Slowest and flakiest layer'],e:[E('ci','e2e','req','')],m:{time:'9.7 min',flaky:'2%',conf:'+ journeys'}},
+ {k:'problem',t:'The ice-cream cone',short:'Anti-pattern',
+  b:'Teams that rely mostly on E2E tests get an inverted pyramid: 40-minute suites, random failures, and developers who stop trusting (or running) tests.\n\nPush checks <b>down</b> the pyramid wherever possible.',
+  ch:['! 40 min suite, 8% flaky'],s:{e2e:{hot:1,tags:[['flaky','red','alert']]}},e:[E('ci','e2e','req','',{dots:4,tone:'red'})],m:{time:'40 min',flaky:'8%'}},
+ {k:'technique',t:'Contract tests',short:'Contracts',
+  b:'Between services, a <b>contract test</b> records what a consumer expects from a provider’s API (fields, types, status codes). The provider’s CI verifies it still satisfies every consumer’s contract.\n\nYou catch breaking API changes without spinning up the whole system.',
+  ch:['+ Consumer contracts verified in provider CI'],s:{e2e:{hot:0,tags:[]}},e:[E('ci','integ','req','verify contracts')],m:{time:'5 min',flaky:'1%'}},
+ {k:'technique',t:'Load & failure tests',short:'Load',v:'load',
+  b:'Before a launch, <b>load-test</b>: simulate realistic traffic to find the breaking point and the bottleneck. And test failure on purpose: kill an instance, add latency to a dependency, and confirm timeouts and failover behave.',
+  ch:['+ 10× expected peak for 30 min','+ Kill a node during the test'],e:[E('load','ci','req','',{dots:4})]},
+ {k:'recap',t:'Recap',short:'Recap',
+  b:'Build a pyramid: lots of fast unit tests, a solid layer of integration tests, a few E2E journeys, plus contract tests between services. Keep the suite fast and flake-free so people trust it, and load-test before big moments.',
+  e:[E('ci','unit','req',''),E('ci','integ','req',''),E('ci','e2e','req','')],m:{conf:'high'}}
+]});
+
+SD.add({id:'cicd',title:'CI/CD & Deployments',min:11,lvl:'Intermediate',
+sub:'From commit to production automatically, with deploy strategies that limit the blast radius.',
+keys:'continuous integration delivery deployment pipeline blue green canary rolling feature flags rollback',
+learn:['Continuous integration: build and test every change','A deployment pipeline with immutable artifacts','Rolling, blue-green and canary deploys','Feature flags and fast rollback'],
+cheat:['CI: merge small changes often; every commit builds and tests.','Build once, deploy the same artifact everywhere (staging → prod).','Canary: ship to a small % first, watch metrics, then expand or roll back.','Feature flags separate deploy from release; keep rollback one click away.'],
+met:[['freq','Deploys','rocket'],['lead','Commit → prod','clock'],['blast','Blast radius','alert'],['mttr','Rollback time','repeat']],
+nodes:{
+  dev:D(-28,4,'developer'),
+  ci:B(-12,4,'blue','gear',['CI','build + test']),
+  art:B(2,-12,'purple','box',['Image','v1.43'],{w:2.6}),
+  stg:B(4,14,'yellow','server',['Staging'],{w:2.6}),
+  lb:B(18,4,'orange','balancer',['LB'],{w:2.6}),
+  v1:B(32,-10,'blue','server',['v1.42'],{w:2.8}),
+  v2:B(32,16,'green','server',['v1.43'],{w:2.8})
+},
+steps:[
+ {k:'problem',t:'Big-bang releases',short:'Big bang',v:'dev v1',
+  b:'Once a month, a release bundles hundreds of changes and goes out on a Friday night with a manual checklist. When something breaks, nobody knows which change caused it, and rollback is scary.',
+  ch:['! 300 changes per release','! Manual steps, long outages'],e:[E('dev','v1','req','manual deploy',{lt:'red'})],m:{freq:'monthly',lead:'~3 weeks',blast:'everyone',mttr:'hours'}},
+ {k:'solution',t:'Continuous integration',short:'CI',v:'ci',
+  b:'Developers merge small changes to main often. Every push triggers <b>CI</b>: compile, lint, run the tests. Broken builds are fixed immediately.\n\nSmall changes are easy to review, and when something breaks, the culprit is obvious.',
+  ch:['+ Every commit built and tested','+ Small, frequent merges'],e:[E('dev','ci','req','push')],m:{lead:'days'}},
+ {k:'technique',t:'One artifact',short:'Artifact',v:'art stg',
+  b:'CI produces an <b>immutable artifact</b> (a container image tagged <code>v1.43</code>). The <i>same</i> image goes to staging for checks, then to production. No rebuilding per environment, so what you tested is what you ship.\n\nConfig comes from the environment, not the image.',
+  ch:['+ Build once, deploy everywhere'],e:[E('ci','art','req','image v1.43'),E('art','stg','req','deploy',{via:[[4,0]]})],m:{lead:'~1 hour'}},
+ {k:'technique',t:'Rolling & blue-green',short:'Blue-green',v:'lb v2',
+  b:'<b>Rolling</b>: replace instances a few at a time. <b>Blue-green</b>: bring up the new version (green) beside the old (blue), test it, then switch the load balancer over at once.\n\nIf green misbehaves, switch back: rollback in seconds.',
+  ch:['+ Green ready beside blue','+ Switch traffic in one step'],e:[E('lb','v1','req','100% (blue)'),E('art','v2','req','deploy green',{via:[[20,-12]],tone:'faint'})],m:{mttr:'seconds'}},
+ {k:'solution',t:'Canary',short:'Canary',
+  b:'A <b>canary</b> sends a small slice of real traffic (say 5%) to the new version while watching error rate and latency. If the numbers hold, ramp to 25%, 50%, 100%. If they spike, the pipeline rolls back automatically.\n\nA bad release now affects 5% of users for a few minutes.',
+  ch:['+ 5% → v1.43, watch metrics','+ Auto-rollback on error spike'],e:[E('lb','v1','req','95%',{dots:3}),E('lb','v2','req','5%',{dots:1})],s:{v2:{tags:[['errors 0.1% ✓','green']]}},m:{blast:'5%',freq:'many / day'}},
+ {k:'problem',t:'Canary catches a bug',short:'Rollback',
+  b:'v1.44’s canary shows error rate jumping from 0.1% to 4%. The pipeline halts the rollout and shifts the 5% back to v1.43. Most users never noticed.',
+  ch:['- v1.44 errors 4%','+ Rolled back automatically in 2 min'],e:[E('lb','v1','req','100% (v1.43)',{dots:3}),E('lb','v2','fail','v1.44 canary')],s:{v1:{l:'v1.43'},v2:{l:'v1.44',c:'red',tags:[['errors 4% ✗','red','alert']]}},m:{mttr:'2 min'}},
+ {k:'technique',t:'Feature flags',short:'Flags',
+  b:'<b>Feature flags</b> let you deploy code switched off, then turn it on for staff, 1% of users, one country… independent of deploys. A misbehaving feature is turned off with a click, no deploy needed.\n\nClean up old flags so they don’t pile up.',
+  ch:['+ Deploy ≠ release','+ Kill switch per feature'],s:{v2:{l:'v1.45',c:'green',tags:[['flag new-checkout: 10%','purple']]}},e:[E('lb','v2','req','',{dots:2}),E('lb','v1','req','',{dots:1})]},
+ {k:'recap',t:'Recap',short:'Recap',
+  b:'Integrate continuously, build one immutable artifact, deploy it through the same pipeline every time, and limit the blast radius with canaries and feature flags. Fast, boring, reversible deploys let teams ship many times a day.',
+  e:[E('dev','ci','req',''),E('ci','art','req',''),E('lb','v2','req','')],m:{freq:'many / day',lead:'< 1 hour',blast:'small',mttr:'minutes'}}
+]});
+
+})();

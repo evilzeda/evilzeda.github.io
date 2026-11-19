@@ -1,0 +1,117 @@
+/* 07 · Security */
+(function(){const {B,D,DB,CR,Q,Z,G,E}=SD.H;
+
+SD.add({id:'authentication',title:'Authentication',min:11,lvl:'Intermediate',
+sub:'Proving who someone is: passwords, sessions, tokens and signing in with another provider.',
+keys:'login password hashing bcrypt session cookie jwt oauth oidc sso mfa',
+learn:['Storing passwords safely (slow hashes + salt)','Server sessions vs signed tokens (JWT)','Signing in with a provider (OAuth 2 / OpenID Connect)','MFA and protecting the login endpoint'],
+cheat:['Never store passwords; store bcrypt/argon2 hashes with a per-user salt.','Session cookie: random ID → server-side session. Easy to revoke.','JWT: signed claims, stateless to verify; keep short-lived + refresh tokens.','Use OIDC/SSO where possible; add MFA; rate-limit and lock out brute force.'],
+met:[['who','Identity','user'],['store','Credential store','key'],['token','Proof sent','id'],['risk','Risk','alert']],
+nodes:{
+  u:D(-24,4,'you'),
+  app:B(-4,4,'blue','server',['App'],{s:'/login'}),
+  db:DB(14,-10,'users DB'),
+  ss:B(14,16,'red','bolt',['Session','store'],{w:2.6}),
+  idp:B(-6,-18,'purple','shield',['Identity','provider'],{s:'Google / Okta'}),
+  atk:B(-24,24,'red','alert',['Attacker'],{w:2.4,h:2})
+},
+steps:[
+ {k:'setup',t:'Who are you?',short:'Login',v:'u app db',
+  b:'<b>Authentication</b> answers “who is making this request?”. The classic way: the user sends an email and password over HTTPS, and the server checks them against what it stored at sign-up.',
+  ch:['+ POST /login over TLS'],e:[E('u','app','req','email + password'),E('app','db','both','lookup user')],m:{who:'?',store:'?',token:'—',risk:'—'}},
+ {k:'problem',t:'Storing passwords',short:'Hashing',
+  b:'If the database leaks and passwords are stored as-is (or with a fast hash like MD5), attackers get them instantly, and people reuse passwords elsewhere.\n\nStore a <b>slow, salted hash</b> (bcrypt, scrypt, argon2). Each guess costs the attacker ~100 ms, and the per-user salt defeats precomputed tables.',
+  ch:['- Plaintext / MD5','+ argon2id, unique salt per user'],e:[E('app','db','both','verify argon2(pw, salt)')],
+  p:[{at:'db',dx:160,dy:-60,title:'users row',c:'blue',lines:['email  ada@ex.com','hash   $argon2id$v=19$m=65536…','salt   (inside the hash)']}],m:{store:'argon2 hash',risk:'leak-resistant'}},
+ {k:'technique',t:'Sessions',short:'Sessions',v:'ss',
+  b:'After a successful login the server creates a <b>session</b>: a long random ID mapped to the user in a session store. The ID goes back in an <code>HttpOnly; Secure; SameSite</code> cookie.\n\nEach request sends the cookie; the server looks it up. Logging out (or revoking) just deletes the session.',
+  ch:['+ Random session ID in a cookie','+ Revocable instantly'],e:[E('u','app','req','cookie: sid=8f2c…'),E('app','ss','both','sid → user 42')],m:{who:'user 42',token:'session cookie'}},
+ {k:'technique',t:'Tokens (JWT)',short:'JWT',
+  b:'A <b>JWT</b> carries signed claims (<code>sub: 42, exp: 15 min</code>). Any service with the key can verify it without a lookup, which is handy for APIs and many services.\n\nThe catch: you can’t easily revoke a token before it expires. Keep access tokens short-lived and use a refresh token to get new ones.',
+  ch:['+ Stateless verification','! Hard to revoke → short expiry'],e:[E('u','app','req','Authorization: Bearer eyJhbGci…')],m:{token:'JWT (15 min) + refresh'}},
+ {k:'solution',t:'Sign in with a provider',short:'OIDC',v:'idp',
+  b:'With <b>OpenID Connect</b> (built on OAuth 2), the app redirects the user to an identity provider. The user logs in there (with MFA), and the provider sends the app a signed ID token.\n\nYour app never sees the password, and companies get single sign-on.',
+  ch:['+ Redirect → provider → code → tokens','+ No passwords stored by you'],e:[E('u','idp','both','login + MFA',{via:[[-24,-18]]}),E('idp','app','req','auth code → ID token'),E('app','u','res','session')],m:{store:'provider',risk:'lower'}},
+ {k:'problem',t:'Attacks on login',short:'Attacks',v:'atk',
+  b:'Attackers try leaked password lists (<b>credential stuffing</b>) and brute force. Defences: rate-limit and slow down repeated failures, detect unusual locations, require <b>MFA</b>, and never reveal whether the email or the password was wrong.',
+  ch:['+ Rate limit per IP + account','+ MFA required','+ Generic error message'],e:[E('atk','app','fail','10k guesses/min → blocked')]},
+ {k:'recap',t:'Recap',short:'Recap',
+  b:'Hash passwords with a slow algorithm and salt, use secure cookies or short-lived tokens, prefer an identity provider for sign-in, and defend the login endpoint with rate limits and MFA. Authentication says <i>who</i>; next is what they may do.',
+  e:[E('u','app','req','cookie / bearer'),E('app','ss','both',''),E('idp','app','req','')],s:{atk:null},h:'atk'}
+]});
+
+SD.add({id:'authorization',title:'Authorization',min:10,lvl:'Intermediate',
+sub:'Deciding what an authenticated user may do, checked on every request, on the server.',
+keys:'rbac abac permissions idor least privilege policy scopes',
+learn:['Authentication vs authorization','Role-based access control (RBAC)','Ownership checks and the IDOR bug','Attribute/policy-based rules and least privilege'],
+cheat:['Check permissions on the server for every request; never trust the UI.','RBAC: users → roles → permissions.','Always check ownership: GET /invoices/77 must verify invoice 77 belongs to the caller.','Least privilege for users, services and API tokens; centralise policy.'],
+met:[['user','Caller','user'],['role','Role','id'],['decision','Decision','shield']],
+nodes:{
+  ana:D(-24,-6,'Ana · viewer'),
+  bo:D(-24,18,'Bo · admin'),
+  api:B(-4,4,'blue','server',['API']),
+  pol:B(12,-14,'purple','shield',['Policy','check']),
+  db:DB(16,14,'invoices')
+},
+steps:[
+ {k:'setup',t:'Logged in ≠ allowed',short:'AuthN vs AuthZ',v:'ana api db',
+  b:'Ana is logged in, so we know <i>who</i> she is. That says nothing about what she may do. <b>Authorization</b> decides whether this user may perform this action on this resource.',
+  ch:['+ Identity known: Ana'],e:[E('ana','api','req','GET /invoices')],m:{user:'Ana',role:'?',decision:'?'}},
+ {k:'problem',t:'Hidden buttons aren’t security',short:'UI only',
+  b:'The UI hides the “Delete” button for Ana. But anyone can send <code>DELETE /invoices/77</code> with curl. If the server doesn’t check, the hidden button protects nothing.\n\nEvery check must happen <b>on the server</b>.',
+  ch:['! Server trusted the UI','- Invoice 77 deleted by a viewer'],e:[E('ana','api','req','DELETE /invoices/77',{lt:'red'}),E('api','db','req','DELETE ✗',{tone:'red'})],m:{decision:'none (bug)'}},
+ {k:'solution',t:'Roles',short:'RBAC',v:'pol bo',
+  b:'<b>Role-based access control</b>: users get roles (viewer, editor, admin) and roles grant permissions (<code>invoice:read</code>, <code>invoice:delete</code>). The API asks the policy check before acting.\n\nAna (viewer) gets <code>403 Forbidden</code>; Bo (admin) is allowed.',
+  ch:['+ viewer: read','+ admin: read, delete'],e:[E('ana','api','req','DELETE /invoices/77'),E('api','pol','both','viewer may delete? no'),E('api','ana','res','403',{tone:'red',lp:.35}),E('bo','api','req','DELETE /invoices/77')],m:{role:'viewer',decision:'403 Forbidden'}},
+ {k:'problem',t:'Whose invoice?',short:'IDOR',
+  b:'Ana changes the URL from <code>/invoices/12</code> (hers) to <code>/invoices/13</code> and sees another company’s invoice. Her role allows reading invoices, just not <i>that</i> one.\n\nThis bug (insecure direct object reference, IDOR) is one of the most common API flaws.',
+  ch:['! Role check passed, ownership not checked'],e:[E('ana','api','req','GET /invoices/13'),E('api','db','both','returns other tenant’s data',{lt:'red'})],m:{decision:'leak (bug)'}},
+ {k:'solution',t:'Check ownership',short:'Ownership',
+  b:'Every lookup must be scoped to what the caller may access: <code>WHERE id = 13 AND org_id = :caller_org</code>. Policies combine role, ownership and context (<b>ABAC</b>: attributes such as org, department, time).\n\nCentralise rules in one policy layer so they’re consistent and testable.',
+  ch:['+ Queries scoped to caller’s org','+ Central policy (e.g. OPA / Cedar)'],e:[E('ana','api','req','GET /invoices/13'),E('api','pol','both','owner? no'),E('api','ana','res','404',{lp:.35})],m:{decision:'404 (not yours)'}},
+ {k:'recap',t:'Recap',short:'Recap',
+  b:'Authorization runs on the server for every request. Use roles for coarse permissions, always check ownership, add attributes when rules get richer, and give users, services and tokens only the access they need.',
+  e:[E('ana','api','req',''),E('bo','api','req',''),E('api','pol','both',''),E('api','db','both','scoped query')]}
+]});
+
+SD.add({id:'encryption',title:'Encryption & Secrets',min:10,lvl:'Intermediate',
+sub:'Protect data on the wire and on disk, and keep keys and passwords out of your code.',
+keys:'tls https encryption at rest kms envelope secrets vault mtls',
+learn:['Encryption in transit (TLS) and mutual TLS','Encryption at rest','Envelope encryption with a KMS','Managing secrets and rotating them'],
+cheat:['TLS everywhere, including inside your network (mTLS between services).','Encrypt disks/databases at rest; encrypt sensitive fields too.','Envelope encryption: data keys encrypt data; a KMS master key encrypts data keys.','Secrets live in a secrets manager, never in git; rotate regularly.'],
+met:[['wire','In transit','lock'],['disk','At rest','db'],['secrets','Secrets','key']],
+nodes:{
+  u:D(-26,4,'you'),
+  app:B(-6,4,'blue','server',['App']),
+  svc:B(10,-12,'green','server',['Billing','svc'],{w:2.6}),
+  db:DB(14,16,'database'),
+  kms:B(28,0,'purple','key',['KMS'],{w:2.6}),
+  vault:B(-6,-18,'yellow','lock',['Secrets','manager'],{w:2.6}),
+  eve:B(-18,22,'red','eye',['Eavesdropper'],{w:2.4,h:2}),
+  git:B(-22,-14,'gray','git',['git repo'],{w:2.4,h:2})
+},
+steps:[
+ {k:'problem',t:'Plain text everywhere',short:'Plain text',v:'u app db eve',
+  b:'Traffic travels over networks you don’t control: Wi-Fi, ISPs, cloud backbones. Unencrypted, anyone on the path can read or change it.\n\nA stolen disk or backup exposes everything stored on it.',
+  ch:['! Readable on the wire','! Readable on disk'],e:[E('u','app','req','password=hunter2',{lt:'red'}),E('eve','u','sync','sniffing',{tone:'red'}),E('app','db','req','')],m:{wire:'none',disk:'none',secrets:'?'}},
+ {k:'solution',t:'TLS in transit',short:'TLS',
+  b:'<b>TLS</b> (HTTPS) encrypts traffic and proves the server’s identity with a certificate. The handshake agrees on fresh session keys; nobody on the path can read or tamper.\n\nRedirect HTTP to HTTPS and enable HSTS so browsers never fall back.',
+  ch:['+ HTTPS + HSTS'],e:[E('u','app','both','TLS 1.3 🔒',{lt:'green'}),E('eve','u','fail','gibberish')],m:{wire:'TLS 1.3'}},
+ {k:'technique',t:'Inside the network too',short:'mTLS',v:'svc',
+  b:'“It’s internal” isn’t protection: one compromised machine can sniff or impersonate services. Use <b>mutual TLS</b>: both sides present certificates, so services authenticate <i>each other</i> and traffic is encrypted.\n\nService meshes automate certificate issuing and rotation.',
+  ch:['+ mTLS between services'],h:'eve',e:[E('app','svc','sync','mTLS: both present certs')],m:{wire:'TLS + mTLS'}},
+ {k:'technique',t:'Encryption at rest',short:'At rest',v:'kms',
+  b:'Encrypt disks, databases and backups. With <b>envelope encryption</b>, each dataset is encrypted with a <b>data key</b>; data keys are themselves encrypted by a master key that never leaves the <b>KMS</b> (key management service).\n\nRotate the master key without re-encrypting everything; revoke access centrally.',
+  ch:['+ AES-256 data keys','+ Master key stays in KMS'],e:[E('app','db','req','encrypted'),E('db','kms','both','decrypt data key')],m:{disk:'envelope (KMS)'}},
+ {k:'problem',t:'Secrets in code',short:'Leaked secret',v:'git',
+  b:'The database password is in <code>config.py</code>, committed to git. Every developer, CI log and fork now has it, and bots scan public repos for keys within minutes.',
+  ch:['! DB password in git history'],e:[E('git','app','req','DB_PASSWORD="…"',{lt:'red'})],s:{git:{hot:1}},m:{secrets:'in git (bad)'}},
+ {k:'solution',t:'A secrets manager',short:'Secrets mgr',v:'vault',
+  b:'Store secrets in a <b>secrets manager</b> (Vault, AWS Secrets Manager…). Apps fetch them at startup using their own identity; access is logged and scoped. Rotate secrets regularly, or use short-lived dynamic credentials.\n\nAnd rotate anything that ever touched git.',
+  ch:['+ Fetched at runtime by identity','+ Rotated every 30 days','- Removed from git (and rotated)'],h:'git',e:[E('app','vault','both','get db-password (as app)')],m:{secrets:'vault, rotated'}},
+ {k:'recap',t:'Recap',short:'Recap',
+  b:'Encrypt in transit (TLS, mTLS inside), encrypt at rest with keys managed by a KMS, and keep secrets in a secrets manager with rotation. Assume any network or disk could be exposed.',
+  e:[E('u','app','both','TLS',{lt:'green'}),E('app','svc','sync','mTLS'),E('app','db','req',''),E('db','kms','both',''),E('app','vault','both','')]}
+]});
+
+})();
