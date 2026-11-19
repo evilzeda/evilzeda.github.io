@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>System Design, Step by Step · evilzeda</title>
+<meta name="description" content="Interactive system design simulations: how a request travels, scaling out, and queues.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<style>
+:root{
+  --font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable Display","Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";
+  --mono:"SFMono-Regular",Menlo,Consolas,"PT Mono","Liberation Mono",Courier,monospace;
+  --bg:#ffffff; --side:#f7f7f5; --soft:#fbfbfa; --ink:#37352f; --mute:#787774; --faint:#a5a29a;
+  --line:#e9e9e7; --line2:#dfdfde; --hover:rgba(55,53,47,.06); --sel:rgba(35,131,226,.14);
+  --code-bg:rgba(135,131,120,.15); --code-ink:#eb5757; --grid:rgba(55,53,47,.07);
+  --gray:#787774;   --gray-bg:#f1f1ef;
+  --brown:#9f6b53;  --brown-bg:#f4eeee;
+  --orange:#d9730d; --orange-bg:#fbecdd;
+  --yellow:#cb912f; --yellow-bg:#fbf3db;
+  --green:#448361;  --green-bg:#edf3ec;
+  --blue:#337ea9;   --blue-bg:#e7f3f8;
+  --purple:#9065b0; --purple-bg:#f6f3f9;
+  --pink:#c14c8a;   --pink-bg:#faf1f5;
+  --red:#d44c47;    --red-bg:#fdebec;
+  --accent:#2383e2; --shadow:0 0 0 1px rgba(15,15,15,.05),0 3px 6px rgba(15,15,15,.1),0 9px 24px rgba(15,15,15,.2);
+}
+html[data-theme=dark]{
+  --bg:#191919; --side:#202020; --soft:#1e1e1e; --ink:#d4d4d4; --mute:#9b9b9b; --faint:#6f6f6f;
+  --line:#2f2f2f; --line2:#373737; --hover:rgba(255,255,255,.055); --sel:rgba(35,131,226,.28);
+  --code-bg:rgba(135,131,120,.15); --code-ink:#ff7369; --grid:rgba(255,255,255,.06);
+  --gray:#9b9b9b;   --gray-bg:#2f2f2f;
+  --brown:#ba856f;  --brown-bg:#4a3229;
+  --orange:#c77d48; --orange-bg:#5c3b23;
+  --yellow:#ca9849; --yellow-bg:#564328;
+  --green:#529e72;  --green-bg:#243d30;
+  --blue:#5e87c9;   --blue-bg:#143a4e;
+  --purple:#9d68d3; --purple-bg:#3c2d49;
+  --pink:#d15796;   --pink-bg:#4e2c3c;
+  --red:#df5452;    --red-bg:#522e2a;
+  --shadow:0 0 0 1px rgba(255,255,255,.07),0 3px 6px rgba(0,0,0,.3),0 9px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;line-height:1.5}
+body{display:flex;min-height:100vh;transition:background .2s,color .2s}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+code{font-family:var(--mono);font-size:85%;background:var(--code-bg);color:var(--code-ink);padding:.15em .35em;border-radius:4px}
+::selection{background:var(--sel)}
+
+/* ---------- sidebar ---------- */
+.side{width:248px;flex:none;background:var(--side);border-right:1px solid var(--line);height:100vh;position:sticky;top:0;display:flex;flex-direction:column;font-size:14px;z-index:20;transition:transform .25s}
+.ws{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;font-weight:600}
+.ws .av{width:22px;height:22px;border-radius:4px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:700}
+.ws small{display:block;font-weight:400;color:var(--mute);font-size:12px;line-height:1.1}
+.side-sec{padding:14px 8px 4px 14px;font-size:12px;font-weight:600;color:var(--mute)}
+.nav{display:flex;flex-direction:column;padding:0 6px}
+.nav a{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:5px;text-decoration:none;color:var(--mute);min-height:30px}
+.nav a:hover{background:var(--hover)}
+.nav a.on{background:var(--hover);color:var(--ink);font-weight:500}
+.nav a .e{width:20px;text-align:center}
+.nav a .n{margin-left:auto;font-size:11px;color:var(--faint)}
+.side-foot{margin-top:auto;padding:10px 6px;border-top:1px solid var(--line)}
+.side-foot a{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:5px;text-decoration:none;color:var(--mute)}
+.side-foot a:hover{background:var(--hover)}
+
+/* ---------- main ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:45px;display:flex;align-items:center;gap:6px;padding:0 12px;position:sticky;top:0;background:var(--bg);z-index:10;font-size:14px}
+.crumb{display:flex;align-items:center;gap:2px;color:var(--mute);min-width:0;overflow:hidden;white-space:nowrap}
+.crumb a,.crumb span{padding:2px 6px;border-radius:4px;text-decoration:none}
+.crumb a:hover{background:var(--hover)}
+.crumb .cur{color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.top .sp{flex:1}
+.ib{height:28px;min-width:28px;padding:0 8px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--mute);font-size:14px}
+.ib:hover{background:var(--hover);color:var(--ink)}
+#menuBtn{display:none}
+
+.cover{height:180px;position:relative;overflow:hidden;flex:none}
+.cover svg{position:absolute;inset:0;width:100%;height:100%}
+.page{width:100%;max-width:960px;margin:0 auto;padding:0 64px 120px}
+.picon{font-size:72px;line-height:1;margin-top:-42px;position:relative;width:max-content;user-select:none}
+h1{font-size:40px;line-height:1.2;font-weight:700;margin:18px 0 6px;letter-spacing:-.01em}
+.lede{color:var(--mute);font-size:16px;margin:0 0 14px}
+.props{display:grid;grid-template-columns:160px 1fr;row-gap:2px;font-size:14px;margin:8px 0 18px}
+.props .k{color:var(--mute);display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px}
+.props .v{padding:4px 6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:3px;font-size:13px;line-height:1;white-space:nowrap}
+.t-gray{background:var(--gray-bg);color:var(--ink)} .t-brown{background:var(--brown-bg)} .t-orange{background:var(--orange-bg)} .t-yellow{background:var(--yellow-bg)}
+.t-green{background:var(--green-bg)} .t-blue{background:var(--blue-bg)} .t-purple{background:var(--purple-bg)} .t-pink{background:var(--pink-bg)} .t-red{background:var(--red-bg)}
+hr.div{border:0;border-top:1px solid var(--line);margin:8px 0 22px}
+h2{font-size:24px;font-weight:600;margin:38px 0 4px;line-height:1.3}
+h3{font-size:18px;font-weight:600;margin:0 0 6px}
+p{margin:4px 0 10px}
+.muted{color:var(--mute)}
+
+/* ---------- simulator block ---------- */
+.sim{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)}
+.metrics{display:flex;gap:0;border-bottom:1px solid var(--line);overflow-x:auto}
+.metric{flex:1 1 0;min-width:120px;padding:10px 14px;border-right:1px solid var(--line);transition:background .4s}
+.metric:last-child{border-right:0}
+.metric .ml{font-size:11.5px;color:var(--mute);display:flex;gap:6px;align-items:center;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+.metric .mv{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.metric.total .mv{color:var(--accent)}
+.metric.flash{background:var(--yellow-bg)}
+.stage{position:relative;background:var(--soft)}
+.stage svg{display:block;width:100%;height:auto}
+.stage-tools{position:absolute;right:8px;top:8px;display:flex;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.stage-tools .ib{height:26px;font-size:12.5px}
+.stage-tools .ib.on{color:var(--ink);background:var(--hover)}
+
+.node{transition:opacity .45s ease}
+.node.off{opacity:0;pointer-events:none}
+.node .box{fill:var(--bg);stroke:var(--line2);stroke-width:1}
+.node.ping .box{stroke:var(--accent);stroke-width:2}
+.node .lbl{font:600 12.5px var(--font);fill:var(--ink)}
+.node .sub{font:400 10.5px var(--font);fill:var(--mute)}
+.node .emo{font-size:17px}
+.node.ping-red .box{stroke:var(--red);stroke-width:2}
+.edge{stroke:var(--line2);stroke-width:1.5;stroke-dasharray:4 5;fill:none;transition:opacity .45s,stroke .3s}
+.edge.off{opacity:0}
+.edge.hot{stroke:var(--faint);stroke-dasharray:none}
+.pkt rect{stroke-width:1}
+.pkt text{font:500 11px var(--font)}
+.note rect{stroke-width:1}
+.note text{font:500 11px var(--font)}
+.c-gray rect{fill:var(--gray-bg);stroke:var(--gray)} .c-gray text{fill:var(--ink)}
+.c-blue rect{fill:var(--blue-bg);stroke:var(--blue)} .c-blue text{fill:var(--blue)}
+.c-green rect{fill:var(--green-bg);stroke:var(--green)} .c-green text{fill:var(--green)}
+.c-orange rect{fill:var(--orange-bg);stroke:var(--orange)} .c-orange text{fill:var(--orange)}
+.c-purple rect{fill:var(--purple-bg);stroke:var(--purple)} .c-purple text{fill:var(--purple)}
+.c-red rect{fill:var(--red-bg);stroke:var(--red)} .c-red text{fill:var(--red)}
+.c-yellow rect{fill:var(--yellow-bg);stroke:var(--yellow)} .c-yellow text{fill:var(--yellow)}
+.c-brown rect{fill:var(--brown-bg);stroke:var(--brown)} .c-brown text{fill:var(--brown)}
+.c-pink rect{fill:var(--pink-bg);stroke:var(--pink)} .c-pink text{fill:var(--pink)}
+.pkt circle{stroke-width:1}
+.c-blue circle{fill:var(--blue)} .c-green circle{fill:var(--green)} .c-red circle{fill:var(--red)} .c-orange circle{fill:var(--orange)} .c-purple circle{fill:var(--purple)} .c-gray circle{fill:var(--gray)}
+
+.narr{display:grid;grid-template-columns:1fr 240px;border-top:1px solid var(--line)}
+.narr-main{padding:18px 22px 16px;min-height:220px;display:flex;flex-direction:column}
+.stepno{font-size:12px;color:var(--mute);font-weight:500;letter-spacing:.03em;text-transform:uppercase}
+.narr-main h3{font-size:20px;margin:2px 0 8px}
+.narr-body{font-size:15px}
+.callout{display:flex;gap:10px;padding:12px 14px;border-radius:6px;background:var(--gray-bg);margin:10px 0 4px;font-size:14.5px}
+.callout .ce{font-size:18px;line-height:1.3}
+.callout.blue{background:var(--blue-bg)} .callout.yellow{background:var(--yellow-bg)} .callout.green{background:var(--green-bg)} .callout.purple{background:var(--purple-bg)}
+.navbtns{display:flex;gap:8px;margin-top:auto;padding-top:14px}
+.btn{height:34px;padding:0 14px;border-radius:6px;border:1px solid var(--line2);display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;background:var(--bg)}
+.btn:hover{background:var(--hover)}
+.btn:disabled{opacity:.4;cursor:default;background:var(--bg)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;flex:1;justify-content:space-between}
+.btn.pri:hover{filter:brightness(.95)}
+.toc{border-left:1px solid var(--line);padding:14px 8px;font-size:13.5px;background:var(--bg)}
+.toc .tt{font-size:11.5px;color:var(--mute);font-weight:600;padding:0 8px 6px;text-transform:uppercase;letter-spacing:.04em}
+.toc ol{list-style:none;margin:0;padding:0;counter-reset:s}
+.toc li button{width:100%;text-align:left;display:flex;gap:8px;padding:3px 8px;border-radius:5px;color:var(--mute);align-items:baseline}
+.toc li button:hover{background:var(--hover)}
+.toc li button .i{font-variant-numeric:tabular-nums;color:var(--faint);width:16px;flex:none;font-size:12px}
+.toc li.done button{color:var(--ink)}
+.toc li.done button .i{color:var(--green)}
+.toc li.on button{background:var(--sel);color:var(--ink);font-weight:500}
+.progress{height:3px;background:var(--line)}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .35s}
+
+/* ---------- playground ---------- */
+.pg{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.pg-grid{display:grid;grid-template-columns:260px 1fr}
+.pg-ctrl{padding:16px;border-right:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column;gap:14px;font-size:14px}
+.pg-out{padding:16px;min-width:0}
+.field label{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin-bottom:4px}
+.field label b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;user-select:none}
+.tog input{display:none}
+.tog .sw{width:30px;height:18px;border-radius:9px;background:var(--line2);position:relative;flex:none;transition:background .2s}
+.tog .sw::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tog input:checked+.sw{background:var(--accent)}
+.tog input:checked+.sw::after{transform:translateX(12px)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.stat{border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.stat .l{font-size:11.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.stat .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat .v.good{color:var(--green)} .stat .v.warn{color:var(--orange)} .stat .v.bad{color:var(--red)}
+.wf{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.wf-row{display:grid;grid-template-columns:130px 1fr 64px;align-items:center;gap:10px}
+.wf-row .nm{color:var(--mute)}
+.wf-row .tr{position:relative;height:18px;background:var(--gray-bg);border-radius:3px;overflow:hidden}
+.wf-row .tr i{position:absolute;top:0;bottom:0;border-radius:3px;transition:left .35s,width .35s}
+.wf-row .ms{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.wf-axis{display:grid;grid-template-columns:130px 1fr 64px;gap:10px;font-size:11px;color:var(--faint)}
+.wf-axis div:nth-child(2){display:flex;justify-content:space-between}
+.verdict{margin-top:12px}
+canvas{display:block;width:100%}
+.mini-btn{height:28px;padding:0 10px;border-radius:5px;border:1px solid var(--line2);background:var(--bg);font-size:13px}
+.mini-btn:hover{background:var(--hover)}
+
+ul.take{padding-left:0;list-style:none;margin:8px 0}
+ul.take li{display:flex;gap:10px;padding:3px 0;font-size:15px}
+ul.take li::before{content:"";flex:none;width:16px;height:16px;margin-top:3px;border-radius:3px}
+ul.take li::before{background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='white' d='M6.4 11.2 3.2 8l1.1-1.1 2.1 2.1 5.3-5.3 1.1 1.1z'/%3E%3C/svg%3E") center/14px no-repeat;-webkit-mask:none;mask:none}
+.nextcard{display:flex;align-items:center;gap:14px;margin-top:28px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;text-decoration:none}
+.nextcard:hover{background:var(--hover)}
+.nextcard .e{font-size:28px}
+.nextcard small{color:var(--mute);display:block}
+kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 4px;color:var(--mute)}
+
+@media (max-width:980px){
+  .narr{grid-template-columns:1fr}
+  .toc{border-left:0;border-top:1px solid var(--line)}
+  .toc ol{display:flex;flex-wrap:wrap;gap:2px}
+  .toc li button .t{display:none}
+  .toc li button{padding:3px 6px}
+  .pg-grid{grid-template-columns:1fr}
+  .pg-ctrl{border-right:0;border-bottom:1px solid var(--line)}
+}
+@media (max-width:820px){
+  .side{position:fixed;left:0;top:0;transform:translateX(-100%);box-shadow:var(--shadow)}
+  body.menu .side{transform:none}
+  #menuBtn{display:inline-flex}
+  .page{padding:0 18px 80px}
+  h1{font-size:30px}
+  .props{grid-template-columns:110px 1fr}
+  .wf-row,.wf-axis{grid-template-columns:90px 1fr 54px}
+}
+</style>
+</head>
+<body>
+<aside class="side" id="side">
+  <div class="ws"><div class="av">e</div><div>evilzeda<small>System Design</small></div></div>
+  <div class="side-sec">Lessons</div>
+  <nav class="nav" id="nav"></nav>
+  <div class="side-sec">Shortcuts</div>
+  <div style="padding:2px 20px;font-size:12.5px;color:var(--mute);line-height:1.9">
+    <kbd>←</kbd> <kbd>→</kbd> step &nbsp; <kbd>Space</kbd> pause<br><kbd>R</kbd> replay &nbsp; <kbd>T</kbd> theme
+  </div>
+  <div class="side-foot"><a href="../"><span>←</span> Back to evilzeda site</a></div>
+</aside>
+
+<div class="main">
+  <header class="top">
+    <button class="ib" id="menuBtn" aria-label="Menu">☰</button>
+    <div class="crumb" id="crumb"></div>
+    <div class="sp"></div>
+    <button class="ib" id="themeBtn" aria-label="Toggle theme" title="Toggle theme (T)">☾</button>
+  </header>
+  <div class="cover" id="cover"></div>
+  <article class="page" id="page"></article>
+</div>
+
+<script>
+/* =========================================================
+   Lesson content
+   ========================================================= */
+const LESSONS = [
+{
+  id:'request-lifecycle', icon:'🛰️', title:'How a Request Travels', short:'How a request travels',
+  lede:'Follow one page load hop by hop, and find out where the time really goes.',
+  minutes:10, level:['Beginner','green'], tags:[['Networking','blue'],['DNS','purple'],['Caching','orange']],
+  cover:['blue','purple'],
+  metrics:[{k:'dns',l:'DNS lookup',i:'🌐'},{k:'connect',l:'Connect',i:'🤝'},{k:'server',l:'Request + server',i:'🖥️'},{k:'download',l:'Download',i:'⬇️'},{k:'total',l:'Total',i:'⏱️',total:true}],
+  unit:'ms',
+  nodes:{
+    browser:{x:95,y:225,e:'💻',l:'Your browser',s:'shop.example',c:'blue'},
+    dns:{x:300,y:72,e:'📖',l:'DNS resolver',s:'1.1.1.1',c:'purple'},
+    root:{x:520,y:72,e:'🌐',l:'Root server',s:'"."',c:'gray'},
+    tld:{x:695,y:72,e:'🏷️',l:'.example TLD',s:'TLD server',c:'gray'},
+    auth:{x:870,y:72,e:'📜',l:'Authoritative',s:'ns1.shop.example',c:'gray'},
+    lb:{x:340,y:270,e:'⚖️',l:'Load balancer',s:'203.0.113.7',c:'yellow'},
+    app:{x:570,y:270,e:'🖥️',l:'App server',s:'private network',c:'green'},
+    cache:{x:810,y:195,e:'⚡',l:'Redis cache',s:'in-memory',c:'red'},
+    db:{x:810,y:340,e:'🗄️',l:'Database',s:'Postgres',c:'brown'}
+  },
+  steps:[
+    {t:'Hit Enter', show:['browser'],
+     body:'You type <code>https://shop.example</code> and press Enter. Before touching the network, the browser parses the URL and checks its own caches: the HSTS list, its DNS cache and its HTTP cache. This is a cold visit, so every cache misses and the request has to leave your machine.',
+     tip:['💡','A warm cache can skip several of the next steps entirely. That’s why the second visit to a site feels instant.'],
+     seq:[{pulse:'browser',note:'browser cache: miss',c:'gray',hold:1400}]},
+    {t:'Find the address', show:['dns'], edges:[['browser','dns']], m:{dns:5},
+     body:'Computers route by IP address, not by name. The browser asks a <b>recursive DNS resolver</b> (usually your ISP’s, or a public one like 1.1.1.1) to translate <code>shop.example</code> into an IP. The resolver checks its own cache first… and misses.',
+     seq:[{f:'browser',to:'dns',l:'where is shop.example?'},{pulse:'dns',note:'cache: miss',c:'orange',hold:1000}]},
+    {t:'Walk the DNS tree', show:['root','tld','auth'], edges:[['dns','root'],['dns','tld'],['dns','auth']], m:{dns:80},
+     body:'On a miss, the resolver walks the hierarchy. A <b>root server</b> points it to the <code>.example</code> TLD servers. Those point it to the domain’s <b>authoritative</b> name server, which finally answers with the IP. The answer is cached for its TTL, so the next visitor gets it in about 1 ms.',
+     tip:['🧠','Three extra round trips, ~75 ms, just to learn an address. DNS TTLs are a trade-off between speed and how fast you can change servers.'],
+     seq:[{f:'dns',to:'root',l:'shop.example?',d:700},{f:'root',to:'dns',l:'ask .example TLD',c:'gray',d:700},
+          {f:'dns',to:'tld',l:'shop.example?',d:600},{f:'tld',to:'dns',l:'ask ns1.shop',c:'gray',d:600},
+          {f:'dns',to:'auth',l:'shop.example?',d:700},{f:'auth',to:'dns',l:'203.0.113.7',c:'green',d:700},
+          {f:'dns',to:'browser',l:'→ 203.0.113.7',c:'green'}]},
+    {t:'Open a connection', show:['lb'], edges:[['browser','lb']], m:{connect:40},
+     body:'Now the browser knows <em>where</em> to go. <code>203.0.113.7</code> belongs to a <b>load balancer</b>, the public front door. The browser opens a TCP connection with a three-way handshake: <code>SYN</code>, <code>SYN-ACK</code>, <code>ACK</code>. No page data has been sent yet, and this already costs one full round trip (RTT), about 40 ms here.',
+     seq:[{f:'browser',to:'lb',l:'SYN',c:'purple'},{f:'lb',to:'browser',l:'SYN-ACK',c:'purple'},{f:'browser',to:'lb',l:'ACK',c:'purple'}]},
+    {t:'Agree on encryption', m:{connect:80},
+     body:'HTTPS adds a <b>TLS handshake</b> on top. The server proves its identity with a certificate, and both sides derive session keys. TLS 1.3 needs one extra round trip; TLS 1.2 needed two. Connection setup has now cost <b>80 ms</b>, and not one byte of your page has arrived.',
+     seq:[{f:'browser',to:'lb',l:'ClientHello',c:'purple'},{f:'lb',to:'browser',l:'ServerHello + cert',c:'purple'},{f:'browser',to:'lb',l:'Finished 🔒',c:'purple'}]},
+    {t:'Send the request', show:['app'], edges:[['lb','app']], m:{server:25},
+     body:'Finally the actual HTTP request goes out: <code>GET /products</code>. It reaches the load balancer, which terminates TLS and forwards the request over the fast internal network to one of several healthy <b>app servers</b>.',
+     tip:['⏱️','Half an RTT to get there (20 ms) plus ~5 ms inside the load balancer.'],
+     seq:[{f:'browser',to:'lb',l:'GET /products'},{f:'lb',to:'app',l:'GET /products',d:600}]},
+    {t:'Check the cache', show:['cache'], edges:[['app','cache']], m:{server:27},
+     body:'The app server’s first stop is <b>Redis</b>, an in-memory cache. A hit comes back in under a millisecond and skips the database completely. This time it’s a miss.',
+     seq:[{f:'app',to:'cache',l:'GET products:home',d:600},{f:'cache',to:'app',l:'MISS',c:'orange',d:600}]},
+    {t:'Ask the database', show:['db'], edges:[['app','db']], m:{server:57},
+     body:'On a miss, the server queries the database. This is the slowest hop inside the data centre (~30 ms for disk, indexes and locks). The server then writes the result back to the cache with a TTL, so the next request is a hit. This pattern is called <b>cache-aside</b>.',
+     seq:[{f:'app',to:'db',l:'SELECT … FROM products',d:800},{f:'db',to:'app',l:'24 rows',c:'green',d:800},{f:'app',to:'cache',l:'SET ttl=60s',c:'gray',d:600}]},
+    {t:'Build the response', m:{server:92},
+     body:'The server renders HTML from those rows (~15 ms) and sends <code>200 OK</code> back through the load balancer to your browser, another half round trip. The time between sending the request and receiving the first byte back is the <b>TTFB</b> (time to first byte).',
+     seq:[{pulse:'app',note:'render 15 ms',c:'green',hold:900},{f:'app',to:'lb',l:'200 OK',c:'green',d:600},{f:'lb',to:'browser',l:'200 OK · 48 KB',c:'green'}]},
+    {t:'Download & paint', m:{download:60},
+     body:'The HTML references CSS, JS and images, so the browser requests them in parallel over the already-open connection (HTTP/2). Once they arrive, it builds the DOM, lays out the page and paints pixels. Done.',
+     tip:['🎯','Add it up: of ~312 ms, only ~52 ms was your code and database. The other ~83% was spent waiting on the network. That’s why CDNs, connection reuse and caching usually matter more than a faster CPU.'],
+     seq:[[{f:'browser',to:'lb',l:'app.css'},{f:'browser',to:'lb',l:'app.js',delay:180},{f:'browser',to:'lb',l:'hero.webp',delay:360}],
+          [{f:'lb',to:'browser',l:'css',c:'green'},{f:'lb',to:'browser',l:'js',c:'green',delay:180},{f:'lb',to:'browser',l:'img',c:'green',delay:360}],
+          {pulse:'browser',note:'painted ✓',c:'green',hold:1200}]}
+  ],
+  take:['Latency is dominated by <b>round trips</b>, not computation.','DNS, TCP and TLS are all paid <b>before the first byte</b>. Reuse connections and keep DNS cached.','Caches at every layer (browser, resolver, Redis) turn expensive hops into cheap ones.','The load balancer is the public face; app servers and databases live on a private network.'],
+  pg:'waterfall'
+},
+{
+  id:'scaling-out', icon:'📈', title:'Scaling Out', short:'Scaling out',
+  lede:'Grow from one server to a fleet, and see what breaks at each stage.',
+  minutes:12, level:['Intermediate','yellow'], tags:[['Load balancing','yellow'],['Caching','orange'],['Replication','brown']],
+  cover:['green','yellow'],
+  metrics:[{k:'cap',l:'Capacity',i:'🚀'},{k:'p95',l:'p95 latency',i:'⏱️'},{k:'db',l:'DB load',i:'🗄️'},{k:'spof',l:'Single points of failure',i:'⚠️'}],
+  nodes:{
+    users:{x:85,y:200,e:'👥',l:'Users',s:'thousands',c:'blue'},
+    cdn:{x:290,y:62,e:'🌍',l:'CDN edge',s:'static files',c:'purple'},
+    lb:{x:290,y:200,e:'⚖️',l:'Load balancer',s:'health checks',c:'yellow'},
+    app1:{x:510,y:92,e:'🖥️',l:'App server 1',s:'stateless',c:'green'},
+    app2:{x:510,y:200,e:'🖥️',l:'App server 2',s:'stateless',c:'green'},
+    app3:{x:510,y:308,e:'🖥️',l:'App server 3',s:'stateless',c:'green'},
+    cache:{x:760,y:72,e:'⚡',l:'Redis',s:'sessions + cache',c:'red'},
+    db:{x:760,y:215,e:'🗄️',l:'DB primary',s:'reads + writes',c:'brown'},
+    replica:{x:760,y:340,e:'📚',l:'Read replica',s:'reads only',c:'brown'}
+  },
+  steps:[
+    {t:'One server', show:['users','app1','db'], edges:[['users','app1'],['app1','db']], m:{cap:'800 rps',p95:'120 ms',db:'35%',spof:'2'},
+     body:'Every product starts here: one app server talking to one database. It’s simple, cheap and easy to debug, and it comfortably handles ~800 requests per second.',
+     seq:[[{f:'users',to:'app1',l:'GET /'},{f:'users',to:'app1',l:'',delay:350},{f:'users',to:'app1',l:'',delay:700}],[{f:'app1',to:'db',l:'query',d:600}],[{f:'db',to:'app1',l:'rows',c:'green',d:600}],[{f:'app1',to:'users',l:'200 OK',c:'green'}]]},
+    {t:'Traffic spike', m:{p95:'2.4 s',db:'92%'},
+     body:'A newsletter goes out and traffic jumps 5×. CPU pins at 100%, requests pile up, latency explodes and some requests start timing out. One machine has a hard ceiling, and if it dies the whole site dies with it.',
+     tip:['🔥','“It worked on launch day” is not a scaling strategy. Know your single-box ceiling before you hit it.'],
+     seq:[[...Array.from({length:9},(_,i)=>({f:'users',to:'app1',l:'',delay:i*130,fail:i%3===2,c:i%3===2?'red':'blue'}))],{pulse:'app1',note:'CPU 100% · timeouts',c:'red',hold:1300,red:true}]},
+    {t:'Scale out', show:['app2','app3'], edges:[['app2','db'],['app3','db']], m:{cap:'2,400 rps'},
+     body:'You could buy a bigger machine (<b>vertical scaling</b>). That’s easy, but it gets expensive fast and it’s still one box. Instead, run several identical copies of the app (<b>horizontal scaling</b>). Capacity now grows linearly: three servers handle ≈ 2,400 rps.',
+     tip:['🤔','Problem: users only know one address, and it points at server 1.'],
+     seq:[[{pulse:'app2',note:'new',c:'green',hold:900},{pulse:'app3',note:'new',c:'green',hold:900}]]},
+    {t:'Add a load balancer', show:['lb'], edges:[['users','lb'],['lb','app1'],['lb','app2'],['lb','app3']], drop:[['users','app1']], m:{p95:'140 ms',spof:'2 (LB, DB)'},
+     body:'A <b>load balancer</b> takes the public IP and spreads requests across the fleet (round-robin, least-connections, …). It runs health checks and stops routing to a server that fails them, so one dead server no longer means a dead site.',
+     seq:[[{f:'users',to:'lb',l:'req 1'},{f:'users',to:'lb',l:'req 2',delay:250},{f:'users',to:'lb',l:'req 3',delay:500}],
+          [{f:'lb',to:'app1',l:'1',d:600},{f:'lb',to:'app2',l:'2',d:600,delay:250},{f:'lb',to:'app3',l:'3',d:600,delay:500}]]},
+    {t:'Keep servers stateless', show:['cache'], edges:[['app1','cache'],['app2','cache'],['app3','cache']],
+     body:'If server 1 keeps your login session in memory, your next request (routed to server 2) forgets who you are. The fix is to keep servers <b>stateless</b> and move sessions to a shared store like Redis. Now any server can handle any request, and you can add or remove servers freely.',
+     seq:[{f:'users',to:'lb',l:'GET /cart'},{f:'lb',to:'app2',l:'GET /cart',d:600},{f:'app2',to:'cache',l:'session:u42?',d:700},{f:'cache',to:'app2',l:'user=42 ✓',c:'green',d:700}]},
+    {t:'Cache hot reads', m:{db:'25%',p95:'70 ms'},
+     body:'Most traffic reads the same popular data. With <b>cache-aside</b>, servers check Redis first and only query the database on a miss. At a 90% hit rate, the database sees one tenth of the read load.',
+     seq:[[{f:'app1',to:'cache',l:'GET',d:600},{f:'app2',to:'cache',l:'GET',d:600,delay:150},{f:'app3',to:'db',l:'miss → SELECT',c:'orange',d:700,delay:300}],
+          [{f:'cache',to:'app1',l:'HIT',c:'green',d:600},{f:'cache',to:'app2',l:'HIT',c:'green',d:600,delay:150},{f:'db',to:'app3',l:'rows',c:'green',d:700,delay:300}]]},
+    {t:'Static files on a CDN', show:['cdn'], edges:[['users','cdn']], m:{p95:'55 ms'},
+     body:'Images, CSS and JS are the same for every user. A <b>CDN</b> caches them at edge locations close to users, so those requests never reach your servers. Users get files faster and your servers do less work.',
+     seq:[[{f:'users',to:'cdn',l:'hero.webp'},{f:'users',to:'lb',l:'GET /api/cart',delay:200}],[{f:'cdn',to:'users',l:'cached · 8 ms',c:'green'},{f:'lb',to:'app1',l:'/api/cart',d:600,delay:200}]]},
+    {t:'Read replicas', show:['replica'], edges:[['db','replica'],['app2','replica'],['app3','replica']], m:{cap:'8,000 rps',db:'18%',spof:'1 (primary)'},
+     body:'Writes still go to the <b>primary</b> database, which streams changes to <b>read replicas</b>. Reads are spread across the replicas, multiplying read capacity. The catch is <b>replication lag</b>: a replica can be a few milliseconds behind. That’s fine for a product list, but risky for a bank balance.',
+     tip:['🧭','The primary is still a single point of failure. Next steps would be automatic failover and, eventually, sharding.'],
+     seq:[{f:'app1',to:'db',l:'INSERT order',c:'purple',d:700},{f:'db',to:'replica',l:'replicate',c:'gray',d:600},[{f:'app2',to:'replica',l:'SELECT',d:700},{f:'app3',to:'replica',l:'SELECT',d:700,delay:200}],[{f:'replica',to:'app2',l:'rows',c:'green',d:700},{f:'replica',to:'app3',l:'rows',c:'green',d:700,delay:200}]]}
+  ],
+  take:['Scale <b>out</b> with identical, stateless servers behind a load balancer.','Move state (sessions, uploads) into shared services so servers stay disposable.','Cache hot reads and push static files to a CDN; the cheapest request is one your servers never see.','Replicas multiply read capacity but introduce lag. Writes still have one home.'],
+  pg:'traffic'
+},
+{
+  id:'queues', icon:'📬', title:'Queues & Async Work', short:'Queues & async work',
+  lede:'Move slow work off the request path, and survive traffic bursts without falling over.',
+  minutes:10, level:['Intermediate','yellow'], tags:[['Message queues','purple'],['Workers','green'],['Reliability','red']],
+  cover:['purple','pink'],
+  metrics:[{k:'resp',l:'User response time',i:'⏱️'},{k:'depth',l:'Queue depth',i:'📬'},{k:'thr',l:'Throughput',i:'⚙️'},{k:'fail',l:'Dead letters',i:'☠️'}],
+  nodes:{
+    user:{x:85,y:200,e:'🙋',l:'User',s:'signs up',c:'blue'},
+    api:{x:280,y:200,e:'🖥️',l:'API server',s:'POST /signup',c:'green'},
+    queue:{x:480,y:200,e:'📬',l:'Queue',s:'SQS / RabbitMQ',c:'purple'},
+    w1:{x:680,y:118,e:'⚙️',l:'Worker 1',s:'emails',c:'yellow'},
+    w2:{x:680,y:282,e:'⚙️',l:'Worker 2',s:'PDFs + emails',c:'yellow'},
+    email:{x:875,y:118,e:'✉️',l:'Email provider',s:'external API',c:'orange'},
+    storage:{x:875,y:282,e:'🪣',l:'Object storage',s:'invoices',c:'brown'},
+    dlq:{x:480,y:345,e:'☠️',l:'Dead-letter queue',s:'needs a human',c:'red'}
+  },
+  steps:[
+    {t:'The slow request', show:['user','api','email'], edges:[['user','api'],['api','email']], m:{resp:'1.8 s',depth:'—',thr:'~5 /s',fail:'—'},
+     body:'A user signs up. The API saves them, then <em>synchronously</em> calls an external provider to send a welcome email. The user stares at a spinner for ~1.8 s, and if the email provider is down, the whole signup fails.',
+     seq:[{f:'user',to:'api',l:'POST /signup'},{f:'api',to:'email',l:'send welcome…',c:'orange',d:1700},{f:'email',to:'api',l:'250 OK',c:'gray',d:900},{f:'api',to:'user',l:'201 Created',c:'green'}]},
+    {t:'Put a queue in between', show:['queue'], edges:[['api','queue']], drop:[['api','email']], m:{resp:'40 ms',depth:'1'},
+     body:'Instead of doing the slow work now, the API drops a small message like <code>{type:"welcome", user:42}</code> onto a <b>queue</b> and immediately answers <code>202 Accepted</code>. The user is done in 40 ms. The work still happens, just not on the user’s time.',
+     seq:[{f:'user',to:'api',l:'POST /signup'},[{f:'api',to:'queue',l:'job #1',c:'purple',d:700},{f:'api',to:'user',l:'202 Accepted',c:'green'}],{pulse:'queue',note:'1 waiting',c:'purple',hold:900}]},
+    {t:'Workers pull jobs', show:['w1'], edges:[['queue','w1'],['w1','email']], m:{depth:'0',thr:'~20 /s'},
+     body:'Separate <b>worker</b> processes pull messages off the queue and do the slow work. Producers and consumers are now <b>decoupled</b>: they scale, deploy and fail independently. If the email provider is slow, only the workers notice.',
+     seq:[{f:'queue',to:'w1',l:'job #1',c:'purple',d:700},{f:'w1',to:'email',l:'send',c:'orange',d:900},{f:'email',to:'w1',l:'250 OK',c:'green',d:700},{f:'w1',to:'queue',l:'ack ✓',c:'gray',d:700}]},
+    {t:'Scale consumers', show:['w2','storage'], edges:[['queue','w2'],['w2','storage'],['w2','email']], m:{thr:'~45 /s'},
+     body:'Throughput is simply <i>workers × jobs per worker per second</i>. Queue backing up? Add workers. Here a second worker also renders invoice PDFs into object storage. Each message is handed to exactly one worker, so they never duplicate effort.',
+     seq:[[{f:'queue',to:'w1',l:'job #2',c:'purple',d:700},{f:'queue',to:'w2',l:'job #3',c:'purple',d:700,delay:250}],[{f:'w1',to:'email',l:'send',c:'orange',d:800},{f:'w2',to:'storage',l:'invoice.pdf',c:'brown',d:800,delay:250}],[{f:'w1',to:'queue',l:'ack',c:'gray',d:700},{f:'w2',to:'queue',l:'ack',c:'gray',d:700,delay:250}]]},
+    {t:'Absorb the spike', m:{depth:'1,240',resp:'40 ms'},
+     body:'A flash sale brings 10× the usual signups. Without a queue, the API would fall over. With one, the extra jobs simply wait: the queue <b>absorbs the burst</b>, and workers drain it at their steady pace. Queue depth is the metric to watch. If it never comes back down, you need more workers.',
+     seq:[[...Array.from({length:10},(_,i)=>({f:'api',to:'queue',l:'',c:'purple',delay:i*110,d:600}))],{pulse:'queue',note:'depth 1,240 ↑',c:'orange',hold:900},[{f:'queue',to:'w1',l:'job',c:'purple',d:700},{f:'queue',to:'w2',l:'job',c:'purple',d:700,delay:200}],{pulse:'queue',note:'draining ↓',c:'green',hold:900}]},
+    {t:'Retries & dead letters', show:['dlq'], edges:[['queue','dlq']], m:{fail:'1'},
+     body:'Sometimes a job fails, for example when the provider times out. The worker doesn’t ack it, so the queue <b>redelivers</b> it later, usually with exponential backoff. After N failed attempts the message moves to a <b>dead-letter queue</b> for a human to inspect, instead of failing forever and clogging the line.',
+     seq:[{f:'queue',to:'w2',l:'job #77',c:'purple',d:600},{f:'w2',to:'email',l:'send',c:'red',fail:true,d:800},{pulse:'w2',note:'retry 1 in 2s',c:'orange',hold:700},
+          {f:'queue',to:'w2',l:'job #77',c:'purple',d:600},{f:'w2',to:'email',l:'send',c:'red',fail:true,d:800},{pulse:'w2',note:'retry 2 in 4s',c:'orange',hold:700},
+          {f:'queue',to:'dlq',l:'job #77',c:'red',d:700},{pulse:'dlq',note:'parked for review',c:'red',hold:1000}]},
+    {t:'Make jobs idempotent', m:{fail:'1'},
+     body:'Most queues guarantee <b>at-least-once</b> delivery. A worker can crash after sending the email but before acking, so the same job arrives again. Design jobs to be <b>idempotent</b>: record a key like <code>welcome:42</code> and skip work that’s already done. Running a job twice must have the same effect as running it once.',
+     tip:['✅','Idempotency keys, upserts and “check then act” inside a transaction are the usual tools.'],
+     seq:[{f:'queue',to:'w1',l:'job #1 (again)',c:'purple',d:700},{pulse:'w1',note:'welcome:42 already sent → skip',c:'green',hold:1400},{f:'w1',to:'queue',l:'ack ✓',c:'gray',d:700}]}
+  ],
+  take:['Keep slow and flaky work <b>off the request path</b>; respond fast and do the work in the background.','Queues decouple producers from consumers and <b>absorb bursts</b>.','Watch queue depth; scale workers to match arrival rate.','Expect failures: retry with backoff, dead-letter the poison messages, make every job idempotent.'],
+  pg:'queue'
+}
+];
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $=(s,r=document)=>r.querySelector(s);
+const NS='http://www.w3.org/2000/svg';
+function S(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const state={li:-1,si:0,token:0,speed:1,paused:false,pgStop:null};
+let nodeEls={},edgeEls={},layerE,layerN,layerP;
+
+/* virtual-time wait: respects speed & pause, cancels on step change */
+function vwait(ms,tok){return new Promise(res=>{let acc=0,last=performance.now();
+  const f=now=>{const dt=now-last;last=now;if(!state.paused)acc+=dt*state.speed;
+    if(tok!==state.token||acc>=ms)res();else requestAnimationFrame(f)};requestAnimationFrame(f)})}
+function vanim(ms,tok,cb){return new Promise(res=>{let acc=0,last=performance.now();
+  const f=now=>{const dt=now-last;last=now;if(!state.paused)acc+=dt*state.speed;const t=Math.min(1,acc/ms);
+    if(tok!==state.token){res(false);return}cb(t);if(t>=1)res(true);else requestAnimationFrame(f)};requestAnimationFrame(f)})}
+
+/* =========================================================
+   Theme
+   ========================================================= */
+function setTheme(t){document.documentElement.dataset.theme=t;const tb=document.getElementById('themeBtn');if(tb)tb.textContent=t==='dark'?'☀':'☾';store.set('sd-theme',t);window.dispatchEvent(new Event('themechange'))}
+setTheme(store.get('sd-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+$('#themeBtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('#menuBtn').onclick=()=>document.body.classList.toggle('menu');
+
+/* =========================================================
+   Sidebar & routing
+   ========================================================= */
+function buildNav(){
+  $('#nav').innerHTML=LESSONS.map((L,i)=>`<a href="#/${L.id}/1" data-i="${i}"><span class="e">${L.icon}</span><span>${L.short}</span><span class="n">${L.steps.length}</span></a>`).join('');
+}
+function parseHash(){
+  const m=location.hash.match(/^#\/([\w-]+)\/?(\d+)?/);
+  let li=0,si=0;
+  if(m){const i=LESSONS.findIndex(L=>L.id===m[1]);if(i>=0)li=i;si=Math.max(0,Math.min(LESSONS[li].steps.length-1,(+m[2]||1)-1))}
+  return {li,si};
+}
+function go(li,si){location.hash=`#/${LESSONS[li].id}/${si+1}`}
+window.addEventListener('hashchange',route);
+function route(){
+  const {li,si}=parseHash();
+  document.body.classList.remove('menu');
+  if(li!==state.li){state.li=li;state.si=si;buildLesson();window.scrollTo({top:0})}
+  else{state.si=si}
+  updateStep();
+}
+
+/* =========================================================
+   Page building
+   ========================================================= */
+function coverSVG(L){
+  const [a,b]=L.cover;
+  return `<svg viewBox="0 0 1200 180" preserveAspectRatio="xMidYMid slice"><defs>
+    <linearGradient id="cg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="var(--${a}-bg)"/><stop offset="1" stop-color="var(--${b}-bg)"/></linearGradient>
+    <pattern id="cp" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="var(--${a})" opacity=".25"/></pattern></defs>
+    <rect width="1200" height="180" fill="url(#cg)"/><rect width="1200" height="180" fill="url(#cp)"/>
+    ${[[160,60],[380,120],[620,50],[860,115],[1080,70]].map(([x,y],i,arr)=>(i<arr.length-1?`<path d="M${x} ${y} L${arr[i+1][0]} ${arr[i+1][1]}" stroke="var(--${i%2?b:a})" stroke-width="1.5" stroke-dasharray="5 6" opacity=".55"/>`:'')+`<rect x="${x-34}" y="${y-14}" width="68" height="28" rx="6" fill="var(--bg)" opacity=".8" stroke="var(--${i%2?b:a})" stroke-opacity=".5"/>`).join('')}
+  </svg>`;
+}
+function buildLesson(){
+  const L=LESSONS[state.li];
+  if(state.pgStop){state.pgStop();state.pgStop=null}
+  document.title=`${L.title} · System Design`;
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',+a.dataset.i===state.li));
+  $('#crumb').innerHTML=`<a href="../">evilzeda</a><span>/</span><a href="#/${LESSONS[0].id}/1">System Design</a><span>/</span><span class="cur">${L.icon} ${L.title}</span>`;
+  $('#cover').innerHTML=coverSVG(L);
+  const next=LESSONS[state.li+1];
+  $('#page').innerHTML=`
+    <div class="picon">${L.icon}</div>
+    <h1>${L.title}</h1>
+    <p class="lede">${L.lede}</p>
+    <div class="props">
+      <div class="k">📚 Lesson</div><div class="v">${state.li+1} of ${LESSONS.length}</div>
+      <div class="k">⏱️ Duration</div><div class="v"><span class="tag t-gray">${L.minutes} min</span></div>
+      <div class="k">📶 Level</div><div class="v"><span class="tag t-${L.level[1]}">${L.level[0]}</span></div>
+      <div class="k">🏷️ Topics</div><div class="v">${L.tags.map(([t,c])=>`<span class="tag t-${c}">${t}</span>`).join('')}</div>
+      <div class="k">👣 Steps</div><div class="v">${L.steps.length} steps</div>
+    </div>
+    <hr class="div">
+    <div class="sim" id="sim">
+      <div class="metrics" id="metrics">${L.metrics.map(m=>`<div class="metric${m.total?' total':''}" data-k="${m.k}"><div class="ml"><span>${m.i}</span>${m.l}</div><div class="mv">—</div></div>`).join('')}</div>
+      <div class="progress"><i id="prog"></i></div>
+      <div class="stage" id="stage">
+        <div class="stage-tools">
+          <button class="ib" id="pauseBtn" title="Pause (Space)">❚❚</button>
+          <button class="ib" id="replayBtn" title="Replay (R)">↻</button>
+          <button class="ib" data-sp="0.5">0.5×</button><button class="ib on" data-sp="1">1×</button><button class="ib" data-sp="2">2×</button>
+        </div>
+      </div>
+      <div class="narr">
+        <div class="narr-main">
+          <div class="stepno" id="stepno"></div>
+          <h3 id="stitle"></h3>
+          <div class="narr-body" id="sbody"></div>
+          <div id="stip"></div>
+          <div class="navbtns">
+            <button class="btn" id="backBtn">← Back</button>
+            <button class="btn pri" id="nextBtn"><span id="nextLbl"></span><span>→</span></button>
+          </div>
+        </div>
+        <div class="toc"><div class="tt">In this lesson</div><ol id="toc">${L.steps.map((s,i)=>`<li data-i="${i}"><button><span class="i">${i+1}</span><span class="t">${s.t}</span></button></li>`).join('')}</ol></div>
+      </div>
+    </div>
+
+    <h2>🧪 Playground</h2>
+    <p class="muted">${{waterfall:'Change the network conditions and see how the page-load waterfall reacts.',traffic:'Throw traffic at the architecture. Add servers, tune the cache and add replicas until nothing is red.',queue:'Tune arrival rate, workers and failure rate. Watch the queue fill up and drain.'}[L.pg]}</p>
+    <div class="pg" id="pg"></div>
+
+    <h2>Key takeaways</h2>
+    <ul class="take">${L.take.map(t=>`<li><span>${t}</span></li>`).join('')}</ul>
+
+    ${next?`<a class="nextcard" href="#/${next.id}/1"><span class="e">${next.icon}</span><span><small>Next lesson</small><b>${next.title}</b></span><span style="margin-left:auto;color:var(--mute)">→</span></a>`
+          :`<a class="nextcard" href="#/${LESSONS[0].id}/1"><span class="e">🎓</span><span><small>You finished the course</small><b>Start again from lesson 1</b></span><span style="margin-left:auto;color:var(--mute)">↺</span></a>`}
+  `;
+  buildStage(L);
+  $('#backBtn').onclick=()=>{if(state.si>0)go(state.li,state.si-1)};
+  $('#nextBtn').onclick=()=>{if(state.si<L.steps.length-1)go(state.li,state.si+1);else if(LESSONS[state.li+1])go(state.li+1,0);else go(0,0)};
+  $('#toc').onclick=e=>{const li=e.target.closest('li');if(li)go(state.li,+li.dataset.i)};
+  $('#replayBtn').onclick=replay;
+  $('#pauseBtn').onclick=togglePause;
+  document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{state.speed=+b.dataset.sp;document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',x===b))});
+  state.pgStop=PG[L.pg]($('#pg'));
+}
+function togglePause(){state.paused=!state.paused;const b=$('#pauseBtn');if(b){b.textContent=state.paused?'▶':'❚❚';b.classList.toggle('on',state.paused)}}
+function replay(){if(state.paused)togglePause();updateStep(true)}
+
+/* =========================================================
+   Stage
+   ========================================================= */
+const NW=148,NH=48;
+function buildStage(L){
+  const st=$('#stage');
+  st.querySelector('svg')?.remove();
+  const svg=S('svg',{viewBox:'0 0 960 400',role:'img','aria-label':L.title});
+  st.prepend(svg);
+  const defs=S('defs',{},svg);
+  const pat=S('pattern',{id:'grid',width:20,height:20,patternUnits:'userSpaceOnUse'},defs);
+  S('circle',{cx:1,cy:1,r:1,fill:'var(--grid)'},pat);
+  S('rect',{width:960,height:400,fill:'url(#grid)'},svg);
+  layerE=S('g',{},svg);layerN=S('g',{},svg);layerP=S('g',{},svg);
+  nodeEls={};edgeEls={};
+  for(const [id,n] of Object.entries(L.nodes)){
+    const g=S('g',{class:'node off',transform:`translate(${n.x},${n.y})`},layerN);
+    S('rect',{class:'box',x:-NW/2,y:-NH/2,width:NW,height:NH,rx:7},g);
+    S('rect',{x:-NW/2+8,y:-15,width:30,height:30,rx:5,fill:`var(--${n.c}-bg)`},g);
+    const em=S('text',{class:'emo',x:-NW/2+23,y:6,'text-anchor':'middle'},g);em.textContent=n.e;
+    const lb=S('text',{class:'lbl',x:-NW/2+46,y:-2},g);lb.textContent=n.l;
+    const sb=S('text',{class:'sub',x:-NW/2+46,y:13},g);sb.textContent=n.s;
+    nodeEls[id]=g;
+  }
+}
+const ek=(a,b)=>[a,b].sort().join('|');
+function edgeEl(a,b){
+  const k=ek(a,b);if(edgeEls[k])return edgeEls[k];
+  const N=LESSONS[state.li].nodes;
+  const e=S('line',{class:'edge off',x1:N[a].x,y1:N[a].y,x2:N[b].x,y2:N[b].y},layerE);
+  return edgeEls[k]=e;
+}
+function walk(seq,cb){(seq||[]).forEach(it=>Array.isArray(it)?walk(it,cb):cb(it))}
+
+function updateStep(force){
+  const L=LESSONS[state.li],si=state.si,step=L.steps[si];
+  // accumulate nodes, edges, metrics
+  const vis=new Set(),edges=new Map(),m={};
+  for(let i=0;i<=si;i++){const s=L.steps[i];
+    (s.show||[]).forEach(n=>vis.add(n));
+    (s.edges||[]).forEach(([a,b])=>edges.set(ek(a,b),[a,b]));
+    (s.drop||[]).forEach(([a,b])=>edges.delete(ek(a,b)));
+    Object.assign(m,s.m||{});}
+  const hot=new Set();walk(step.seq,it=>{if(it.f){hot.add(ek(it.f,it.to));if(!edges.has(ek(it.f,it.to)))edges.set(ek(it.f,it.to),[it.f,it.to])}});
+  for(const [id,g] of Object.entries(nodeEls))g.classList.toggle('off',!vis.has(id));
+  for(const [k,[a,b]] of edges)edgeEl(a,b);
+  for(const [k,e] of Object.entries(edgeEls)){e.classList.toggle('off',!edges.has(k));e.classList.toggle('hot',hot.has(k))}
+  // metrics
+  let total=0;
+  L.metrics.forEach(d=>{
+    const el=document.querySelector(`.metric[data-k="${d.k}"]`);let v;
+    if(d.total){v=total?total:undefined}else{v=m[d.k];if(typeof v==='number')total+=v}
+    const txt=v===undefined?'—':(typeof v==='number'?`${v} ${L.unit}`:v);
+    const mv=el.querySelector('.mv');
+    if(mv.textContent!==txt){mv.textContent=txt;if(txt!=='—'){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),700)}}
+  });
+  // narrative
+  $('#stepno').textContent=`Step ${si+1} of ${L.steps.length}`;
+  $('#stitle').textContent=step.t;
+  $('#sbody').innerHTML=step.body;
+  $('#stip').innerHTML=step.tip?`<div class="callout ${si===L.steps.length-1?'blue':'yellow'}"><span class="ce">${step.tip[0]}</span><div>${step.tip[1]}</div></div>`:'';
+  $('#backBtn').disabled=si===0;
+  $('#nextLbl').textContent=si<L.steps.length-1?`Next: ${L.steps[si+1].t}`:(LESSONS[state.li+1]?`Next lesson: ${LESSONS[state.li+1].title}`:'Finish course');
+  document.querySelectorAll('#toc li').forEach(li=>{const i=+li.dataset.i;li.classList.toggle('on',i===si);li.classList.toggle('done',i<si)});
+  $('#prog').style.width=`${(si+1)/L.steps.length*100}%`;
+  // animation
+  state.token++;layerP.innerHTML='';
+  Object.values(nodeEls).forEach(g=>g.classList.remove('ping','ping-red'));
+  play(state.token);
+}
+
+async function play(tok){
+  const step=LESSONS[state.li].steps[state.si];
+  if(!step.seq)return;
+  await vwait(450,tok);
+  while(tok===state.token){
+    for(const it of step.seq){if(tok!==state.token)return;await runItem(it,tok);await vwait(160,tok)}
+    await vwait(1600,tok);
+  }
+}
+async function runItem(it,tok){
+  if(Array.isArray(it))return Promise.all(it.map(x=>runItem(x,tok)));
+  if(it.delay)await vwait(it.delay,tok);
+  if(tok!==state.token)return;
+  if(it.wait)return vwait(it.wait,tok);
+  if(it.pulse)return pulse(it.pulse,it.note,it.c||'blue',it.hold||900,tok,it.red);
+  if(it.f)return packet(it,tok);
+}
+function pill(parent,cls,text,x,y){
+  const g=S('g',{class:cls,transform:`translate(${x},${y})`},parent);
+  if(text){const r=S('rect',{rx:10,ry:10,height:20,y:-10},g);const t=S('text',{'text-anchor':'middle',y:4},g);t.textContent=text;
+    const w=Math.max(28,t.getComputedTextLength()+18);r.setAttribute('width',w);r.setAttribute('x',-w/2);}
+  else S('circle',{r:6},g);
+  return g;
+}
+async function packet(p,tok){
+  const N=LESSONS[state.li].nodes,A=N[p.f],B=N[p.to];
+  const g=pill(layerP,`pkt c-${p.c||'blue'}`,p.l,A.x,A.y);
+  g.style.opacity=0;
+  const dur=p.d||850,end=p.fail?.58:1;
+  const ok=await vanim(dur*end,tok,t=>{const k=ease(t)*end;g.setAttribute('transform',`translate(${A.x+(B.x-A.x)*k},${A.y+(B.y-A.y)*k})`);g.style.opacity=Math.min(1,t*6)});
+  if(!ok){g.remove();return}
+  if(p.fail){
+    const x=A.x+(B.x-A.x)*end,y=A.y+(B.y-A.y)*end;
+    const xg=pill(layerP,'note c-red','✕ failed',x,y-24);
+    await vanim(500,tok,t=>{g.style.opacity=1-t;g.setAttribute('transform',`translate(${x},${y+t*18})`)});
+    await vanim(300,tok,t=>xg.style.opacity=1-t);
+    g.remove();xg.remove();return;
+  }
+  ping(p.to,false);
+  await vanim(220,tok,t=>g.style.opacity=1-t);g.remove();
+}
+function ping(id,red){const g=nodeEls[id];if(!g)return;const c=red?'ping-red':'ping';g.classList.add(c);setTimeout(()=>g.classList.remove(c),red?1400:450)}
+async function pulse(id,note,c,hold,tok,red){
+  ping(id,red);
+  if(!note)return vwait(hold,tok);
+  const n=LESSONS[state.li].nodes[id];
+  const g=pill(layerP,`note c-${c}`,note,n.x,n.y-NH/2-16);
+  g.style.opacity=0;
+  await vanim(200,tok,t=>g.style.opacity=t);
+  await vwait(hold,tok);
+  await vanim(250,tok,t=>g.style.opacity=1-t);
+  g.remove();
+}
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,textarea'))return;
+  const L=LESSONS[state.li];
+  if(e.key==='ArrowRight'&&state.si<L.steps.length-1)go(state.li,state.si+1);
+  else if(e.key==='ArrowLeft'&&state.si>0)go(state.li,state.si-1);
+  else if(e.key===' '){e.preventDefault();togglePause()}
+  else if(e.key==='r'||e.key==='R')replay();
+  else if(e.key==='t'||e.key==='T')$('#themeBtn').click();
+});
+
+/* =========================================================
+   Playgrounds
+   ========================================================= */
+const PG={};
+function slider(id,label,min,max,val,step=1,fmt=v=>v){return `<div class="field"><label>${label}<b id="${id}-v">${fmt(val)}</b></label><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"></div>`}
+function toggle(id,label,on){return `<label class="tog"><span>${label}</span><input type="checkbox" id="${id}" ${on?'checked':''}><span class="sw"></span></label>`}
+function stat(id,label){return `<div class="stat"><div class="l">${label}</div><div class="v" id="${id}">—</div></div>`}
+function setupCanvas(cv,h){const dpr=Math.min(2,window.devicePixelRatio||1);const w=cv.clientWidth;cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return {c,w,h}}
+function rr(c,x,y,w,h,r){c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h)}
+function palette(){const p={};['bg','soft','ink','mute','faint','line','line2','gray','gray-bg','blue','blue-bg','green','green-bg','orange','orange-bg','red','red-bg','yellow','yellow-bg','purple','purple-bg','brown','brown-bg','accent'].forEach(k=>p[k]=css('--'+k));return p}
+const FONT=css('--font');
+
+/* ---------- 1. waterfall ---------- */
+PG.waterfall=root=>{
+  root.innerHTML=`<div class="pg-grid"><div class="pg-ctrl">
+    ${slider('rtt','Round-trip time to server',10,300,40,5,v=>v+' ms')}
+    ${toggle('dnsC','DNS already cached',false)}
+    ${toggle('reuse','Reuse open connection',false)}
+    ${toggle('tls13','TLS 1.3 (vs 1.2)',true)}
+    ${toggle('hit','Server cache hit',false)}
+    ${toggle('cdn','Serve via CDN edge (~12 ms away)',false)}
+  </div><div class="pg-out">
+    <div class="stats">${stat('w-total','Total')}${stat('w-ttfb','Time to first byte')}${stat('w-net','Spent on network')}</div>
+    <div class="wf" id="wf"></div><div class="wf-axis" id="wfa"></div>
+    <div class="callout verdict" id="wv"></div></div></div>`;
+  const rows=[['DNS lookup','purple'],['TCP handshake','blue'],['TLS handshake','pink'],['Request + server','green'],['Download assets','orange']];
+  const wf=$('#wf',root);
+  wf.innerHTML=rows.map(([n,c],i)=>`<div class="wf-row"><span class="nm">${n}</span><span class="tr"><i id="wb${i}" style="background:var(--${c})"></i></span><span class="ms" id="wm${i}"></span></div>`).join('');
+  const calc=()=>{
+    const rtt=+$('#rtt',root).value;$('#rtt-v',root).textContent=rtt+' ms';
+    const dnsC=$('#dnsC',root).checked,reuse=$('#reuse',root).checked,t13=$('#tls13',root).checked,hit=$('#hit',root).checked,cdn=$('#cdn',root).checked;
+    const edge=cdn?Math.min(12,rtt):rtt;
+    const dns=dnsC?0:Math.round(5+rtt*1.9);
+    const tcp=reuse?0:edge;
+    const tls=reuse?0:edge*(t13?1:2);
+    const work=5+(hit?1:31)+15;
+    const srv=Math.round(rtt+work);           // dynamic HTML always goes to origin
+    const dl=Math.round(edge+20);
+    const parts=[dns,tcp,tls,srv,dl];
+    const total=parts.reduce((a,b)=>a+b,0);
+    const scale=Math.max(400,Math.ceil(total/100)*100);
+    let off=0;
+    parts.forEach((v,i)=>{const b=$('#wb'+i,root);b.style.left=off/scale*100+'%';b.style.width=Math.max(v?0.6:0,v/scale*100)+'%';$('#wm'+i,root).textContent=v+' ms';off+=v});
+    $('#wfa',root).innerHTML=`<div></div><div>${[0,.25,.5,.75,1].map(f=>`<span>${Math.round(scale*f)}</span>`).join('')}</div><div></div>`;
+    const net=total-work, pct=Math.round(net/total*100);
+    const T=$('#w-total',root);T.textContent=total+' ms';T.className='v '+(total<200?'good':total<500?'warn':'bad');
+    $('#w-ttfb',root).textContent=(dns+tcp+tls+srv)+' ms';
+    $('#w-net',root).textContent=pct+'%';
+    let tip;
+    if(!dnsC&&dns>total*.25)tip='DNS is a big slice. Cached lookups (or a resolver close to users) remove it entirely.';
+    else if(!reuse&&tcp+tls>total*.3)tip='Connection setup dominates. Keep-alive / HTTP/2 connection reuse makes it disappear on later requests.';
+    else if(!cdn&&rtt>100)tip='Users are far from your server. A CDN edge shortens every round trip for static files and handshakes.';
+    else if(!hit)tip='The database query is now noticeable. A cache hit would save ~30 ms per request.';
+    else tip='Nicely tuned. What’s left is mostly physics: the speed of light to your origin.';
+    $('#wv',root).innerHTML=`<span class="ce">💡</span><div><b>${pct}%</b> of this page load is waiting on the network, and only ${work} ms is server work. ${tip}</div>`;
+  };
+  root.querySelectorAll('input').forEach(i=>i.oninput=calc);calc();
+  return ()=>{};
+};
+
+/* ---------- 2. traffic ---------- */
+PG.traffic=root=>{
+  root.innerHTML=`<div class="pg-grid"><div class="pg-ctrl">
+    ${slider('rps','Incoming traffic',100,8000,1500,100,v=>(+v).toLocaleString()+' rps')}
+    ${slider('srv','App servers',1,8,2,1)}
+    ${slider('hit','Cache hit rate',0,95,50,5,v=>v+'%')}
+    ${slider('rep','Read replicas',0,4,0,1)}
+    <p class="muted" style="font-size:12.5px;margin:0">Each app server handles ~800 rps. Each database node serves ~1,200 queries/s.</p>
+  </div><div class="pg-out">
+    <div class="stats">${stat('t-thr','Served')}${stat('t-p95','p95 latency')}${stat('t-err','Errors')}${stat('t-cpu','Server CPU')}${stat('t-db','DB load')}</div>
+    <canvas id="tcv"></canvas>
+    <div class="callout verdict" id="tv"></div></div></div>`;
+  const cv=$('#tcv',root);let C,W,H,P=palette();
+  const resize=()=>{({c:C,w:W,h:H}=setupCanvas(cv,330))};resize();
+  const onTheme=()=>P=palette();window.addEventListener('themechange',onTheme);window.addEventListener('resize',resize);
+  let cfg={};
+  const model=()=>{
+    const rps=+$('#rps',root).value,n=+$('#srv',root).value,hit=+$('#hit',root).value/100,rep=+$('#rep',root).value;
+    $('#rps-v',root).textContent=rps.toLocaleString()+' rps';$('#srv-v',root).textContent=n;$('#hit-v',root).textContent=Math.round(hit*100)+'%';$('#rep-v',root).textContent=rep;
+    const uS=rps/(n*800),drop=uS>1?1-1/uS:0,served=rps*(1-drop);
+    const q=served*(1-hit),uD=q/(1200*(1+rep)),dbDrop=uD>1?1-1/uD:0;
+    const ok=served*(1-(1-hit)*dbDrop);
+    const err=1-ok/rps;
+    const lat=12/(1-Math.min(uS,.96))+hit*2+(1-hit)*(25/(1-Math.min(uD,.96)));
+    const p95=Math.round(lat*2.1);
+    cfg={rps,n,hit,rep,uS,uD,drop,dbDrop,err};
+    const set=(id,txt,cls)=>{const e=$('#'+id,root);e.textContent=txt;e.className='v '+(cls||'')};
+    const lv=(x,a,b)=>x<a?'good':x<b?'warn':'bad';
+    set('t-thr',Math.round(ok).toLocaleString()+' rps',lv(err,.001,.05));
+    set('t-p95',(p95>=1000?(p95/1000).toFixed(1)+' s':p95+' ms'),lv(p95,150,600));
+    set('t-err',(err*100).toFixed(err<.1?1:0)+'%',lv(err,.001,.05));
+    set('t-cpu',Math.round(Math.min(uS,1)*100)+'%',lv(uS,.7,.9));
+    set('t-db',Math.round(Math.min(uD,1)*100)+'%',lv(uD,.7,.9));
+    let v;
+    if(uS>1)v=`<b>App servers are saturated</b> (${Math.round(uS*100)}% of capacity). Requests are being dropped. Add servers: you need at least ${Math.ceil(rps/800/.7)} to stay under 70% CPU.`;
+    else if(uD>1)v=`<b>The database is the bottleneck.</b> Raise the cache hit rate or add read replicas.`;
+    else if(uS>.8||uD>.8)v=`Running hot. It works, but latency climbs steeply above ~80% utilisation. Leave headroom for spikes.`;
+    else v=`Healthy: every tier has headroom. Try pushing traffic to 8,000 rps and see what breaks first.`;
+    $('#tv',root).innerHTML=`<span class="ce">${uS>1||uD>1?'🚨':uS>.8||uD>.8?'⚠️':'✅'}</span><div>${v}</div>`;
+  };
+  root.querySelectorAll('input').forEach(i=>i.oninput=model);model();
+  const parts=[];let acc=0,rr_i=0,raf,last=performance.now();
+  const layout=()=>{
+    const L={users:{x:Math.max(40,W*.08),y:H/2},lb:{x:Math.max(150,W*.3),y:H/2},srv:[],cache:{x:W*.86,y:H*.2},db:[]};
+    const n=cfg.n,top=34,bot=H-34;
+    for(let i=0;i<n;i++)L.srv.push({x:W*.53,y:n===1?H/2:top+(bot-top)*i/(n-1)});
+    const m=1+cfg.rep;for(let i=0;i<m;i++)L.db.push({x:W*.86,y:m===1?H*.68:H*.45+(H*.9-H*.45)*i/(m-1)});
+    return L;
+  };
+  const util=u=>u<.7?P.green:u<.9?P.orange:P.red;
+  const box=(x,y,w,h,label,u,emoji)=>{
+    C.fillStyle=P.bg;C.strokeStyle=P.line2;C.lineWidth=1;rr(C,x-w/2,y-h/2,w,h,6);C.fill();C.stroke();
+    C.fillStyle=P.ink;C.font=`600 11px ${FONT}`;C.textAlign='center';C.fillText((emoji?emoji+' ':'')+label,x,y+(u!==undefined?-1:4));
+    if(u!==undefined){C.fillStyle=P['gray-bg'];rr(C,x-w/2+8,y+6,w-16,4,2);C.fill();C.fillStyle=util(u);rr(C,x-w/2+8,y+6,(w-16)*Math.min(1,u),4,2);C.fill()}
+  };
+  const frame=now=>{
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    const Lo=layout();
+    acc+=dt*Math.min(cfg.rps/30,180);
+    while(acc>=1){acc--;
+      const si=rr_i++%cfg.n,S0=Lo.srv[si];
+      const dropped=Math.random()<cfg.drop;
+      const path=[Lo.users,Lo.lb,S0];let col='blue';
+      if(dropped)col='red';
+      else if(Math.random()<cfg.hit){path.push(Lo.cache);col='green'}
+      else{const d=Lo.db[cfg.rep&&Math.random()>1/(1+cfg.rep)?1+Math.floor(Math.random()*cfg.rep):0];path.push(d);col=Math.random()<cfg.dbDrop?'red':'orange'}
+      parts.push({path:path.map(p=>({x:p.x,y:p.y+(Math.random()-.5)*10})),seg:0,t:0,col,dropped,fall:0,sp:1.6+Math.random()*.8});
+    }
+    C.clearRect(0,0,W,H);
+    // edges
+    C.strokeStyle=P.line2;C.setLineDash([3,4]);C.lineWidth=1;
+    const line=(a,b)=>{C.beginPath();C.moveTo(a.x,a.y);C.lineTo(b.x,b.y);C.stroke()};
+    line(Lo.users,Lo.lb);Lo.srv.forEach(s=>{line(Lo.lb,s);line(s,Lo.cache);Lo.db.forEach(d=>line(s,d))});C.setLineDash([]);
+    // particles
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+      if(p.seg>=p.path.length-1){ if(p.dropped){p.fall+=dt*60;p.y0??=p.path.at(-1).y;}else p.fade=(p.fade||0)+dt*4;
+        if(p.fall>40||p.fade>1){parts.splice(i,1);continue}}
+      else{p.t+=dt*p.sp;if(p.t>=1){p.t=0;p.seg++}}
+      let x,y;if(p.seg>=p.path.length-1){x=p.path.at(-1).x+(p.dropped?8:0);y=p.path.at(-1).y+(p.fall||0)}
+      else{const a=p.path[p.seg],b=p.path[p.seg+1];x=a.x+(b.x-a.x)*p.t;y=a.y+(b.y-a.y)*p.t}
+      C.globalAlpha=p.fade?1-p.fade:p.fall?1-p.fall/40:1;C.fillStyle=P[p.col];C.beginPath();C.arc(x,y,2.6,0,7);C.fill();C.globalAlpha=1}
+    // boxes
+    box(Lo.users.x,Lo.users.y,70,34,'Users',undefined,'👥');
+    box(Lo.lb.x,Lo.lb.y,100,34,'Load balancer',undefined,'⚖️');
+    Lo.srv.forEach((s,i)=>box(s.x,s.y,96,Math.min(34,(H-40)/cfg.n-4),'App '+(i+1),cfg.uS,'🖥️'));
+    box(Lo.cache.x,Lo.cache.y,96,34,'Redis',undefined,'⚡');
+    Lo.db.forEach((d,i)=>box(d.x,d.y,96,Math.min(34,(H*.5)/(1+cfg.rep)-4),i?'Replica '+i:'DB primary',cfg.uD,i?'📚':'🗄️'));
+    raf=requestAnimationFrame(frame);
+  };
+  raf=requestAnimationFrame(frame);
+  return ()=>{cancelAnimationFrame(raf);window.removeEventListener('themechange',onTheme);window.removeEventListener('resize',resize)};
+};
+
+/* ---------- 3. queue ---------- */
+PG.queue=root=>{
+  root.innerHTML=`<div class="pg-grid"><div class="pg-ctrl">
+    ${slider('lam','Arrival rate',1,80,10,1,v=>v+' jobs/s')}
+    ${slider('wk','Workers',1,12,6,1)}
+    ${slider('jt','Time per job',100,2000,400,50,v=>v+' ms')}
+    ${slider('fr','Failure rate',0,40,5,1,v=>v+'%')}
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="mini-btn" id="burst">⚡ Burst +200 jobs</button><button class="mini-btn" id="reset">↺ Reset</button></div>
+    <p class="muted" style="font-size:12.5px;margin:0">Failed jobs retry up to 3 times, then go to the dead-letter queue.</p>
+  </div><div class="pg-out">
+    <div class="stats">${stat('q-depth','Queue depth')}${stat('q-thr','Processed /s')}${stat('q-wait','Avg wait')}${stat('q-dlq','Dead letters')}</div>
+    <canvas id="qcv"></canvas>
+    <div class="callout verdict" id="qv"></div></div></div>`;
+  const cv=$('#qcv',root);let C,W,H,P=palette();
+  const resize=()=>{({c:C,w:W,h:H}=setupCanvas(cv,300))};resize();
+  const onTheme=()=>P=palette();window.addEventListener('themechange',onTheme);window.addEventListener('resize',resize);
+  let q=[],workers=[],dlq=0,done=[],hist=[],acc=0,waitEMA=0,simT=0,sampleT=0,raf,last=performance.now();
+  const val=id=>+$('#'+id,root).value;
+  const label=()=>{$('#lam-v',root).textContent=val('lam')+' jobs/s';$('#wk-v',root).textContent=val('wk');$('#jt-v',root).textContent=val('jt')+' ms';$('#fr-v',root).textContent=val('fr')+'%'};
+  root.querySelectorAll('input').forEach(i=>i.oninput=label);label();
+  $('#burst',root).onclick=()=>{for(let i=0;i<200;i++)q.push({t0:simT,tries:0})};
+  $('#reset',root).onclick=()=>{q=[];dlq=0;done=[];hist=[];workers.forEach(w=>w.job=null)};
+  let statT=0;
+  const frame=now=>{
+    const dt=Math.min(.05,(now-last)/1000);last=now;simT+=dt;
+    const lam=val('lam'),nW=val('wk'),jt=val('jt')/1000,fr=val('fr')/100;
+    while(workers.length<nW)workers.push({job:null,end:0,start:0});
+    if(workers.length>nW)workers.length=nW;
+    acc+=lam*dt*(0.4+Math.random()*1.2);
+    while(acc>=1){acc--;q.push({t0:simT,tries:0})}
+    workers.forEach(w=>{
+      if(w.job&&simT>=w.end){
+        if(Math.random()<fr){w.job.tries++;if(w.job.tries>=3)dlq++;else q.push(w.job);w.flash={c:'red',t:simT}}
+        else{done.push(simT);w.flash={c:'green',t:simT}}
+        w.job=null;
+      }
+      if(!w.job&&q.length){w.job=q.shift();w.start=simT;w.end=simT+jt*(0.6+Math.random()*0.8);waitEMA=waitEMA*.97+(simT-w.job.t0)*.03}
+    });
+    while(done.length&&done[0]<simT-3)done.shift();
+    sampleT+=dt;if(sampleT>.2){sampleT=0;hist.push(q.length);if(hist.length>300)hist.shift()}
+    // draw
+    C.clearRect(0,0,W,H);
+    const topH=150;
+    // producer
+    const bx=(x,y,w,h,t,c)=>{C.fillStyle=P.bg;C.strokeStyle=c||P.line2;C.lineWidth=1;rr(C,x,y,w,h,6);C.fill();C.stroke();C.fillStyle=P.ink;C.font=`600 11px ${FONT}`;C.textAlign='center';C.fillText(t,x+w/2,y+h/2+4)};
+    bx(8,topH/2-18,78,36,'🖥️ API');
+    // queue container
+    const qx=110,qw=W*.48,qy=topH/2-34,qh=68;
+    C.fillStyle=P['purple-bg'];rr(C,qx,qy,qw,qh,6);C.fill();
+    C.fillStyle=P.purple;C.font=`600 10.5px ${FONT}`;C.textAlign='left';C.fillText('📬 QUEUE',qx+8,qy-6);
+    const cell=9,cols=Math.floor((qw-12)/cell),rows=Math.floor((qh-12)/cell),cap=cols*rows;
+    for(let i=0;i<Math.min(q.length,cap);i++){const col=cols-1-Math.floor(i/rows),row=i%rows;
+      C.fillStyle=q[i].tries?P.orange:P.purple;C.globalAlpha=.85;rr(C,qx+6+col*cell,qy+6+row*cell,cell-2,cell-2,2);C.fill()}
+    C.globalAlpha=1;
+    if(q.length>cap){C.fillStyle=P.bg;rr(C,qx+qw-58,qy+qh-22,52,16,4);C.fill();C.fillStyle=P.red;C.textAlign='center';C.font=`600 10.5px ${FONT}`;C.fillText('+'+(q.length-cap),qx+qw-32,qy+qh-10)}
+    // arrows
+    C.strokeStyle=P.line2;C.setLineDash([3,4]);C.beginPath();C.moveTo(86,topH/2);C.lineTo(qx,topH/2);C.stroke();C.setLineDash([]);
+    // workers
+    const wx=qx+qw+30,ww=W-wx-10,n=workers.length,gap=4,wh=Math.min(22,(topH-10-(n-1)*gap)/n);
+    workers.forEach((w,i)=>{const y=(topH-(n*wh+(n-1)*gap))/2+i*(wh+gap);
+      C.strokeStyle=P.line2;C.setLineDash([2,4]);C.beginPath();C.moveTo(qx+qw,topH/2);C.lineTo(wx,y+wh/2);C.stroke();C.setLineDash([]);
+      C.fillStyle=P.bg;C.strokeStyle=w.flash&&simT-w.flash.t<.25?P[w.flash.c]:P.line2;rr(C,wx,y,ww,wh,4);C.fill();C.stroke();
+      if(w.job){C.fillStyle=P['yellow-bg'];rr(C,wx+1,y+1,(ww-2)*Math.min(1,(simT-w.start)/(w.end-w.start)),wh-2,3);C.fill()}
+      C.fillStyle=P.ink;C.font=`500 10.5px ${FONT}`;C.textAlign='left';C.fillText(`⚙️ W${i+1} ${w.job?'busy':'idle'}`,wx+6,y+wh/2+4)});
+    // chart
+    const cy=topH+18,ch=H-cy-18;
+    C.fillStyle=P.mute;C.font=`500 10.5px ${FONT}`;C.textAlign='left';C.fillText('QUEUE DEPTH · last 60 s',8,cy-4);
+    const mx=Math.max(20,...hist)*1.15;
+    C.strokeStyle=P.line;C.lineWidth=1;[0,.5,1].forEach(f=>{const y=cy+ch-ch*f;C.beginPath();C.moveTo(8,y);C.lineTo(W-8,y);C.stroke();C.fillStyle=P.faint;C.textAlign='right';C.fillText(Math.round(mx*f),W-10,y-3)});
+    if(hist.length>1){const step=(W-16)/299;
+      C.beginPath();hist.forEach((v,i)=>{const x=8+(300-hist.length+i)*step,y=cy+ch-v/mx*ch;i?C.lineTo(x,y):C.moveTo(x,y)});
+      C.strokeStyle=P.purple;C.lineWidth=2;C.stroke();
+      C.lineTo(8+299*step,cy+ch);C.lineTo(8+(300-hist.length)*step,cy+ch);C.closePath();C.fillStyle=P['purple-bg'];C.globalAlpha=.7;C.fill();C.globalAlpha=1}
+    // stats
+    statT+=dt;if(statT>.25){statT=0;
+      const capRate=nW/jt*(1-fr*.9),thr=done.length/3;
+      const s=(id,t,c)=>{const e=$('#'+id,root);e.textContent=t;e.className='v '+(c||'')};
+      s('q-depth',q.length.toLocaleString(),q.length<50?'good':q.length<300?'warn':'bad');
+      s('q-thr',thr.toFixed(1));
+      s('q-wait',waitEMA<1?Math.round(waitEMA*1000)+' ms':waitEMA.toFixed(1)+' s',waitEMA<1?'good':waitEMA<5?'warn':'bad');
+      s('q-dlq',dlq,dlq?'bad':'good');
+      const ratio=lam/capRate;
+      $('#qv',root).innerHTML=ratio<.85?`<span class="ce">✅</span><div>Workers can process <b>~${capRate.toFixed(1)} jobs/s</b> vs <b>${lam}/s</b> arriving. The queue stays near empty and bursts drain quickly.</div>`
+        :ratio<1?`<span class="ce">⚠️</span><div>Capacity <b>~${capRate.toFixed(1)}/s</b> barely covers <b>${lam}/s</b>. Random spikes will build a backlog that takes a long time to drain.</div>`
+        :`<span class="ce">🚨</span><div>Arrivals (<b>${lam}/s</b>) exceed capacity (<b>~${capRate.toFixed(1)}/s</b>). The queue will grow forever. Add ~${Math.ceil(lam/((1/jt)*(1-fr*.9)))-nW} more workers or make jobs faster.</div>`;
+    }
+    raf=requestAnimationFrame(frame);
+  };
+  raf=requestAnimationFrame(frame);
+  return ()=>{cancelAnimationFrame(raf);window.removeEventListener('themechange',onTheme);window.removeEventListener('resize',resize)};
+};
+
+/* =========================================================
+   Boot
+   ========================================================= */
+buildNav();
+if(!location.hash)history.replaceState(null,'',`#/${LESSONS[0].id}/1`);
+route();
+</script>
+</body>
+</html>
