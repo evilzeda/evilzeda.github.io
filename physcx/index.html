@@ -25,6 +25,7 @@
   --serif:'Crimson Pro',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
 #labels{position:fixed;inset:0;pointer-events:none}
@@ -136,7 +137,7 @@ body.contents-open #contents{opacity:1;pointer-events:auto}
 #sceneList button.on .dot{opacity:1;transform:scale(1.5);background:var(--c)}
 
 /* right panel */
-#panel{position:fixed;top:18px;right:18px;width:300px;max-height:calc(100vh - 110px);overflow:auto;display:flex;flex-direction:column;gap:10px;z-index:5;scrollbar-width:thin;scrollbar-color:#2a3040 transparent}
+#panel{position:fixed;top:18px;right:18px;width:350px;max-height:calc(100vh - 36px);overflow:auto;display:flex;flex-direction:column;gap:10px;z-index:5;scrollbar-width:thin;scrollbar-color:#2a3040 transparent}
 .card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .card h3{margin:0 0 10px 0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
 #eq{font-size:15.5px;overflow-x:auto;overflow-y:hidden;padding:2px 0}
@@ -162,18 +163,90 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 #readouts .row span:last-child{font-family:var(--mono);font-size:12px;color:var(--ink)}
 #readouts .row span:first-child{color:var(--mute)}
 
-/* caption */
-#caption{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:min(760px,calc(100vw - 700px));min-width:320px;z-index:5;text-align:center}
-#capText{font-family:var(--serif);font-size:23px;line-height:1.42;color:var(--ink);text-shadow:0 1px 18px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.8);min-height:66px;transition:opacity .35s ease,transform .35s ease}
-#capText.out{opacity:0;transform:translateY(8px)}
-#capText .katex{font-size:1.02em}
-.capNav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px}
-.capNav button{width:30px;height:30px;border-radius:50%;color:var(--mute);display:grid;place-items:center;transition:color .2s,background .2s}
-.capNav button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
-#dots{display:flex;gap:7px}
-#dots i{width:6px;height:6px;border-radius:50%;background:#353b4b;cursor:pointer;transition:background .3s,transform .3s}
-#dots i.on{background:var(--accent);transform:scale(1.35)}
-#dots i.seen{background:#5b6275}
+/* lesson card (sysdesign-style step card) */
+#lessonCard{padding:16px 18px 14px}
+.lhead{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
+.kind{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.1em;padding:2px 7px;border-radius:5px;color:var(--kc);background:color-mix(in srgb, var(--kc) 14%, transparent);border:1px solid color-mix(in srgb, var(--kc) 35%, transparent)}
+.lbar{flex:1;height:3px;border-radius:2px;background:#232838;overflow:hidden;margin-left:4px}
+.lbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .45s ease}
+#lMin{border:0;width:24px;height:24px;border-radius:6px;color:var(--mute);display:none;place-items:center;margin-left:2px}
+#lTitle{font-family:var(--serif);font-weight:500;font-size:25px;line-height:1.15;margin:10px 0 8px;text-wrap:balance}
+#lBody{transition:opacity .28s ease}
+#lBody.out{opacity:0}
+#lBody p{margin:0 0 10px;font-size:14px;line-height:1.62;color:#c9cfdb}
+#lBody p:last-child{margin-bottom:0}
+#lBody b{color:var(--ink);font-weight:600}
+#lBody .katex{font-size:1.06em;color:var(--ink)}
+.tip{margin-top:12px;border-left:3px solid var(--tc,var(--accent));background:rgba(255,255,255,.035);border-radius:0 9px 9px 0;padding:9px 12px;font-size:13px;line-height:1.55;color:#c9cfdb}
+.tip b{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tc,var(--accent));margin-bottom:3px;font-weight:600}
+.try{margin-top:12px;border:1px dashed rgba(255,255,255,.14);border-radius:9px;padding:9px 12px;font-size:13px;line-height:1.5;color:#c9cfdb}
+.try b{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#83C167;margin-bottom:3px;font-weight:600}
+.try div+div{margin-top:4px}
+.lnav{display:flex;gap:8px;margin-top:14px}
+.lnav button{height:36px;border-radius:9px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,border-color .2s;min-width:0}
+#lPrev{border:1px solid var(--line);color:var(--mute);padding:0 12px;flex:none}
+#lPrev:disabled{opacity:.35;cursor:default}
+#lNext{flex:1;background:var(--accent);color:#0b0d12;font-weight:600;padding:0 12px}
+#lNext span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lNext:hover{filter:brightness(1.1)}
+#lPrev:not(:disabled):hover{background:rgba(255,255,255,.06);color:var(--ink)}
+#learnList,#cheatList{list-style:none;margin:0;padding:0}
+#learnList li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;color:#b4bbcb;padding:4px 0}
+#learnList li i{flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #3a4152;margin-top:1px;display:grid;place-items:center;transition:background .3s,border-color .3s}
+#learnList li.ok{color:var(--ink)}
+#learnList li.ok i{background:var(--accent);border-color:var(--accent)}
+#learnList li.ok i::after{content:"";width:7px;height:4px;border-left:1.8px solid #0b0d12;border-bottom:1.8px solid #0b0d12;transform:rotate(-45deg) translate(1px,-1px)}
+#cheatList li{font-size:13px;line-height:1.5;color:#c9cfdb;padding:6px 0 6px 12px;border-bottom:1px dashed rgba(255,255,255,.06);position:relative}
+#cheatList li:last-child{border:0}
+#cheatList li::before{content:"";position:absolute;left:0;top:.95em;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+#learnCard h3 span,#cheatCard h3 span{float:right;font-family:var(--mono);letter-spacing:0;text-transform:none;color:var(--faint);font-weight:400}
+
+/* stepper */
+#stepper{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 720px);padding:6px 8px;border-radius:999px;background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line)}
+#stepper>button{width:28px;height:28px;border-radius:50%;color:var(--mute);display:grid;place-items:center;flex:none}
+#stepper>button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+#steps{display:flex;align-items:center;min-width:0}
+#steps .st{display:flex;align-items:center;gap:7px;height:28px;padding:0 4px;border-radius:999px;color:var(--faint);flex:none}
+#steps .st i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:10.5px;border:1.5px solid #333a4b;color:var(--mute);transition:background .3s,border-color .3s,color .3s}
+#steps .st span{font-size:12.5px;color:var(--ink);white-space:nowrap;max-width:0;overflow:hidden;opacity:0;transition:max-width .35s ease,opacity .3s}
+#steps .st.on span{max-width:190px;opacity:1;padding-right:6px}
+#steps .st.seen i{border-color:color-mix(in srgb, var(--accent) 55%, #333a4b);color:var(--ink)}
+#steps .st.on i{background:var(--accent);border-color:var(--accent);color:#0b0d12;font-weight:600}
+#steps .ln{width:14px;height:1.5px;background:#2e3445;flex:none}
+#steps .ln.seen{background:color-mix(in srgb, var(--accent) 50%, #2e3445)}
+#steps .st:hover i{border-color:var(--ink)}
+#sheet{display:none}
+
+/* chips, progress marks */
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.chips span{font-size:11px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.chips .lv{color:var(--ink)}
+.chips .dn{color:#83C167;border-color:rgba(131,193,103,.4)}
+.ok-mark{color:#83C167;font-size:12px;margin-left:6px}
+#toc button .ok-mark{margin-left:auto;padding-left:6px}
+.cc .lvl{display:inline-block;margin:6px 6px 0 0;font-size:10.5px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:1px 7px}
+.progline{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mute)}
+.progline .pb{width:120px;height:4px;border-radius:2px;background:#232838;overflow:hidden}
+.progline .pb i{display:block;height:100%;background:#83C167;width:0;transition:width .5s}
+
+/* contents tools: search, tabs, cheatsheet */
+.ctools{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:-10px 0 26px}
+.ctabs{display:flex;gap:3px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:3px}
+.ctabs button{font-size:13px;padding:7px 14px;border-radius:7px;color:var(--mute)}
+.ctabs button.on{background:rgba(255,255,255,.1);color:var(--ink)}
+#search{flex:1 1 260px;min-width:0;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--ink);font:inherit;font-size:14px;padding:0 14px;outline:none}
+#search:focus{border-color:var(--accent)}
+#search::placeholder{color:var(--faint)}
+#noHits{color:var(--mute);font-family:var(--serif);font-style:italic;font-size:19px;padding:20px 0}
+#cheatGrid{columns:3 320px;column-gap:26px}
+.csec{break-inside:avoid;margin-bottom:22px;border-top:2px solid var(--tc);padding-top:10px}
+.csec h4{margin:0 0 2px;font-family:var(--serif);font-weight:500;font-size:19px;display:flex;gap:9px;align-items:baseline;cursor:pointer}
+.csec h4 .n{font-family:var(--mono);font-size:11px;color:var(--tc)}
+.csec h4:hover{color:#fff}
+.csec ul{list-style:none;margin:6px 0 0;padding:0}
+.csec li{font-size:13px;line-height:1.5;color:#c9cfdb;padding:4px 0 4px 12px;position:relative}
+.csec li::before{content:"";position:absolute;left:0;top:.85em;width:4px;height:4px;border-radius:50%;background:var(--tc)}
+mark{background:rgba(255,224,102,.25);color:inherit;border-radius:2px}
 
 /* toolbar */
 #toolbar{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;border-radius:14px;background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);z-index:6}
@@ -253,7 +326,9 @@ body.home .ui{opacity:0;pointer-events:none}
 #err{position:fixed;inset:0;display:none;place-items:center;z-index:30;background:var(--bg);font-family:var(--serif);font-size:20px;color:var(--mute);text-align:center;padding:30px}
 
 @media (max-width:1100px){
-  #caption{width:min(720px,calc(100vw - 380px));min-width:0}
+  #stepper{max-width:calc(100vw - 640px)}
+  #steps .st.on span{max-width:120px}
+  #panel{width:320px}
   .hint{display:none}
 }
 @media (max-width:820px){
@@ -266,7 +341,6 @@ body.home .ui{opacity:0;pointer-events:none}
   #side .chapter p{font-size:14.5px}
   .chnav{margin-top:10px}
   .chnav button{height:36px;font-size:13px}
-  #capText{background:rgba(11,13,18,.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:12px;padding:8px 12px}
   #toolbar .sep{display:none}
   .chapter h1{font-size:25px}
   .chapter p{font-size:15px}
@@ -277,12 +351,22 @@ body.home .ui{opacity:0;pointer-events:none}
   #panel{top:auto;bottom:70px;right:10px;left:10px;width:auto;max-height:46vh;transform:translateY(calc(100% + 90px));transition:transform .35s ease}
   body.panel-open #panel{transform:none}
   #panel{max-height:62vh;background:rgba(11,13,18,.9);border-radius:16px;padding:4px}
-  #paramCard{order:1} #liveCard{order:2} #linkCard{order:3} #eqCard{order:4} #refCard{order:5}
-  body.panel-open #caption{opacity:0;pointer-events:none}
+  #paramCard{order:1} #liveCard{order:2} #learnCard{order:3} #cheatCard{order:4} #linkCard{order:5} #eqCard{order:6} #refCard{order:7}
+  #stepper{display:none}
+  #sheet{display:block;position:fixed;left:8px;right:8px;bottom:calc(66px + env(safe-area-inset-bottom, 0px));z-index:5;max-height:40vh;overflow-y:auto;overscroll-behavior:contain;border-radius:16px;background:rgba(13,16,23,.94);border:1px solid var(--line);transition:transform .35s ease,opacity .3s}
+  #sheet .card{background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #lessonCard{padding:12px 14px}
+  #lMin{display:grid}
+  #lTitle{font-size:21px;margin:8px 0 6px}
+  #lBody p{font-size:14px;line-height:1.55}
+  body.sheet-min #lBody,body.sheet-min #lTip,body.sheet-min #lTry{display:none}
+  body.sheet-min #lTitle{margin-bottom:0}
+  body.sheet-min #lMin svg{transform:rotate(180deg)}
+  body.panel-open #sheet{opacity:0;pointer-events:none;transform:translateY(20px)}
+  .lnav{position:sticky;bottom:-12px;background:rgba(13,16,23,.97);margin:12px -14px -12px;padding:10px 14px 12px}
   #panelBtn{display:flex!important}
-  #caption{width:calc(100vw - 24px);bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
-  #capText{font-size:16.5px;min-height:0;line-height:1.38}
-  .capNav{margin-top:6px}
+  .ctools{margin-top:-14px}
+  #cheatGrid{columns:1}
   #toolbar{bottom:calc(12px + env(safe-area-inset-bottom, 0px));max-width:calc(100vw - 16px)}
   #toolbar button{min-width:44px;height:40px}
   #toolbar .wide{display:none}
@@ -300,6 +384,7 @@ body.home .ui{opacity:0;pointer-events:none}
   </div>
   <div class="tag" id="sceneTag"></div>
   <div class="chapter"><span class="num" id="chapNum">01</span><div><h1 id="sceneTitle"></h1><p id="sceneSub"></p></div></div>
+  <div class="chips" id="chips"></div>
   <div class="chnav">
     <button id="sPrev" title="Previous chapter ([)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg><span>Previous</span></button>
     <button id="sNext" title="Next chapter (])"><span>Next chapter</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -310,20 +395,28 @@ body.home .ui{opacity:0;pointer-events:none}
 
 
 <aside id="panel" class="ui">
-  <section class="card" id="refCard"><h3 id="refHead">From the Feynman Lectures</h3><div class="rl" id="refLabel"></div><div class="rt" id="refTitle"></div><a class="read" id="refLink" target="_blank" rel="noopener">Read the lecture ↗</a></section>
-  <section class="card" id="linkCard"><h3 id="linkHead">The physics behind it</h3><div id="linkList"></div></section>
-  <section class="card" id="eqCard"><h3>Governing equations</h3><div id="eq"></div></section>
+  <section class="card" id="lessonCard">
+    <div class="lhead"><span id="lStep">Step 1 / 8</span><span class="kind" id="lKind">Setup</span><span class="lbar"><i id="lBar"></i></span><button id="lMin" title="Collapse / expand"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <h2 id="lTitle"></h2>
+    <div id="lBody"></div>
+    <div class="tip" id="lTip" hidden></div>
+    <div class="try" id="lTry" hidden></div>
+    <div class="lnav"><button id="lPrev" title="Previous step (←)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>Back</button><button id="lNext" title="Next step (→)"><span id="lNextT">Next</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button></div>
+  </section>
   <section class="card" id="paramCard"><h3>Parameters</h3><div id="params"></div></section>
   <section class="card" id="liveCard"><h3>Live</h3><div id="readouts"></div></section>
+  <section class="card" id="eqCard"><h3>Governing equations</h3><div id="eq"></div></section>
+  <section class="card" id="learnCard"><h3>What you’ll learn <span id="learnCount"></span></h3><ul id="learnList"></ul></section>
+  <section class="card" id="cheatCard"><h3>Key facts</h3><ul id="cheatList"></ul></section>
+  <section class="card" id="linkCard"><h3 id="linkHead">The physics behind it</h3><div id="linkList"></div></section>
+  <section class="card" id="refCard"><h3 id="refHead">From the Feynman Lectures</h3><div class="rl" id="refLabel"></div><div class="rt" id="refTitle"></div><a class="read" id="refLink" target="_blank" rel="noopener">Read the lecture ↗</a></section>
 </aside>
+<div id="sheet" class="ui"></div>
 
-<div id="caption" class="ui">
-  <div id="capText"></div>
-  <div class="capNav">
-    <button id="prevStep" title="Previous (←)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
-    <div id="dots"></div>
-    <button id="nextStep" title="Next (→)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-  </div>
+<div id="stepper" class="ui">
+  <button id="prevStep" title="Previous step (←)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <div id="steps"></div>
+  <button id="nextStep" title="Next step (→)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
 </div>
 
 <div id="toolbar" class="ui">
@@ -351,7 +444,14 @@ body.home .ui{opacity:0;pointer-events:none}
       <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twenty-seven chapters in nine topics. Each topic starts with the physics and ends with where it is used in the real world.</p></div>
       <button id="closeContents" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
+    <div class="ctools">
+      <div class="ctabs"><button data-tab="chapters" class="on">Chapters</button><button data-tab="cheat">Cheatsheet</button></div>
+      <input id="search" type="search" placeholder="Search chapters, ideas, equations…  ( / )" autocomplete="off" spellcheck="false">
+      <div class="progline" id="cprog"></div>
+    </div>
     <div id="topicGrid"></div>
+    <div id="cheatGrid" hidden></div>
+    <div id="noHits" hidden>Nothing matches that. Try a word like “lift”, “resonance” or “tunneling”.</div>
   </div>
 </div>
 <div id="fade"></div>
@@ -364,12 +464,16 @@ body.home .ui{opacity:0;pointer-events:none}
       <button class="primary" id="startBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Start from chapter 1.1</button>
       <button class="ghost" id="continueBtn" hidden></button>
     </div>
+    <div class="progline" id="hprog" style="margin-top:20px"></div>
     <div id="nowShowing"></div>
   </div>
   <aside class="hlist" id="homeTopics" aria-label="All chapters"></aside>
 </div>
 <div id="err"></div>
 
+<script src="js/lessons-a.js"></script>
+<script src="js/lessons-b.js"></script>
+<script src="js/lessons-c.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -4137,8 +4241,10 @@ const CHAPTERS = [];
 TOPICS.forEach((t, ti) => t.chapters.forEach((ch, k) => { ch.topic = t; ch.num = `${ti+1}.${k+1}`; CHAPTERS.push(ch); }));
 const chapLabel = i => CHAPTERS[i].num;
 const appsFor = ch => CHAPTERS.filter(a => a.builtOn && a.builtOn.includes(ch));
+const PHX = window.PHX || {};
+CHAPTERS.forEach(ch => { const L = PHX[ch.id]; if (L){ ch.lesson = L; ch.steps = L.steps; } });
 CHAPTERS.forEach(ch => {
-  if (!ch.uses) return;
+  if (!ch.uses || ch.lesson) return;
   const apps = appsFor(ch);
   const see = apps.length ? ` See it at work in ${apps.map(a => `${a.num} <i>${a.title}</i>`).join(' and ')}.` : '';
   ch.steps.push({text:`<b>In the real world.</b> ${ch.uses.join(' ')}${see}`});
@@ -4150,6 +4256,36 @@ CHAPTERS.forEach(ch => {
 const $ = id => document.getElementById(id);
 const state = { idx:-1, step:0, playing:true, speed:1, tour:false, tourT:0, ctx:null, seen:new Set() };
 const SPEEDS = [0.25, 0.5, 1, 2, 4];
+const KINDS = {setup:['Setup','#9aa3b8'], concept:['Concept','#58C4DD'], derive:['Derivation','#FFE066'], experiment:['Experiment','#83C167'],
+  pitfall:['Pitfall','#FC6255'], world:['Real world','#F0AC5F'], recap:['Recap','#C59BD8']};
+const TIPC = {'Key idea':'var(--accent)', 'Good to know':'#58C4DD', 'Watch out':'#FC6255'};
+const DONE = new Set();
+try { JSON.parse(localStorage.getItem('physcx:done') || '[]').forEach(id => DONE.add(id)); } catch (e) {}
+const stepWords = st => (st.b || st.text || '').replace(/\$[^$]*\$/g, ' x ').split(/\s+/).length;
+function markDone(def){
+  if (DONE.has(def.id)) return;
+  DONE.add(def.id);
+  try { localStorage.setItem('physcx:done', JSON.stringify([...DONE])); } catch (e) {}
+  refreshProgress();
+}
+function progHTML(){
+  const n = CHAPTERS.filter(c => DONE.has(c.id)).length;
+  return `<span class="pb"><i style="width:${n/CHAPTERS.length*100}%"></i></span><span>${n} of ${CHAPTERS.length} chapters completed</span>`;
+}
+function refreshProgress(){
+  document.querySelectorAll('button[data-i]').forEach(b => {
+    const ch = CHAPTERS[+b.dataset.i]; if (!ch) return;
+    let m = b.querySelector('.ok-mark');
+    if (DONE.has(ch.id) && !m){ m = document.createElement('span'); m.className = 'ok-mark'; m.textContent = '✓'; m.title = 'Completed';
+      const host = b.querySelector('.ct, .t') || b; host.appendChild(m); }
+  });
+  $('cprog').innerHTML = progHTML(); $('hprog').innerHTML = progHTML();
+  if (state.idx >= 0) renderChips(CHAPTERS[state.idx]);
+}
+function renderChips(def){
+  const L = def.lesson;
+  $('chips').innerHTML = (L ? `<span class="lv">${L.level}</span><span>${L.min} min</span>` : '') + `<span>${def.steps.length} steps</span>` + (DONE.has(def.id) ? '<span class="dn">✓ Completed</span>' : '');
+}
 
 function makeCtx(def){
   const group = new THREE.Group(); scene.add(group);
@@ -4245,7 +4381,7 @@ function buildNav(){
       const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
       b.className = 'cc'; b.dataset.i = i;
       const badge = ch.ref ? `<span class="cf">Feynman ${ch.ref.label.replace(' · ', ', ')}${ch.ref.related ? ' (related)' : ''}</span>` : '';
-      b.innerHTML = `<span class="cn">${ch.num}</span><span><div class="ct">${ch.title}${ch.app ? '<span class="ap">applied</span>' : ''}</div><div class="cs">${ch.sub}</div>${badge}</span>`;
+      b.innerHTML = `<span class="cn">${ch.num}</span><span><div class="ct">${ch.title}${ch.app ? '<span class="ap">applied</span>' : ''}</div><div class="cs">${ch.sub}</div>${ch.lesson ? `<span class="lvl">${ch.lesson.level} · ${ch.lesson.min} min</span>` : ''}${badge}</span>`;
       b.onclick = () => { closeContents(); goScene(i); };
       sec.appendChild(b);
     });
@@ -4281,6 +4417,44 @@ function buildToc(){
     });
   });
 }
+function buildCheat(){
+  const g = $('cheatGrid');
+  TOPICS.forEach(t => t.chapters.forEach(ch => {
+    if (!ch.lesson) return;
+    const sec = document.createElement('section'); sec.className = 'csec'; sec.style.setProperty('--tc', hexCss(t.color)); sec.dataset.i = CHAPTERS.indexOf(ch);
+    sec.innerHTML = `<h4><span class="n">${ch.num}</span>${ch.title}</h4><ul>${ch.lesson.cheat.map(c => `<li>${rich(c)}</li>`).join('')}</ul>`;
+    sec.querySelector('h4').onclick = () => { closeContents(); if (state.homeOn) enterChapter(+sec.dataset.i); else goScene(+sec.dataset.i); };
+    g.appendChild(sec);
+  }));
+}
+const norm = x => x.toLowerCase().replace(/<[^>]+>|[\\${}^_]/g, ' ');
+function hay(ch){
+  if (ch._hay) return ch._hay;
+  const L = ch.lesson || {};
+  return ch._hay = norm([ch.num, ch.title, ch.sub, ch.topic.name, ...(L.learn || []), ...(L.cheat || []), ...ch.steps.map(st => (st.t || '') + ' ' + (st.b || st.text || '')), ...(ch.uses || [])].join(' '));
+}
+let ctab = 'chapters';
+function filterContents(){
+  const q = norm($('search').value).trim().split(/\s+/).filter(Boolean);
+  const hit = ch => q.every(w => hay(ch).includes(w));
+  let any = false;
+  if (ctab === 'chapters'){
+    $('topicGrid').querySelectorAll('.topic').forEach(sec => {
+      let n = 0; sec.querySelectorAll('.cc').forEach(b => { const ok = hit(CHAPTERS[+b.dataset.i]); b.hidden = !ok; n += ok; });
+      sec.hidden = !n; any ||= n > 0;
+    });
+  } else {
+    $('cheatGrid').querySelectorAll('.csec').forEach(sec => { const ok = hit(CHAPTERS[+sec.dataset.i]); sec.hidden = !ok; any ||= ok; });
+  }
+  $('noHits').hidden = any;
+}
+function setTab(t){
+  ctab = t;
+  document.querySelectorAll('.ctabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('topicGrid').hidden = t !== 'chapters'; $('cheatGrid').hidden = t !== 'cheat';
+  filterContents();
+}
+function openSearch(){ openContents(); setTimeout(() => { $('search').focus(); $('search').select(); }, 60); }
 function openContents(){ document.body.classList.add('contents-open'); }
 function closeContents(){ document.body.classList.remove('contents-open'); }
 function toggleContents(){ document.body.classList.toggle('contents-open'); }
@@ -4315,6 +4489,14 @@ async function goScene(i, first=false){
     $('refLabel').textContent = def.ref.label; $('refTitle').textContent = def.ref.title; $('refLink').href = def.ref.url;
   }
   $('sceneTitle').textContent = def.title; $('sceneSub').textContent = def.sub;
+  renderChips(def);
+  const L = def.lesson;
+  $('learnCard').hidden = $('cheatCard').hidden = !L;
+  if (L){
+    $('learnList').innerHTML = L.learn.map(x => `<li><i></i><span>${rich(x)}</span></li>`).join('');
+    $('cheatList').innerHTML = L.cheat.map(x => `<li>${rich(x)}</li>`).join('');
+  }
+  $('panel').scrollTop = 0; $('sheet').scrollTop = 0;
   $('topicGrid').querySelectorAll('.cc').forEach(b => b.classList.toggle('on', +b.dataset.i === i));
   $('toc').querySelectorAll('button').forEach(b => { const on = +b.dataset.i === i; b.classList.toggle('on', on); if (on) b.scrollIntoView({block:'nearest'}); });
   const nx = CHAPTERS[(i + 1) % CHAPTERS.length]; $('sNext').title = `Next: ${nx.num} ${nx.title} (])`;
@@ -4337,18 +4519,47 @@ async function goScene(i, first=false){
 }
 
 function showStep(k, instant=false){
-  const def = CHAPTERS[state.idx], ctx = state.ctx;
-  k = Math.max(0, Math.min(def.steps.length-1, k));
+  const def = CHAPTERS[state.idx], ctx = state.ctx, N = def.steps.length;
+  k = Math.max(0, Math.min(N-1, k));
   state.step = k; state.seen.add(k); state.tourT = 0;
-  const st = def.steps[k], cap = $('capText');
-  cap.classList.add('out');
-  setTimeout(() => { cap.innerHTML = rich(st.text); cap.classList.remove('out'); }, instant ? 0 : 280);
-  const dots = $('dots'); dots.innerHTML = '';
-  def.steps.forEach((_, i) => {
-    const d = document.createElement('i');
-    if (i === k) d.className = 'on'; else if (state.seen.has(i)) d.className = 'seen';
-    d.onclick = () => showStep(i); dots.appendChild(d);
+  const st = def.steps[k], body = $('lBody');
+  state.tourDur = Math.max(9, Math.min(32, stepWords(st)/3.2 + 3));
+  const [kn, kc] = KINDS[st.k] || ['Step', '#9aa3b8'];
+  $('lStep').textContent = `Step ${k+1} / ${N}`;
+  $('lKind').textContent = kn; $('lKind').style.setProperty('--kc', kc); $('lKind').hidden = !st.k;
+  $('lBar').style.width = ((k+1)/N*100) + '%';
+  const fill = () => {
+    $('lTitle').innerHTML = rich(st.t || `${def.title}`);
+    body.innerHTML = (st.b || st.text || '').split(/\n\n+/).map(p => `<p>${rich(p)}</p>`).join('');
+    const tip = $('lTip'); tip.hidden = !st.tip;
+    if (st.tip){ tip.style.setProperty('--tc', TIPC[st.tip[0]] || 'var(--accent)'); tip.innerHTML = `<b>${st.tip[0]}</b>${rich(st.tip[1])}`; }
+    const tr = $('lTry'); tr.hidden = !st.try;
+    if (st.try) tr.innerHTML = `<b><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Try it</b>` + st.try.map(x => `<div>${rich(x)}</div>`).join('');
+    body.classList.remove('out');
+  };
+  if (instant) fill(); else { body.classList.add('out'); setTimeout(fill, 220); }
+  $('lPrev').disabled = k === 0;
+  const nx = CHAPTERS[(state.idx + 1) % CHAPTERS.length];
+  $('lNextT').innerHTML = k < N-1 ? `Next: ${def.steps[k+1].s || def.steps[k+1].t || 'continue'}` : `Next chapter: ${nx.num} ${nx.title}`;
+  // learning goals tick off as the lesson progresses
+  if (def.lesson){
+    const li = $('learnList').children, nl = li.length; let ok = 0;
+    [...li].forEach((el, i) => { const on = Math.max(...state.seen) >= Math.round((i+1)*N/nl) - 1; el.classList.toggle('ok', on); ok += on; });
+    $('learnCount').textContent = `${ok}/${nl}`;
+  }
+  // stepper
+  const host = $('steps'); host.innerHTML = '';
+  def.steps.forEach((s2, i) => {
+    if (i){ const ln = document.createElement('span'); ln.className = 'ln' + (state.seen.has(i) ? ' seen' : ''); host.appendChild(ln); }
+    const b = document.createElement('button');
+    b.className = 'st' + (i === k ? ' on' : state.seen.has(i) ? ' seen' : '');
+    b.title = `${i+1}. ${s2.t || ''}`;
+    b.innerHTML = `<i>${i+1}</i><span>${s2.s || s2.t || ''}</span>`;
+    b.onclick = () => showStep(i); host.appendChild(b);
   });
+  if (!instant && innerWidth > 820) $('panel').scrollTo({top:0, behavior:'smooth'});
+  if (!instant) $('sheet').scrollTo({top:0, behavior:'smooth'});
+  if (k === N-1 && !state.homeOn) markDone(def);
   if (st.cam && !instant) flyTo(st.cam[0], st.cam[1], 2.0);
   if (st.run && ctx) st.run(ctx);
 }
@@ -4371,7 +4582,7 @@ function cycleSpeed(dir=1){
 }
 function toggleTour(){ state.tour = !state.tour; state.tourT = 0; $('tourBtn').classList.toggle('on', state.tour); }
 function toggleOrbit(){ controls.autoRotate = !controls.autoRotate; $('orbitBtn').classList.toggle('on', controls.autoRotate); }
-function toggleClean(){ document.body.classList.toggle('clean'); }
+function toggleClean(){ document.body.classList.toggle('clean'); updateView(); }
 function resetSim(){ state.ctx?.reset(); }
 function resetCam(){ const d = CHAPTERS[state.idx]; flyTo(d.cam.pos, d.cam.target, 1.4); }
 function toggleFS(){ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
@@ -4384,15 +4595,21 @@ $('tourBtn').onclick = toggleTour;
 $('orbitBtn').onclick = toggleOrbit;
 $('camBtn').onclick = resetCam;
 $('cleanBtn').onclick = toggleClean;
-$('panelBtn').onclick = () => document.body.classList.toggle('panel-open');
+$('panelBtn').onclick = () => { document.body.classList.toggle('panel-open'); setTimeout(updateView, 380); };
 $('fsBtn').onclick = toggleFS;
 $('nextStep').onclick = nextStep;
 $('prevStep').onclick = prevStep;
 canvas.addEventListener('dblclick', () => { if (document.body.classList.contains('clean')) toggleClean(); });
 
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' && e.key !== ' ') return;
+  if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)){ e.preventDefault(); if (state.homeOn) leaveHome(); openSearch(); return; }
+  if (e.target.tagName === 'INPUT'){
+    if (e.target.id === 'search' && e.key === 'Escape'){ if (e.target.value){ e.target.value = ''; filterContents(); } else closeContents(); }
+    if (e.target.id === 'search' && e.key === 'Enter'){ const b = [...$(ctab === 'chapters' ? 'topicGrid' : 'cheatGrid').querySelectorAll('[data-i]')].find(x => !x.hidden && !x.closest('[hidden]')); if (b){ closeContents(); goScene(+b.dataset.i); } }
+    if (e.key !== ' ' || e.target.id === 'search') return;
+  }
   const k = e.key;
+  if (k === '/' && !state.homeOn){ e.preventDefault(); openSearch(); return; }
   if (state.homeOn){ if (k === 'Enter' && e.target === document.body) enterChapter(state.idx); return; }
   if (document.body.classList.contains('contents-open')){ if (k === 'Escape' || k === 'm' || k === 'M') closeContents(); return; }
   if (k === ' '){ e.preventDefault(); togglePlay(); }
@@ -4426,7 +4643,7 @@ function frame(now){
     const sdt = state.playing ? rdt*state.speed : 0;
     ctx.def.update(sdt, ctx);
     readoutT += rdt; if (readoutT > 0.12){ readoutT = 0; updateReadouts(ctx); }
-    if (state.tour && !switching){ state.tourT += rdt; if (state.tourT > 11) nextStep(); }
+    if (state.tour && !switching){ state.tourT += rdt; if (state.tourT > (state.tourDur || 11)) nextStep(); }
   }
   controls.update();
   composer.render();
@@ -4442,7 +4659,7 @@ function showHome(){
   document.body.classList.add('home'); document.body.classList.remove('panel-open');
   closeContents();
   $('intro').classList.remove('gone'); $('intro').scrollTop = 0;
-  controls.autoRotate = true;
+  controls.autoRotate = true; updateView();
   let last = null; try { last = localStorage.getItem('physcx:last'); } catch (e) {}
   const li = CHAPTERS.findIndex(c => c.id === last), cb = $('continueBtn');
   cb.hidden = li < 0;
@@ -4454,6 +4671,7 @@ function leaveHome(){
   document.body.classList.remove('home');
   $('intro').classList.add('gone');
   controls.autoRotate = $('orbitBtn').classList.contains('on');
+  updateView();
 }
 function enterChapter(i){
   leaveHome();
@@ -4479,7 +4697,28 @@ addEventListener('hashchange', () => {
   if (i !== state.idx) goScene(i);
 });
 
-buildNav(); buildToc(); syncPlay();
+buildNav(); buildToc(); buildCheat(); syncPlay(); refreshProgress();
+$('search').addEventListener('input', filterContents);
+document.querySelectorAll('.ctabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$('lPrev').onclick = prevStep; $('lNext').onclick = nextStep;
+$('lMin').onclick = () => { document.body.classList.toggle('sheet-min'); requestAnimationFrame(updateView); };
+// on phones the step card lives in a bottom sheet instead of the side panel
+const mqPhone = matchMedia('(max-width:820px)');
+function placeLesson(){ const c = $('lessonCard'); if (mqPhone.matches){ if (c.parentNode !== $('sheet')) $('sheet').appendChild(c); } else if (c.parentNode !== $('panel')) $('panel').prepend(c); updateView(); }
+// shift the 3D view so it is centred in the part of the screen the UI leaves free
+function updateView(){
+  let dy = 0;
+  if (mqPhone.matches && !state.homeOn && !document.body.classList.contains('clean')){
+    const top = $('side').getBoundingClientRect().bottom - 24;
+    const sh = $('sheet'), pOpen = document.body.classList.contains('panel-open');
+    const bot = pOpen ? $('panel').getBoundingClientRect().top : sh.getBoundingClientRect().top;
+    dy = Math.round(innerHeight/2 - (top + bot)/2);
+  }
+  if (Math.abs(dy) < 3) camera.clearViewOffset(); else camera.setViewOffset(innerWidth, innerHeight, 0, dy, innerWidth, innerHeight);
+}
+mqPhone.addEventListener('change', placeLesson); addEventListener('resize', updateView);
+new ResizeObserver(updateView).observe($('sheet'));
+placeLesson();
 const linked = CHAPTERS.findIndex(c => '#' + c.id === location.hash);
 if (linked >= 0){ goScene(linked, true); $('intro').classList.add('gone'); }
 else { showHome(); goScene(CHAPTERS.indexOf(Lorenz), true); }

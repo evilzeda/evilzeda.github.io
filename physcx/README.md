@@ -1,7 +1,7 @@
 # physcx — physics in three dimensions
 
 An interactive, narrated 3D physics explorer in the spirit of 3Blue1Brown, built around *The Feynman Lectures on Physics*.
-Everything lives in `index.html` — double-click it to open in Chrome or Edge (needs an internet connection to load three.js, KaTeX and fonts from a CDN).
+The simulations live in `index.html`; the written lessons live in `js/lessons-a.js`, `js/lessons-b.js` and `js/lessons-c.js`. Open `index.html` in Chrome or Edge (needs an internet connection to load three.js, KaTeX and fonts from a CDN).
 
 ## Contents — 27 chapters in 9 topics
 
@@ -47,12 +47,23 @@ Every theory chapter also has an "In the real world" card and a closing narratio
 | 9.1 | Electrons Through Two Slits | Vol. III, Ch. 1 |
 | 9.2 | *Applied:* Seeing Atoms by Tunneling — the scanning tunneling microscope | Vol. III, Ch. 1 (related) |
 
-Each chapter has step-by-step narration with equations, live sliders, live readouts, and a link to its lecture.
+## Inside every chapter
+Every chapter is a full lesson of 7–9 steps, each tagged by kind: **Setup**, **Concept**, **Derivation**, **Experiment**, **Pitfall**, **Real world** and **Recap**.
+
+- **Step card** (right panel; a bottom sheet on phones) with the step's title, paragraphs, a *Key idea* or *Watch out* box, and *Try it* suggestions for the sliders. Each step can move the camera and set the simulation.
+- **Stepper** above the toolbar: jump to any step.
+- **What you'll learn**: four goals that tick off as you go.
+- **Key facts**: four formulas and numbers worth remembering.
+- Level (Beginner / Intermediate / Advanced), reading time and step count.
+- Live sliders, live readouts, governing equations and a link to the lecture.
+- **Progress**: a chapter is marked ✓ when you reach its last step (saved in your browser).
+- **Contents** (`M`) with search (`/` or `Ctrl K`) across titles, lessons and formulas, and a **Cheatsheet** tab with every chapter's key facts.
 
 ## Controls
 | Action | Input |
 |---|---|
 | Contents (all chapters by topic) | `M` or the Contents button |
+| Search chapters, ideas, formulas | `/` or `Ctrl K` |
 | Previous / next chapter | `[` / `]` (or the « » buttons) |
 | Jump to a topic | `1` – `9` |
 | Next / previous narration step | `→` / `←` |
@@ -67,5 +78,14 @@ Each chapter has step-by-step narration with equations, live sliders, live reado
 | Fullscreen | `F` |
 
 ## Adding a chapter
-Each chapter is a plain object in the script with `params`, `steps`, `init(ctx)`, `reset(ctx)`, `update(dt, ctx)` and `readouts(ctx)` (optional `ref` for a Feynman lecture link).
+Each chapter is a plain object in `index.html` with `params`, `init(ctx)`, `reset(ctx)`, `update(dt, ctx)` and `readouts(ctx)` (optional `ref` for a Feynman lecture link).
 Write one and add it to a topic's `chapters` list in `TOPICS`.
+
+Its lesson goes in one of the `js/lessons-*.js` files under the chapter's `id`:
+
+```js
+PHX['my-id'] = {level:'Beginner', min:8,
+  learn:['…four goals…'], cheat:['…four key facts, $\\LaTeX$ allowed…'],
+  steps:[{k:'concept', t:'Title', s:'Short label', b:'Paragraph.\n\nParagraph.',
+          tip:['Key idea', '…'], try:['…'], cam:[[x,y,z],[tx,ty,tz]], run:c => c.setParam('key', value, seconds)}]};
+```
