@@ -177,7 +177,7 @@ steps:[
   ch:['+ Client → storage directly','- App bandwidth for uploads: 0'],e:[E('u','app','both','POST /uploads → signed URL'),E('u','s3','req','PUT (signed) 200 MB',{dots:3,via:[[-12,10]]})],s:{app:{cpu:.15}},m:{app:'~0',path:'direct'}},
  {k:'technique',t:'Process in the background',short:'Processing',v:'w',
   b:'The upload triggers an event. A <b>worker</b> picks it up, transcodes the video into several resolutions and generates thumbnails, writing results back to storage and marking the record ready.\n\nThe user isn’t kept waiting on a slow HTTP request.',
-  ch:['+ Upload event → worker','+ 1080p / 720p / 480p + thumbnail'],e:[E('s3','w','req','object created'),E('w','s3','res','renditions'),E('w','db','req','status = ready')]},
+  ch:['+ Upload event → worker','+ 1080p / 720p / 480p + thumbnail'],e:[E('s3','w','req','object created'),E('w','s3','req','renditions',{tone:'green'}),E('w','db','req','status = ready')]},
  {k:'solution',t:'Serve via CDN',short:'Serve',v:'cdn',
   b:'Viewers fetch videos through a <b>CDN</b>, which caches them at the edge and streams them efficiently. For private files, the app issues short-lived signed URLs for downloads too.\n\nLifecycle rules move old files to cheaper storage tiers automatically.',
   ch:['+ Edge-cached delivery','+ Old files → archive tier'],e:[E('cdn','s3','both','miss → fetch'),E('u','cdn','both','stream',{dots:3})]},

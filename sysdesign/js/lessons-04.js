@@ -75,7 +75,7 @@ steps:[
   ch:['+ Max 5 attempts, exponential backoff','+ Then → dead-letter queue'],e:[E('q','w2','req','job #77 (try 5)'),E('w2','mail','fail','invalid address',{via:[[26,14]]}),E('q','dlq','req','job #77',{tone:'red'})],s:{q:{n:0},dlq:{n:1},w1:{cpu:.2},w2:{cpu:.2}},m:{depth:0,dlq:1}},
  {k:'technique',t:'At-least-once → idempotent',short:'Idempotent',
   b:'A worker can send the email and crash before acking. The message is redelivered and processed <b>again</b>. Most queues are <b>at-least-once</b>.\n\nMake handlers <b>idempotent</b>: record <code>welcome:42 sent</code> and skip if already done.',
-  ch:['+ Dedupe key welcome:42','+ Duplicate delivery = no-op'],e:[E('q','w1','req','job #42 (again)'),E('w1','q','res','already sent → ack',{lt:'green'})]},
+  ch:['+ Dedupe key welcome:42','+ Duplicate delivery = no-op'],e:[E('q','w1','req','job #42 (again)'),E('w1','q','req','already sent → ack',{lt:'green',tone:'green'})]},
  {k:'recap',t:'Recap',short:'Recap',
   b:'Queues take slow, flaky work off the request path, absorb bursts and let you scale workers independently. Watch depth, cap retries with a dead-letter queue, and make every consumer idempotent.',
   e:[E('api','q','req',''),E('q','w1','req',''),E('q','w2','req','')]}
@@ -150,10 +150,10 @@ steps:[
   ch:['+ Full duplex, low overhead'],e:[E('c','s','sync','typing… / new message',{dots:2})],m:{dir:'both ways',delay:'~30 ms'}},
  {k:'problem',t:'Scaling persistent connections',short:'Scaling',v:'s2 c2 bus',
   b:'With a million open sockets you need many servers, and the sender and recipient may be connected to <b>different</b> servers. Server 1 can’t deliver to a socket held by server 2.\n\nAdd a <b>pub/sub backplane</b> (Redis, NATS, Kafka): servers publish messages and each delivers to its own connected clients.',
-  ch:['+ Backplane fans out across servers','! Connections are stateful: plan for reconnects'],e:[E('c','s','sync','send “hi”'),E('s','bus','req','publish room:7'),E('bus','s2','req','deliver'),E('s2','c2','res','“hi”')]},
+  ch:['+ Backplane fans out across servers','! Connections are stateful: plan for reconnects'],e:[E('c','s','sync','send “hi”'),E('s','bus','req','publish room:7'),E('bus','s2','req','deliver'),E('s2','c2','req','“hi”',{tone:'green'})]},
  {k:'recap',t:'Recap',short:'Recap',
   b:'Polling is simple but wasteful. Long polling cuts waste. SSE streams one-way updates cheaply. WebSockets give two-way, low-latency channels. At scale, persistent connections need a backplane and graceful reconnects.',
-  e:[E('c','s','sync',''),E('s','bus','req',''),E('bus','s2','req',''),E('s2','c2','res','')],
+  e:[E('c','s','sync',''),E('s','bus','req',''),E('bus','s2','req',''),E('s2','c2','req','',{tone:'green'})],
   p:[{at:'c',dx:20,dy:-170,title:'Pick one',c:'yellow',lines:['rare updates   → polling','feeds / alerts → SSE','chat / games   → WebSocket']}]}
 ]});
 

@@ -246,7 +246,7 @@ function drawNode(n,st){
 }
 
 /* ------------------------------------------------------------------ app state */
-const S={lesson:null,si:0,speed:1,paused:false,t0:0,tPause:0,edges:[],vb:null,vbTarget:null,prevVis:new Set()};
+const S={home:false,seq:[],lesson:null,si:0,speed:1,paused:false,t0:0,tPause:0,edges:[],vb:null,vbTarget:null,prevVis:new Set()};
 
 /* ------------------------------------------------------------------ layout */
 function shell(){
@@ -254,11 +254,11 @@ function shell(){
   <header class="top">
     <button class="tb menu-b" id="menuB" aria-label="Lessons">${icon('list',18)}</button>
     <a class="brand" href="#/"><span class="logo">${icon('layers',18)}</span><span>System <mark>Design</mark></span></a>
-    <nav class="tabs"><a href="#/" id="tabLearn">${icon('book',15)}Learn</a><a href="#/cheatsheet" id="tabCheat">${icon('doc',15)}Cheatsheet</a></nav>
+    <nav class="tabs"><a href="#/" id="tabHome">${icon('home',15)}Home</a><a href="#/" id="tabLearn">${icon('book',15)}Learn</a><a href="#/cheatsheet" id="tabCheat">${icon('doc',15)}Cheatsheet</a></nav>
     <div class="sp"></div>
     <label class="search">${icon('search',15)}<input id="q" placeholder="Search lessons…" autocomplete="off"><kbd>Ctrl K</kbd></label>
     <button class="tb" id="themeB" aria-label="Toggle theme" title="Theme (T)"></button>
-    <a class="tb home" href="../" title="Back to evilzeda site">${icon('home',16)}<span>evilzeda</span></a>
+    <a class="tb back" href="../" title="Back to evilzeda site">${icon('globe',16)}<span>evilzeda</span></a>
   </header>
   <div class="app">
     <aside class="side" id="side">
@@ -268,7 +268,8 @@ function shell(){
     </aside>
     <main class="center" id="center"></main>
     <aside class="right" id="right"></aside>
-  </div>`;
+  </div>
+  <div id="home"></div>`;
   $('#menuB').onclick=()=>document.body.classList.toggle('menu');
   $('#themeB').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
   $('#q').oninput=buildTree;
@@ -297,6 +298,17 @@ function buildTree(){
   $('#progBar').style.width=done.size/ORDER.length*100+'%';
 }
 
+/* ------------------------------------------------------------------ shared stage */
+function stageSVG(){return `<svg id="scene" preserveAspectRatio="xMidYMid meet"><defs>
+  <pattern id="isog" width="${(U*C30*2).toFixed(2)}" height="${U}" patternUnits="userSpaceOnUse"><path d="M0 ${U/2} L${(U*C30).toFixed(2)} 0 L${(U*C30*2).toFixed(2)} ${U/2} L${(U*C30).toFixed(2)} ${U} Z" class="gridp"/></pattern>
+  ${['orange','green','gray','purple','red','faint','blue','yellow','pink'].map(t=>`<marker id="ah-${t}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1 9 5 1 9z" class="ah" style="fill:var(--${t==='faint'?'faint':t==='gray'?'edge':t})"/></marker>`).join('')}
+  </defs><rect id="gridR" fill="url(#isog)"/><g id="lz"></g><g id="le"></g><g id="ln"></g><g id="lo"></g><g id="lp"></g></svg>`}
+
+/* ------------------------------------------------------------------ sources */
+const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return ''}};
+function sources(L){return [['Original lesson (designed-to-scale)',`https://designed-to-scale.vercel.app/#/${L.id}/1`,'Dilum Sanjaya · interactive'],...((SD.src&&SD.src[L.id])||[])]}
+function sourcesHTML(L,compact){return `<ul class="srcs${compact?' compact':''}">${sources(L).map(([t,u,by])=>`<li><a href="${u}" target="_blank" rel="noopener" title="${esc(u)}">${compact?'':icon('link',13)}<span><b>${esc(t)}</b>${compact?'':`<small>${esc(by||host(u))}</small>`}</span>${icon('arrow',12,'ext')}</a></li>`).join('')}</ul>`}
+
 /* ------------------------------------------------------------------ lesson view */
 function meta(id){return ORDER.find(o=>o.id===id)}
 function lessonView(L){
@@ -310,12 +322,9 @@ function lessonView(L){
     </section>
     <section class="card stagecard">
       <div class="st-top"><div class="metrics" id="metrics">${L.met.map(([k,l,ic])=>`<div class="metric${k===L.sum?' tot':''}" data-k="${k}"><div class="ml">${icon(ic||'chart',12)}${esc(l)}</div><div class="mv">—</div></div>`).join('')}</div>
-        <div class="st-btn"><button class="sbtn" id="replayB">${icon('repeat',13)}Replay</button><button class="sbtn" id="pauseB">${icon('timer',13)}<span>Pause</span></button><button class="sbtn sp" id="speedB">1×</button></div></div>
-      <div class="stage" id="stage"><svg id="scene" preserveAspectRatio="xMidYMid meet"><defs>
-        <pattern id="isog" width="${(U*C30*2).toFixed(2)}" height="${U}" patternUnits="userSpaceOnUse"><path d="M0 ${U/2} L${(U*C30).toFixed(2)} 0 L${(U*C30*2).toFixed(2)} ${U/2} L${(U*C30).toFixed(2)} ${U} Z" class="gridp"/></pattern>
-        ${['orange','green','gray','purple','red','faint','blue','yellow','pink'].map(t=>`<marker id="ah-${t}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1 9 5 1 9z" class="ah" style="fill:var(--${t==='faint'?'faint':t==='gray'?'edge':t})"/></marker>`).join('')}
-      </defs><rect id="gridR" fill="url(#isog)"/><g id="lz"></g><g id="le"></g><g id="ln"></g><g id="lo"></g><g id="lp"></g></svg></div>
-      <div class="legend"><span><i class="dot d-orange"></i>request</span><span><i class="dot d-green"></i>response</span><span><i class="dot d-purple"></i>sync / handshake</span><span><i class="dot d-red"></i>failure</span></div>
+        <div class="st-btn"><button class="sbtn" id="replayB">${icon('repeat',13)}Replay</button><button class="sbtn" id="pauseB">${icon('timer',13)}<span>Pause</span></button><button class="sbtn sp" id="speedB">${S.speed}×</button></div></div>
+      <div class="stage" id="stage">${stageSVG()}<div class="seqbox" id="seqbox"></div></div>
+      <div class="legend"><span><i class="dot d-orange"></i>request</span><span><i class="dot d-green"></i>response</span><span><i class="dot d-purple"></i>sync / handshake</span><span><i class="dot d-red"></i>failure</span><span><i class="badge">1</i><i class="badge">2</i>order of events</span></div>
     </section>
     <section class="card stepper"><div class="sp-h"><b>IN THIS LESSON</b><span id="spN"></span></div><div class="sp-row" id="spRow"></div></section>`;
   const nx=next(L.id);
@@ -329,15 +338,15 @@ function lessonView(L){
       <div class="sc-nav"><button class="btn" id="backB">← Back</button><button class="btn pri" id="nextB"><span id="nextL"></span><span>→</span></button></div>
       <div class="keys"><kbd>←</kbd><kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause</div>
     </section>
-    <section class="card learn"><div class="lt">YOU'LL LEARN</div><ul id="learn">${L.learn.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></section>`;
+    <section class="card learn"><div class="lt">YOU'LL LEARN</div><ul id="learn">${L.learn.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></section>
+    <section class="card srccard"><div class="lt">${icon('book',12)} READ MORE · SOURCES</div><p class="srcnote">Want the detailed explanation? These go deeper than this lesson.</p>${sourcesHTML(L)}</section>`;
   $('#spRow').innerHTML=L.steps.map((s,i)=>`<button data-i="${i}" title="${esc(s.t)}"><span class="n">${i+1}</span><span class="t">${esc(s.short||s.t)}</span></button>`).join('');
   $('#spRow').onclick=e=>{const b=e.target.closest('button');if(b)go(L.id,+b.dataset.i)};
   $('#backB').onclick=()=>{if(S.si>0)go(L.id,S.si-1)};
   $('#nextB').onclick=()=>{if(S.si<L.steps.length-1)go(L.id,S.si+1);else if(nx)go(nx.id,0)};
   $('#replayB').onclick=replay;$('#pauseB').onclick=togglePause;
-  $('#speedB').onclick=()=>{S.speed=S.speed===1?2:S.speed===2?0.5:1;$('#speedB').textContent=S.speed+'×'};
+  $('#speedB').onclick=()=>{S.speed=S.speed===1?0.5:S.speed===0.5?2:1;$('#speedB').textContent=S.speed+'×'};
   S.vb=null;S.prevVis=new Set();
-  // zones under everything (static)
 }
 function next(id){const i=ORDER.findIndex(o=>o.id===id);for(let k=i+1;k<ORDER.length;k++)if(LESSONS[ORDER[k].id])return LESSONS[ORDER[k].id];return null}
 
@@ -352,38 +361,48 @@ function accum(L,si){
   }
   return {vis,st,m};
 }
+const nameOf=(n,st)=>{const l=st&&st.l!=null?st.l:n.l;return labelLines(l).join(' ')||'node'};
+function badge(x,y,n){return `<g class="badge-g" data-ord="${n}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="9"/><text y="3.8" text-anchor="middle">${n}</text></g>`}
 
-function renderStep(){
-  const L=S.lesson,si=S.si,step=L.steps[si];
+/* draw nodes, edges, panels, camera for (lesson, step) into the current #stage */
+function drawScene(L,si,opt={}){
+  const step=L.steps[si];
   const {vis,st,m}=accum(L,si);
-  // ---- nodes
   const ids=Object.keys(L.nodes).filter(id=>vis.has(id));
   const zones=ids.filter(id=>L.nodes[id].t==='zone'),solids=ids.filter(id=>L.nodes[id].t!=='zone');
   solids.sort((a,b)=>{const A=L.nodes[a],B=L.nodes[b];return ((A.z||0)-(B.z||0))||((A.x+A.y)-(B.x+B.y))||(A.x-B.x)});
   $('#lz').innerHTML=zones.map(id=>`<g data-id="${id}" class="nwrap${S.prevVis.has(id)?'':' enter'}">${drawNode(L.nodes[id],st[id])}</g>`).join('');
   $('#ln').innerHTML=solids.map(id=>`<g data-id="${id}" class="nwrap${S.prevVis.has(id)?'':' enter'}">${drawNode(L.nodes[id],st[id])}</g>`).join('');
   S.prevVis=vis;
-  // ---- edges
-  S.edges=[];let eh='',oh='';
-  (step.e||[]).forEach((e,ix)=>{
-    const A=L.nodes[e.a],B=L.nodes[e.b];if(!A||!B)return;
+  // ---- edges: classify into ordered sequence vs continuous streams
+  const raw=(step.e||[]).map((e,ix)=>({e,ix})).filter(o=>L.nodes[o.e.a]&&L.nodes[o.e.b]);
+  const animated=raw.filter(o=>(o.e.f||'req')!=='off');
+  const isStream=o=>step.par||(o.e.dots||0)>=3;
+  const seqList=animated.filter(o=>!isStream(o));
+  const showNums=seqList.length>=2;
+  S.edges=[];S.seq=[];let eh='',oh='',bh='';
+  raw.forEach(({e,ix})=>{
+    const A=L.nodes[e.a],B=L.nodes[e.b];
     let wp=[[A.x,A.y]];
     if(e.via)e.via.forEach(p=>wp.push(p));else if(e.r==='L')wp.push([B.x,A.y]);else if(e.r==='L2')wp.push([A.x,B.y]);
     wp.push([B.x,B.y]);
     let sp=wp.map(p=>P(p[0],p[1],0));
-    if(e.lift){sp=sp.map(p=>[p[0],p[1]-e.lift])}
-    // shorten
     const sh=(pa,pb,r)=>{const dx=pb[0]-pa[0],dy=pb[1]-pa[1],d=Math.hypot(dx,dy)||1;r=Math.min(r,d*0.45);return [pa[0]+dx/d*r,pa[1]+dy/d*r]};
     sp[0]=sh(sp[0],sp[1],anchorR(A)+(e.ga||0));const n=sp.length;sp[n-1]=sh(sp[n-1],sp[n-2],anchorR(B)+(e.gb||0));
     const f=e.f||'req',tone=e.tone||TONE[f]||'gray';
     const heads=e.heads||(f==='res'?'start':f==='both'||f==='sync'?'both':f==='off'?(e.arrow?'end':'none'):'end');
     const mk=`url(#ah-${tone})`;
-    eh+=`<polyline class="edge e-${f}" style="stroke:var(--${tone==='gray'?'edge':tone})" points="${pts(sp)}" ${heads==='end'||heads==='both'?`marker-end="${mk}"`:''} ${heads==='start'||heads==='both'?`marker-start="${mk}"`:''}/>`;
-    // length & label
+    const o=seqList.findIndex(q=>q.ix===ix);
+    eh+=`<polyline data-ix="${ix}" class="edge e-${f}${o>=0&&showNums?' seq':''}" style="stroke:var(--${tone==='gray'?'edge':tone})" points="${pts(sp)}" ${heads==='end'||heads==='both'?`marker-end="${mk}"`:''} ${heads==='start'||heads==='both'?`marker-start="${mk}"`:''}/>`;
     let len=0;const segs=[];for(let i=1;i<n;i++){const d=Math.hypot(sp[i][0]-sp[i-1][0],sp[i][1]-sp[i-1][1]);segs.push(d);len+=d}
     const at=k=>{let d=k*len;for(let i=0;i<segs.length;i++){if(d<=segs[i]||i===segs.length-1){const t=segs[i]?d/segs[i]:0;return [sp[i][0]+(sp[i+1][0]-sp[i][0])*t,sp[i][1]+(sp[i+1][1]-sp[i][1])*t]}d-=segs[i]}};
-    if(e.l){const p=at(e.lp!=null?e.lp:0.5);oh+=pill(p[0]+(e.lx||0),p[1]+(e.ly||0),e.l,e.lt||(f==='off'?'ink':tone==='gray'||tone==='faint'?'ink':tone),e.li)}
-    if(f!=='off')S.edges.push({at,len,f,tone,ix,dots:e.dots||(f==='both'?1:2)});
+    const lp=at(e.lp!=null?e.lp:0.5),lx=lp[0]+(e.lx||0),ly=lp[1]+(e.ly||0);
+    if(e.l)oh+=pill(lx,ly,e.l,e.lt||(f==='off'?'ink':tone==='gray'||tone==='faint'?'ink':tone),e.li);
+    if(o>=0&&showNums){const w=e.l?String(e.l).length*11*CH+(e.li?15:0)+16:0;bh+=badge(e.l?lx-w/2-6:lx,e.l?ly-9:ly,o+1)}
+    if(f!=='off'){
+      const E={at,len,f,tone,ix,dots:e.dots||(f==='both'?1:2),a:e.a,b:e.b};
+      if(o>=0){const base=Math.max(1.05,len/165);E.dur=(f==='both'||f==='sync')?base*2:f==='fail'?base*1.1:base;E.ord=o;S.seq.push(E)}else S.edges.push(E);
+    }
   });
   $('#le').innerHTML=eh;
   // ---- panels
@@ -392,18 +411,42 @@ function renderStep(){
     const lines=p.lines||[],fs=11,w=Math.max((p.title||'').length*11.5*CH,...lines.map(l=>l.length*fs*CH))+26,h=34+lines.length*16;
     oh+=`<g class="panel p-${p.c||'ink'}" transform="translate(${x-w/2} ${y-h/2})"><rect width="${w}" height="${h}" rx="9"/><text x="13" y="20" class="pt">${esc(p.title||'')}</text>${lines.map((l,i)=>`<text x="13" y="${40+i*16}" class="pl${/^\s*(total|=)/i.test(l)?' b':''}">${esc(l)}</text>`).join('')}</g>`;
   });
-  $('#lo').innerHTML=oh;$('#lp').innerHTML='';
+  $('#lo').innerHTML=oh+bh;$('#lp').innerHTML='';
+  S.seqT=S.seq.reduce((a,E)=>a+E.dur,0)+(S.seq.length?0.7:0);S.seqActive=-1;S.clock0=clock;
+  // ---- "what's happening" list
+  const box=$('#seqbox');
+  if(box){
+    const lines=[];
+    const nm=id=>esc(nameOf(L.nodes[id],st[id]));
+    const arrow=f=>f==='both'||f==='sync'?'⇄':'→';
+    const flow=(e,f)=>f==='res'?`${nm(e.b)} → ${nm(e.a)}`:`${nm(e.a)} ${arrow(f)} ${nm(e.b)}`;
+    seqList.forEach((q,i)=>{const e=q.e,f=e.f||'req';lines.push(`<li data-ord="${i}" class="t-${f}"><i class="n">${showNums?i+1:'•'}</i><span><b>${flow(e,f)}</b>${e.l?`<em>${esc(e.l)}</em>`:''}${f==='fail'?'<em class="x">✕ fails</em>':''}</span></li>`)});
+    animated.filter(isStream).forEach(q=>{const e=q.e,f=e.f||'req';lines.push(`<li class="stream t-${f}"><i class="n">${step.par?'∥':'∿'}</i><span><b>${flow(e,f)}</b><em>${e.l?esc(e.l)+' · ':''}${step.par?'at the same time':'continuous traffic'}</em></span></li>`)});
+    box.innerHTML=lines.length?`<div class="sb-h">${icon('play',11)} WHAT'S HAPPENING</div><ol>${lines.join('')}</ol>`:'';
+    box.hidden=!lines.length;
+  }
   // ---- camera
   let bb=[1e9,1e9,-1e9,-1e9];
   const grow=b=>{bb=[Math.min(bb[0],b[0]),Math.min(bb[1],b[1]),Math.max(bb[2],b[2]),Math.max(bb[3],b[3])]};
   ids.forEach(id=>grow(nodeBox(L.nodes[id],st[id])));
-  $$('#lo .panel, #lo .pill').forEach(g=>{try{const b=g.getBBox(),m=g.transform.baseVal.consolidate();const tx=m?m.matrix.e:0,ty=m?m.matrix.f:0;grow([tx+b.x-6,ty+b.y-6,tx+b.x+b.width+6,ty+b.y+b.height+6])}catch(e){}});
+  $$('#lo .panel, #lo .pill').forEach(g=>{try{const b=g.getBBox(),mm=g.transform.baseVal.consolidate();const tx=mm?mm.matrix.e:0,ty=mm?mm.matrix.f:0;grow([tx+b.x-6,ty+b.y-6,tx+b.x+b.width+6,ty+b.y+b.height+6])}catch(e){}});
   if(bb[0]>bb[2])bb=[-300,-200,300,200];
   const pad=28;let vb=[bb[0]-pad,bb[1]-pad,bb[2]-bb[0]+pad*2,bb[3]-bb[1]+pad*2];
-  const stg=$('#stage'),ar=stg.clientWidth/Math.max(1,stg.clientHeight);
+  // fit into the free region of the stage (insets in px), then expand to the whole stage
+  const stg=$('#stage'),W=Math.max(1,stg.clientWidth),Hh=Math.max(1,stg.clientHeight);
+  let ins=opt.region?opt.region():{l:0,r:0,t:0,b:0};
+  if(box&&!box.hidden&&getComputedStyle(box).position==='absolute'){ins.b=Math.max(ins.b,box.offsetHeight+14)}
+  const rw=Math.max(80,W-ins.l-ins.r),rh=Math.max(80,Hh-ins.t-ins.b),ar=rw/rh;
   if(vb[2]/vb[3]<ar){const nw=vb[3]*ar;vb[0]-=(nw-vb[2])/2;vb[2]=nw}else{const nh=vb[2]/ar;vb[1]-=(nh-vb[3])/2;vb[3]=nh}
-  const minW=780;if(vb[2]<minW){const k=minW/vb[2];vb=[vb[0]-(vb[2]*k-vb[2])/2,vb[1]-(vb[3]*k-vb[3])/2,vb[2]*k,vb[3]*k]}
+  const minW=(opt.minW||780)*rw/Math.max(rw,W*0.75);if(vb[2]<minW){const k=minW/vb[2];vb=[vb[0]-(vb[2]*k-vb[2])/2,vb[1]-(vb[3]*k-vb[3])/2,vb[2]*k,vb[3]*k]}
+  const sc=vb[2]/rw;vb=[vb[0]-ins.l*sc,vb[1]-ins.t*sc,W*sc,Hh*sc];
   S.vbTarget=vb;if(!S.vb)S.vb=vb.slice();
+  return {m,step};
+}
+
+function renderStep(){
+  const L=S.lesson,si=S.si;
+  const {m,step}=drawScene(L,si);
   // ---- metrics
   let sum=0;
   L.met.forEach(([k,l,ic,unit])=>{
@@ -429,68 +472,128 @@ function renderStep(){
   $('#spN').textContent=`Step ${si+1} of ${L.steps.length}`;
   $('#spRow').style.setProperty('--p',(si/(Math.max(1,L.steps.length-1)))*100+'%');
   const nl=L.learn.length;$$('#learn li').forEach((li,i)=>li.classList.toggle('ok',si>=Math.round((i+1)*L.steps.length/nl)-1));
-  // done
   if(si===L.steps.length-1){const d=doneSet();if(!d.has(L.id)){d.add(L.id);store.set('sd-done',[...d]);buildTree()}}
-  S.t0=performance.now();S.tPause=0;
 }
 
 /* ------------------------------------------------------------------ animation loop */
 let lastNow=performance.now(),clock=0;
+const dotAt=(E,k,col,r=5)=>{const p=E.at(Math.max(0,Math.min(1,k)));return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" class="pk" style="fill:var(--${col})"/>`};
+function flashNode(id){const g=$(`#ln .nwrap[data-id="${id}"]`);if(!g)return;g.classList.remove('ping');void g.getBoundingClientRect();g.classList.add('ping')}
 function loop(now){
   const dt=Math.min(64,now-lastNow);lastNow=now;
   if(!S.paused)clock+=dt*S.speed;
-  // camera tween
   if(S.vb&&S.vbTarget){for(let i=0;i<4;i++)S.vb[i]+=(S.vbTarget[i]-S.vb[i])*Math.min(1,dt/140);
     const sv=$('#scene');if(sv){sv.setAttribute('viewBox',S.vb.map(v=>v.toFixed(1)).join(' '));const g=$('#gridR');g.setAttribute('x',S.vb[0]-200);g.setAttribute('y',S.vb[1]-200);g.setAttribute('width',S.vb[2]+400);g.setAttribute('height',S.vb[3]+400)}}
-  // packets
   const lp=$('#lp');
   if(lp&&S.edges){
     let h='';const T=clock/1000;
+    // continuous streams / parallel edges
     S.edges.forEach(E=>{
-      const dur=Math.max(1.1,E.len/150);
-      const phase=((T+E.ix*0.37)/dur);
-      if(E.f==='both'||E.f==='sync'){
-        const c=phase%2,fw=c<1,k=fw?c%1:1-(c%1),p=E.at(k);
-        const col=E.f==='sync'?'purple':fw?'orange':'green';
-        h+=`<circle cx="${p[0]}" cy="${p[1]}" r="5" class="pk" style="fill:var(--${col})"/>`;
-      }else if(E.f==='fail'){
-        const k=(phase%1);const kk=Math.min(k,0.6),p=E.at(kk);
-        if(k<0.6)h+=`<circle cx="${p[0]}" cy="${p[1]}" r="5" class="pk" style="fill:var(--red)"/>`;
-        else h+=`<g opacity="${1-(k-0.6)/0.4}">${gIcon('x',p[0],p[1],16,'var(--red)')}</g>`;
-      }else{
-        for(let d=0;d<E.dots;d++){let k=(phase+d/E.dots)%1;if(E.f==='res')k=1-k;const p=E.at(k);
-          h+=`<circle cx="${p[0]}" cy="${p[1]}" r="4.6" class="pk" style="fill:var(--${E.tone==='faint'||E.tone==='gray'?'edge':E.tone})"/>`}
-      }
+      const dur=Math.max(1.1,E.len/150),phase=((T+E.ix*0.37)/dur);
+      if(E.f==='both'||E.f==='sync'){const c=phase%2,fw=c<1;h+=dotAt(E,fw?c%1:1-(c%1),E.f==='sync'?'purple':fw?'orange':'green')}
+      else if(E.f==='fail'){const k=phase%1;if(k<0.6)h+=dotAt(E,k,'red');else{const p=E.at(0.6);h+=`<g opacity="${1-(k-0.6)/0.4}">${gIcon('x',p[0],p[1],16,'var(--red)')}</g>`}}
+      else for(let d=0;d<E.dots;d++){let k=(phase+d/E.dots)%1;if(E.f==='res')k=1-k;h+=dotAt(E,k,E.tone==='faint'||E.tone==='gray'?'edge':E.tone,4.6)}
     });
+    // ordered sequence: one edge at a time
+    if(S.seq&&S.seq.length){
+      let t=((clock-(S.clock0||0))/1000)%S.seqT;if(t<0)t+=S.seqT;let act=-1,k=0;
+      for(let i=0,acc=0;i<S.seq.length;i++){const E=S.seq[i];if(t<acc+E.dur){act=i;k=(t-acc)/E.dur;break}acc+=E.dur}
+      if(act!==S.seqActive){
+        const prev=S.seqActive>=0?S.seq[S.seqActive]:null;
+        if(prev&&act!==-1||prev&&act===-1){flashNode(prev.f==='res'?prev.a:prev.f==='fail'?null:prev.b)}
+        S.seqActive=act;
+        const multi=S.seq.length>1;
+        S.seq.forEach((E,i)=>{const pl=$(`#le polyline[data-ix="${E.ix}"]`);if(pl){pl.classList.toggle('act',i===act);pl.classList.toggle('idle',multi&&i!==act)}});
+        $$('#lo .badge-g').forEach(b=>b.classList.toggle('on',+b.dataset.ord===act+1));
+        $$('#seqbox li[data-ord]').forEach(li=>{const o=+li.dataset.ord;li.classList.toggle('on',o===act);li.classList.toggle('done',act===-1||o<act)});
+      }
+      if(act>=0){const E=S.seq[act];
+        if(E.f==='both'||E.f==='sync'){const fw=k<0.5,kk=fw?k*2:1-(k-0.5)*2;if(fw!==E._fw){E._fw=fw;if(!fw)flashNode(E.b)}h+=dotAt(E,kk,E.f==='sync'?'purple':fw?'orange':'green',5.5)}
+        else if(E.f==='fail'){const kk=k/0.85;if(kk<0.6)h+=dotAt(E,kk,'red',5.5);else{const p=E.at(0.6);h+=`<g opacity="${Math.max(0,1-(kk-0.6)/0.5)}">${gIcon('x',p[0],p[1],18,'var(--red)')}</g>`}}
+        else{h+=dotAt(E,E.f==='res'?1-k:k,E.tone==='faint'||E.tone==='gray'?'edge':E.tone,5.5)}
+      }
+    }
     lp.innerHTML=h;
   }
+  if(S.home&&!S.paused){S.homeT=(S.homeT||0)+dt;if(S.homeT>7000&&!S.homeHover){S.homeT=0;homeCycle()}}
   requestAnimationFrame(loop);
 }
-function replay(){clock=0;if(S.paused)togglePause();$$('#ln .nwrap').forEach(g=>{g.classList.remove('enter');void g.getBoundingClientRect();g.classList.add('enter')})}
+function replay(){clock=0;S.clock0=0;S.seqActive=-1;if(S.paused)togglePause();$$('#ln .nwrap').forEach(g=>{g.classList.remove('enter');void g.getBoundingClientRect();g.classList.add('enter')})}
 function togglePause(){S.paused=!S.paused;const b=$('#pauseB span');if(b)b.textContent=S.paused?'Play':'Pause'}
 
 /* ------------------------------------------------------------------ cheatsheet */
+const folderSVG=c=>`<svg class="folder" style="--c:var(--${c})" width="18" height="15" viewBox="0 0 20 16"><path d="M1.2 3.2A2 2 0 0 1 3.2 1.2h4.1l2 2.2h7.5a2 2 0 0 1 2 2v8.4a2 2 0 0 1-2 2H3.2a2 2 0 0 1-2-2Z"/><path class="lip" d="M1.2 6.2h17.6"/></svg>`;
 function cheatView(){
   $('#right').innerHTML='';
-  document.body.classList.add('wide');
-  $('#center').innerHTML=`<section class="card lhead"><div class="crumbs">Reference</div><h1>Cheatsheet</h1><p class="sub">The key ideas from every lesson on one page. Click a title to open the lesson.</p></section>`+
-    MODULES.map(m=>`<section class="card cheat"><h3><svg class="folder" style="--c:var(--${m.c})" width="18" height="15" viewBox="0 0 20 16"><path d="M1.2 3.2A2 2 0 0 1 3.2 1.2h4.1l2 2.2h7.5a2 2 0 0 1 2 2v8.4a2 2 0 0 1-2 2H3.2a2 2 0 0 1-2-2Z"/><path class="lip" d="M1.2 6.2h17.6"/></svg>${m.num}. ${m.title}</h3><div class="cgrid">${m.lessons.map(id=>LESSONS[id]).filter(Boolean).map(L=>`<div class="cl"><a href="#/${L.id}/1">${esc(L.title)}</a><ul>${(L.cheat||L.learn).map(t=>`<li>${t}</li>`).join('')}</ul></div>`).join('')}</div></section>`).join('');
+  $('#center').innerHTML=`<section class="card lhead"><div class="crumbs">Reference</div><h1>Cheatsheet</h1><p class="sub">The key ideas from every lesson on one page, with links to read further.</p></section>`+
+    MODULES.map(m=>`<section class="card cheat"><h3>${folderSVG(m.c)}${m.num}. ${m.title}</h3><div class="cgrid">${m.lessons.map(id=>LESSONS[id]).filter(Boolean).map(L=>`<div class="cl"><a class="clt" href="#/${L.id}/1">${esc(L.title)}</a><ul>${(L.cheat||L.learn).map(t=>`<li>${t}</li>`).join('')}</ul><div class="lt">READ MORE</div>${sourcesHTML(L,true)}</div>`).join('')}</div></section>`).join('');
 }
+
+/* ------------------------------------------------------------------ landing page */
+function homeView(){
+  const done=doneSet(),last=store.get('sd-last',null),first=ORDER[0].id;
+  const total=ORDER.reduce((a,o)=>a+(LESSONS[o.id]?LESSONS[o.id].steps.length:0),0);
+  $('#center').innerHTML='';$('#right').innerHTML='';
+  $('#home').innerHTML=`
+    <div class="h-stage" id="stage">${stageSVG()}</div>
+    <div class="h-hero">
+      <div class="h-bar">${MODULES.map((m,i)=>`<i style="background:var(--${m.c});animation-delay:${(i*0.07).toFixed(2)}s"></i>`).join('')}</div>
+      <div class="h-kick">An interactive course · ${MODULES.length} modules · ${ORDER.length} lessons · ${total} animated steps</div>
+      <h1 class="h-title">System <mark>Design</mark>, step by step</h1>
+      <p class="h-tag">Watch requests travel through real architectures, from one page load to a chat system for millions. Every step is animated and numbered, and every lesson links to the sources that explain it in depth.</p>
+      <div class="h-btns">
+        <button class="btn pri" id="startB">${icon('play',13)}<span>Start from lesson 1</span></button>
+        ${last&&LESSONS[last]&&last!==first?`<button class="btn" id="contB">${icon('repeat',13)}<span>Continue: ${esc(LESSONS[last].title)}</span></button>`:''}
+        <a class="btn" href="#/cheatsheet">${icon('doc',13)}<span>Cheatsheet</span></a>
+      </div>
+      <div class="h-prog"><i><b style="width:${done.size/ORDER.length*100}%"></b></i><span>${done.size} / ${ORDER.length} lessons completed</span></div>
+      <div class="h-now"><i></i><span>Previewing</span><b id="nowT"></b><small id="nowM"></small></div>
+    </div>
+    <aside class="h-list" id="hlist">${MODULES.map(m=>`<div class="hm"><div class="hm-h">${folderSVG(m.c)}<span class="num">${m.num}</span><h3>${m.title}</h3><small>${m.lessons.filter(id=>done.has(id)).length}/${m.lessons.length}</small></div>${m.lessons.map((id,i)=>{const L=LESSONS[id];if(!L)return'';return `<button class="hr${done.has(id)?' done':''}" data-id="${id}" style="--tc:var(--${m.c})"><span class="n">${m.num}.${i+1}</span><span class="tx"><b>${esc(L.title)}</b><small>${esc(L.sub)}</small></span><span class="meta">${done.has(id)?icon('check',13):`${L.min}m`}</span></button>`}).join('')}</div>`).join('')}</aside>`;
+  $('#startB').onclick=()=>go(first,0);
+  if($('#contB'))$('#contB').onclick=()=>go(last,0);
+  const list=$('#hlist');
+  let tmr=null;
+  list.addEventListener('mouseover',e=>{const b=e.target.closest('.hr');if(!b)return;S.homeHover=true;clearTimeout(tmr);tmr=setTimeout(()=>preview(b.dataset.id),140)});
+  list.addEventListener('mouseleave',()=>{S.homeHover=false;S.homeT=0});
+  list.addEventListener('focusin',e=>{const b=e.target.closest('.hr');if(b)preview(b.dataset.id)});
+  list.addEventListener('click',e=>{const b=e.target.closest('.hr');if(b)go(b.dataset.id,0)});
+  S.home=true;S.vb=null;S.homeT=0;S.homeHover=false;
+  preview(last&&LESSONS[last]?last:first);
+}
+function preview(id){
+  const L=LESSONS[id];if(!L||!$('#home .h-stage'))return;
+  if(S.homeId===id)return;S.homeId=id;
+  // show the richest step: the one with the most visible nodes (ties → later step)
+  let best=0,bestN=-1;L.steps.forEach((s,i)=>{const n=accum(L,i).vis.size+(s.e||[]).length*0.5;if(n>=bestN){bestN=n;best=i}});
+  S.prevVis=new Set();
+  drawScene(L,best,{noBox:true,minW:560,region:homeRegion});
+  const M=meta(id);$('#nowT').textContent=L.title;$('#nowM').textContent=`${M.mod.num}.${M.index} · ${L.steps[best].t}`;
+  $$('#hlist .hr').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+}
+function homeRegion(){if(matchMedia('(max-width:1000px)').matches)return{l:0,r:0,t:0,b:0};const h=$('.h-hero'),l=$('#hlist');return{l:h?h.getBoundingClientRect().right+24:0,r:l?l.getBoundingClientRect().width+40:0,t:30,b:30}}
+function homeCycle(){const ids=ORDER.map(o=>o.id).filter(id=>LESSONS[id]);const i=ids.indexOf(S.homeId);preview(ids[(i+1)%ids.length]);const b=$(`#hlist .hr[data-id="${S.homeId}"]`);if(b&&!matchMedia('(max-width:900px)').matches)b.scrollIntoView({block:'nearest',behavior:'smooth'})}
 
 /* ------------------------------------------------------------------ router */
 function go(id,si){location.hash=`#/${id}/${si+1}`}
 function route(){
   document.body.classList.remove('menu');
   const h=location.hash;
-  $('#tabCheat').classList.toggle('on',h.startsWith('#/cheatsheet'));
-  $('#tabLearn').classList.toggle('on',!h.startsWith('#/cheatsheet'));
-  if(h.startsWith('#/cheatsheet')){S.lesson=null;buildTree();cheatView();document.title='Cheatsheet · System Design';window.scrollTo(0,0);return}
-  document.body.classList.remove('wide');
+  const isHome=!h||h==='#'||h==='#/'||h.startsWith('#/home');
+  const isCheat=h.startsWith('#/cheatsheet');
+  const last=store.get('sd-last',null);
+  $('#tabLearn').href=`#/${last&&LESSONS[last]?last:ORDER[0].id}/1`;
+  $('#tabHome').classList.toggle('on',isHome);$('#tabCheat').classList.toggle('on',isCheat);$('#tabLearn').classList.toggle('on',!isHome&&!isCheat);
+  document.body.classList.toggle('home',isHome);document.body.classList.toggle('wide',isCheat);
+  S.home=isHome;S.homeId=null;
+  if(isHome){S.lesson=null;S.edges=[];S.seq=[];buildTree();homeView();document.title='System Design, step by step · evilzeda';window.scrollTo(0,0);return}
+  $('#home').innerHTML='';
+  if(isCheat){S.lesson=null;S.edges=[];S.seq=[];buildTree();cheatView();document.title='Cheatsheet · System Design';window.scrollTo(0,0);return}
   const m=h.match(/^#\/([\w-]+)\/?(\d+)?/);
-  let id=m&&LESSONS[m[1]]?m[1]:(store.get('sd-last',null)&&LESSONS[store.get('sd-last')]?store.get('sd-last'):ORDER.find(o=>LESSONS[o.id]).id);
+  const id=m&&LESSONS[m[1]]?m[1]:ORDER[0].id;
   const L=LESSONS[id];
-  let si=m&&m[1]===id?Math.max(0,Math.min(L.steps.length-1,(+m[2]||1)-1)):0;
-  if(!m||m[1]!==id){history.replaceState(null,'',`#/${id}/${si+1}`)}
+  const si=m&&m[1]===id?Math.max(0,Math.min(L.steps.length-1,(+m[2]||1)-1)):0;
+  if(!m||m[1]!==id)history.replaceState(null,'',`#/${id}/${si+1}`);
   store.set('sd-last',id);
   if(!S.lesson||S.lesson.id!==id){S.lesson=L;lessonView(L);buildTree();window.scrollTo(0,0)}
   S.si=si;document.title=`${L.title} · System Design`;
@@ -506,7 +609,7 @@ const SD={H,add(L){
   LESSONS[L.id]=L;const M=meta(L.id);if(M)L.mod=M.mod},MODULES,LESSONS,start(){
   shell();
   window.addEventListener('hashchange',route);
-  window.addEventListener('resize',()=>{if(S.lesson)renderStep()});
+  window.addEventListener('resize',()=>{if(S.lesson)renderStep();else if(S.home&&S.homeId){const id=S.homeId;S.homeId=null;preview(id)}});
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey&&e.key.toLowerCase()==='k'){e.preventDefault();$('#q').focus();return}
     if(e.target.matches('input,textarea'))return;

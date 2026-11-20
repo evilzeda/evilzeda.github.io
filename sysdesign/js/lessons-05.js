@@ -65,7 +65,7 @@ steps:[
   ch:['! 1 client = 95% of traffic','- Normal users time out'],e:[E('good','api','req','',{via:[[-6,-8]]}),E('bot','api','req','5,000 rps',{dots:5,tone:'red',via:[[-6,18]]})],s:{api:{cpu:1,hot:1}},m:{in:'5,200 rps',ok:'all (badly)',rej:0,cpu:'100%'}},
  {k:'solution',t:'Limit per client',short:'Limit',v:'gw',
   b:'Put a <b>rate limiter</b> in front: each API key may make, say, 100 requests per second. Beyond that, respond immediately with <code>429 Too Many Requests</code> and a <code>Retry-After</code> header.\n\nRejecting early is cheap; the backend never sees the excess.',
-  ch:['+ 100 rps per key','+ Excess → 429'],e:[E('good','gw','req',''),E('bot','gw','req','',{dots:5,tone:'red'}),E('gw','api','req','allowed'),E('gw','bot','res','429',{tone:'red',lp:.3})],s:{api:{cpu:.35,hot:0}},m:{ok:'300 rps',rej:'4,900 rps',cpu:'35%'}},
+  ch:['+ 100 rps per key','+ Excess → 429'],e:[E('good','gw','req',''),E('bot','gw','req','',{dots:5,tone:'red'}),E('gw','api','req','allowed'),E('gw','bot','req','429',{tone:'red',lp:.3})],s:{api:{cpu:.35,hot:0}},m:{ok:'300 rps',rej:'4,900 rps',cpu:'35%'}},
  {k:'technique',t:'Token bucket',short:'Token bucket',
   b:'Each client has a bucket holding up to <b>B</b> tokens, refilled at <b>R</b> per second. A request spends one token; no token, no entry.\n\nIt allows short <b>bursts</b> (up to B) while enforcing the average rate R. Cheap to compute: store tokens + last refill time.',
   ch:['+ R = 100/s, burst B = 200'],e:[E('good','gw','req','',{dots:3})],
@@ -81,7 +81,7 @@ steps:[
   ch:['+ Edge: per IP','+ Gateway: per key / plan','+ Service: per endpoint'],e:[E('good','gw','req',''),E('gw','api','req',''),E('gw','r','both','')]},
  {k:'recap',t:'Recap',short:'Recap',
   b:'Rate limiting keeps one client from hurting everyone. Use token buckets or sliding windows, reply 429 with Retry-After, share counters across instances, and layer limits from edge to service.',
-  e:[E('good','gw','req',''),E('bot','gw','req','',{tone:'red'}),E('gw','api','req',''),E('gw','bot','res','429',{tone:'red',lp:.3})]}
+  e:[E('good','gw','req',''),E('bot','gw','req','',{tone:'red'}),E('gw','api','req',''),E('gw','bot','req','429',{tone:'red',lp:.3})]}
 ]});
 
 SD.add({id:'timeouts-retries',title:'Timeouts & Retries',min:11,lvl:'Intermediate',

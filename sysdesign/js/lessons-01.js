@@ -153,7 +153,7 @@ steps:[
  {k:'technique',t:'Bandwidth',short:'Bandwidth',
   b:'Reads usually outnumber writes. If each user views 50 photos a day at 200 KB (thumbnails), that’s <code>10 M × 50 × 200 KB = 100 TB/day</code>, or about <b>9 Gbit/s</b> on average.\n\nThat number says “use a CDN” before you’ve drawn anything else.',
   ch:['+ Egress ≈ 100 TB / day ≈ 9 Gbit/s','! A CDN is a requirement, not an option'],
-  e:[E('obj','u','res','~9 Gbit/s',{tone:'green',dots:3})],m:{bw:'~9 Gbit/s'}},
+  e:[E('obj','u','req','~9 Gbit/s',{tone:'green',dots:3})],m:{bw:'~9 Gbit/s'}},
  {k:'technique',t:'How many servers?',short:'Servers',v:'w2 w3',
   b:'If one web server handles ~1,000 rps at a healthy 60–70% CPU, peak 7,000 rps needs <b>7 servers</b>. Add one or two spares for failures and deploys: <b>~9</b>.\n\nThe point isn’t the exact count. It’s knowing whether you need 1, 10 or 1,000.',
   ch:['+ Peak 7k rps ÷ 1k per box = 7','+ +2 for failures and deploys'],
@@ -161,7 +161,7 @@ steps:[
  {k:'recap',t:'Recap',short:'Recap',
   b:'In five minutes we know: ~2k average / 7k peak rps, tens of TB of media a year, ~9 Gbit/s egress, and about 9 web servers. That points straight at a CDN, object storage and a small, horizontally scaled web tier.',
   p:[{at:'u',dx:250,dy:-150,title:'Estimate summary',c:'yellow',lines:['users       10 M / day','requests    2.3k avg · 7k peak','storage     ~36 TB / year','egress      ~9 Gbit/s','web servers ~9']}],
-  e:[E('u','web','req','',{dots:3}),E('web','db','both',''),E('obj','u','res','',{tone:'green'})],s:{web:{cpu:.6},w2:{cpu:.6},w3:{cpu:.6}}}
+  e:[E('u','web','req','',{dots:3}),E('web','db','both',''),E('obj','u','req','',{tone:'green'})],s:{web:{cpu:.6},w2:{cpu:.6},w3:{cpu:.6}}}
 ]});
 
 })();
