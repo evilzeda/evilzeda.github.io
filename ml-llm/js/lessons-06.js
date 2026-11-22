@@ -150,4 +150,81 @@ steps:[
  {k:'insight',t:'Text-to-image',short:'Guidance',m:{note:'text-conditioned'},
   b:'Feed a text embedding into the denoiser so it removes noise “toward” the prompt. <b>Classifier-free guidance</b> amplifies the difference between the prompted and unprompted predictions to follow the prompt more closely.\n\nRun it in a VAE latent space and you have Stable Diffusion. The same recipe drives today’s video generators.'}
 ]});
+
+/* ======================================================= Kalman filter */
+/* 1D constant-velocity Kalman filter per axis: state [pos, vel], F=[[1,1],[0,1]], H=[1,0] */
+function kf1(zs,q,r,x0,v0){let x=[x0,v0],P=[[.05,0],[0,.02]];const out=[];
+  zs.forEach(z=>{// predict
+    const xp=[x[0]+x[1],x[1]];const Pp=[[P[0][0]+2*P[0][1]+P[1][1]+q/4,P[0][1]+P[1][1]+q/2],[P[0][1]+P[1][1]+q/2,P[1][1]+q]];
+    // update
+    const S=Pp[0][0]+r,K=[Pp[0][0]/S,Pp[1][0]/S],y=z-xp[0];
+    x=[xp[0]+K[0]*y,xp[1]+K[1]*y];P=[[(1-K[0])*Pp[0][0],(1-K[0])*Pp[0][1]],[Pp[1][0]-K[1]*Pp[0][0],Pp[1][1]-K[1]*Pp[0][1]]];
+    out.push({pred:xp[0],pvar:Pp[0][0],est:x[0],var:P[0][0],K:K[0],z})});return out}
+ML.add({id:'kalman-filter',title:'The Kalman Filter',min:13,lvl:'Intermediate',
+sub:'Track something you can only measure noisily: predict, measure, blend, and repeat, trusting each source by how certain it is.',
+keys:'kalman filter state estimation tracking sensor fusion gps predict update gain covariance noise ekf ukf particle filter time series',
+learn:['Why raw measurements are not enough','Predict: move the estimate forward, uncertainty grows','Update: blend in a measurement, uncertainty shrinks','The Kalman gain, the full loop, and tuning Q and R'],
+cheat:['State = best guess (mean) + uncertainty (covariance P).','Predict: x ← F x, P ← F P Fᵀ + Q (uncertainty grows).','Update: K = P Hᵀ (H P Hᵀ + R)⁻¹; x ← x + K (z − H x); P ← (I − K H) P (shrinks).','Q = how much you distrust the motion model, R = how much you distrust the sensor. Non-linear: EKF / UKF / particle filter.'],
+met:[['step','Time step','clock'],['K','Kalman gain','scale'],['err','Error (RMSE)','target']],
+hero:4,
+setup(){const r=U.rng(83),N=40;this.N=N;let x=.6,y=1.6,vx=.24,vy=.03;const tr=[];
+  for(let t=0;t<N;t++){vx+=U.gauss(r)*.02;vy+=U.gauss(r)*.025+(t>16&&t<26?.03:0);x+=vx;y+=vy;tr.push({x,y})}this.tr=tr;
+  this.z=tr.map(p=>({x:p.x+U.gauss(r)*.5,y:p.y+U.gauss(r)*.5}));const all=[...tr,...this.z];this.bx=[Math.min(...all.map(p=>p.x))-.4,Math.max(...all.map(p=>p.x))+.4];this.by=[Math.min(...all.map(p=>p.y))-.4,Math.max(...all.map(p=>p.y))+.4];
+  const run=(q,R)=>{const zx=this.z.map(p=>p.x),zy=this.z.map(p=>p.y);const a=kf1(zx,q,R,.6,.24),b=kf1(zy,q,R,1.6,.03);return a.map((u,i)=>({x:u.est,y:b[i].est,px:u.pred,py:b[i].pred,pv:(u.pvar+b[i].pvar)/2,v:(u.var+b[i].var)/2,K:u.K}))};
+  this.f=run(.004,.3);this.fSmallQ=run(.00005,.3);this.fBigQ=run(.4,.3);
+  const rm=a=>Math.sqrt(a.reduce((s,p,i)=>s+(p.x-tr[i].x)**2+(p.y-tr[i].y)**2,0)/a.length);
+  this.rmse={raw:rm(this.z)};
+  const rmT=a=>Math.sqrt(a.slice(3).reduce((s,p,i)=>s+(p.x-tr[i+3].x)**2+(p.y-tr[i+3].y)**2,0)/(a.length-3));
+  this.steps[0].m={err:`raw ${this.rmse.raw.toFixed(2)}`};this.steps[2].m={K:this.f[14].K.toFixed(2)};this.steps[4].m={step:`1 → ${N}`,K:`→ ${this.f[N-1].K.toFixed(2)}`,err:`raw ${this.rmse.raw.toFixed(2)} → ${rmT(this.f).toFixed(2)}`};
+  this.steps[5].m={err:`small Q ${rmT(this.fSmallQ).toFixed(2)} · large Q ${rmT(this.fBigQ).toFixed(2)}`};},
+plotP(g,zoom){let xr=this.bx,yr=this.by;if(zoom){const c=this.f[zoom];xr=[c.x-2.6,c.x+2.6];yr=[c.y-2.1,c.y+2.1]}const w=500,h=410;return g.plot({x:50,y:30,w,h,xr,yr,grid:true,xl:zoom?'x (km) · zoomed in':'x (km)',yl:'y (km)'})},
+ell(g,P,x,y,v,c,o={}){const r=Math.max(4,Math.sqrt(v)*P.w/(P.xr[1]-P.xr[0]));return `<circle cx="${P.sx(x)}" cy="${P.sy(y)}" r="${r}" style="fill:var(--${c});opacity:${o.op||.14};stroke:var(--${c});stroke-width:1.5${o.dash?';stroke-dasharray:4 4':''}"/>`},
+draw(si,g){
+  const s=[];const N=this.N;
+  if(si===0){const P=this.plotP(g);s.push(P.svg,P.line(this.tr.map(p=>[p.x,p.y]),'green',{cls:'dash'}),P.line(this.z.map(p=>[p.x,p.y]),'red',{cls:'thin',op:.5}),P.pts(this.z.map(p=>({...p,c:'red'})),4));
+    s.push(g.panel(580,50,'Noisy GPS',['green dashed = where the car','               really went','red = what the sensor says','','each reading is off by ~0.5 km','joining them gives a zig-zag'],'red'))}
+  else if(si===1||si===2){const t=14,P=this.plotP(g,t),f=this.f,prev=f[t-1],cur=f[t];this.P=P;
+    s.push(P.svg,P.clip(P.line(this.tr.slice(0,t+3).map(p=>[p.x,p.y]),'green',{cls:'dash thin'})+P.line(f.slice(0,t).map(p=>[p.x,p.y]),'blue')+P.pts(this.z.slice(0,t).map(p=>({...p,c:'red'})),3.5,{cls:'dim'})));
+    s.push(this.ell(g,P,prev.x,prev.y,f[t-1].v,'blue'),g.C(P.sx(prev.x),P.sy(prev.y),6,'blue'),g.T(P.sx(prev.x)-10,P.sy(prev.y)+24,'estimate at t',{cls:'b',c:'blue',a:'end'}));
+    s.push(g.A(P.sx(prev.x),P.sy(prev.y),P.sx(cur.px),P.sy(cur.py),{c:'purple',dash:1}),this.ell(g,P,cur.px,cur.py,cur.pv,'purple',{dash:1}),g.C(P.sx(cur.px),P.sy(cur.py),6,'purple',{cls:'hollow'}),g.T(P.sx(cur.px)+12,P.sy(cur.py)-30,'prediction t+1',{cls:'b',c:'purple'}));
+    if(si===2){const z=this.z[t];s.push(this.ell(g,P,z.x,z.y,.3,'red'),g.C(P.sx(z.x),P.sy(z.y),6,'red'),g.T(P.sx(z.x)+12,P.sy(z.y)+16,'measurement',{cls:'b',c:'red'}),this.ell(g,P,cur.x,cur.y,cur.v,'green',{op:.3}),g.C(P.sx(cur.x),P.sy(cur.y),7,'green',{cls:'big'}),g.T(P.sx(cur.x)-12,P.sy(cur.y)+28,'new estimate',{cls:'b',c:'green',a:'end'}))}
+    const Q=g.plot({x:590,y:250,w:240,h:150,xr:[-3,3],yr:[0,1.6],grid:false,title:si===1?'1D view: prediction spreads':'1D view: blend = product'});const N1=(x,m,sd)=>Math.exp(-((x-m)**2)/(2*sd*sd))/(sd*2.5066);
+    s.push(Q.svg);if(si===1)s.push(Q.fn(x=>N1(x,-1.2,.35),'blue',{n:160}),Q.fn(x=>N1(x,-.4,.7),'purple',{n:160,cls:'dash'}));else s.push(Q.fn(x=>N1(x,-.4,.7),'purple',{n:160,cls:'dash'}),Q.fn(x=>N1(x,.8,.5),'red',{n:160}),Q.fn(x=>N1(x,.39,.41),'green',{n:160,w:3}));
+    s.push(g.panel(590,40,si===1?'1. Predict':'2. Update',si===1?['move the estimate with the','motion model (velocity × time)','','uncertainty GROWS: the model','is not perfect (noise Q)']:['a measurement arrives (red),','with its own uncertainty R','','new estimate lies between them,','closer to the more certain one','uncertainty SHRINKS'],si===1?'purple':'green'))}
+  else if(si===3){s.push(g.T(60,50,'The Kalman gain: who do we trust?',{cls:'h'}));this.K3=1;
+    s.push(g.panel(560,90,'K = P / (P + R)',['P = prediction variance','R = measurement variance','','new = pred + K·(meas − pred)','','K → 0: ignore the sensor','K → 1: ignore the model','variance: (1 − K)·P'],'orange'))}
+  else if(si===4){const P=this.plotP(g);this.P=P;s.push(P.svg,P.line(this.tr.map(p=>[p.x,p.y]),'green',{cls:'dash thin'}),P.pts(this.z.map(p=>({...p,c:'red'})),3.5,{cls:'dim'}));
+    s.push(g.panel(580,40,'Predict → update, forever',['red dots   = raw GPS','blue line  = Kalman estimate','circle     = its uncertainty','','smooth, close to the truth,','and only needs the LAST','estimate: no history stored'],'blue'))}
+  else if(si===5){[[this.fSmallQ,'Q too small: trusts the model','yellow','smooth but LAGS when the','car turns'],[this.fBigQ,'Q too large: trusts the sensor','red','follows every noisy','reading: jittery']].forEach(([f,t,c,a,b],i)=>{const P=g.plot({x:30+i*420,y:50,w:390,h:300,xr:this.bx,yr:this.by,grid:false,title:t});s.push(P.svg,P.line(this.tr.map(p=>[p.x,p.y]),'green',{cls:'dash thin'}),P.pts(this.z.map(p=>({...p,c:'red'})),3,{cls:'dim'}),P.line(f.map(p=>[p.x,p.y]),c,{w:2.6}),g.T(40+i*420,380,a,{cls:'m'}),g.T(40+i*420,396,b,{cls:'m'}))});
+    s.push(g.T(30,440,'Q = process noise (model distrust) · R = measurement noise (sensor distrust) · tune the ratio, or estimate them from data',{cls:'b'}))}
+  else{s.push(g.T(60,50,'Where it goes from here',{cls:'h'}));
+    [['Everywhere','GPS + accelerometer fusion in phones, Apollo navigation (1960s), drones, robots, finance, weather','blue'],['Extended KF (EKF)','curved (non-linear) motion: linearise with a Jacobian at each step','purple'],['Unscented KF (UKF)','push a few "sigma points" through the true non-linear model instead','orange'],['Particle filter','thousands of weighted guesses; any shape of uncertainty','red'],['ML connections','a linear-Gaussian state-space model; cousin of HMMs; RNNs learn the update instead','green']].forEach(([n,d,c],i)=>s.push(g.box(160,100+i*70,210,48,n,c,{fs:11}),g.T(280,104+i*70,d,{cls:'m'})))}
+  return s.join('');
+},
+anim(si,t,g){
+  if(si===3){const k=(Math.sin(t*.9)+1)/2,K=.05+.9*k;const X0=100,X1=480,Y=250;let s=`<line x1="${X0}" y1="${Y}" x2="${X1}" y2="${Y}" style="stroke:var(--line2);stroke-width:3"/>`;
+    s+=g.C(X0,Y,9,'purple')+g.T(X0,Y+30,'prediction',{a:'middle',cls:'b',c:'purple'})+g.C(X1,Y,9,'red')+g.T(X1,Y+30,'measurement',{a:'middle',cls:'b',c:'red'});
+    const x=X0+(X1-X0)*K;s+=g.C(x,Y,11,'green',{cls:'big'})+g.pill(x,Y-30,`K = ${K.toFixed(2)}`,'green');
+    s+=g.T(290,350,K<.35?'sensor is noisy (big R) → lean on the model':K>.65?'model is unsure (big P) → lean on the sensor':'about equally certain → meet in the middle',{a:'middle',cls:'b'});return s}
+  if(si===4&&this.P){const P=this.P,n=this.N,i=Math.min(n-1,Math.floor((t*4)%(n+8)));const f=this.f.slice(0,i+1);let s=P.line(f.map(p=>[p.x,p.y]),'blue',{w:2.8});
+    s+=this.ell(g,P,f[i].x,f[i].y,f[i].v,'blue',{op:.2})+g.C(P.sx(this.z[i].x),P.sy(this.z[i].y),6,'red')+g.C(P.sx(f[i].x),P.sy(f[i].y),6,'blue')+g.pill(P.x+P.w-70,P.y+18,`t = ${i+1} · K = ${f[i].K.toFixed(2)}`,'blue');return s}
+  return '';
+},
+steps:[
+ {k:'problem',t:'Noisy measurements',short:'The problem',m:{step:'—',K:'—'},
+  b:'A car starts from a known spot and reports its GPS position every second, but each reading can be off by half a kilometre. Joining the raw dots gives a jagged path that jumps around the real one.\n\nAveraging the last few readings would smooth it but lag behind. The <b>Kalman filter</b> (1960) combines what we <b>expect</b> (the car keeps moving roughly as it was) with what we <b>measure</b>, in the statistically best way when noise is Gaussian.'},
+ {k:'technique',t:'Step 1: predict',short:'Predict',m:{step:'t → t+1',K:'—'},
+  b:'The filter keeps two things: a best guess of the <b>state</b> (position and velocity) and how <b>uncertain</b> that guess is (the covariance P, drawn as a circle).\n\nTo predict the next second, push the state through a motion model: new position = position + velocity. Because the model is imperfect (the driver might brake), we add process noise Q, so the uncertainty circle <b>grows</b>.'},
+ {k:'technique',t:'Step 2: update',short:'Update',m:{},
+  b:'Now a measurement arrives, with its own uncertainty R. We have two Gaussians: the prediction and the measurement. Multiplying them gives a new Gaussian that sits <b>between</b> the two, closer to the more certain one, and is <b>narrower than either</b>.\n\nCombining two imperfect sources gives a better estimate than either alone. That is the core of sensor fusion.'},
+ {k:'math',t:'The Kalman gain',short:'Gain K',m:{K:'0 … 1'},
+  b:'How far to move toward the measurement is set by the <b>Kalman gain</b> K = P / (P + R): prediction uncertainty divided by total uncertainty. The update is <code>new = prediction + K·(measurement − prediction)</code>.\n\nA noisy sensor (large R) gives small K, so trust the model. An unsure model (large P) gives K near 1, so trust the sensor. The gain is recomputed every step.'},
+ {k:'solution',t:'The full loop',short:'Loop',
+  n:['Predict the next state; uncertainty grows','Measure','Compute the gain from the two uncertainties','Blend; uncertainty shrinks','Repeat'],
+  b:'Predict, update, repeat. The estimate (blue) stays close to the true path with a fraction of the raw error, and the uncertainty settles to a steady size.\n\nIt is <b>recursive</b>: it needs only the previous estimate and the new measurement, never the full history. That makes it cheap enough for 1960s spacecraft computers and for every phone today.'},
+ {k:'tradeoff',t:'Tuning Q and R',short:'Tuning',
+  b:'Performance depends on the noise settings. If Q is too small the filter over-trusts its motion model: smooth, but slow to react when the car turns. If Q is too large it over-trusts the sensor and passes the noise straight through.\n\nR usually comes from the sensor’s spec sheet; Q is tuned, or learned from data, much like a regularisation hyperparameter.'},
+ {k:'recap',t:'Beyond the linear filter',short:'Variants',m:{step:'—',K:'—',err:'—'},
+  b:'The classic filter assumes linear motion and Gaussian noise. The <b>Extended</b> KF linearises curved models, the <b>Unscented</b> KF propagates a few sample points, and <b>particle filters</b> use thousands of weighted guesses for any shape of uncertainty.\n\nIn ML terms it is exact inference in a linear-Gaussian state-space model, a continuous cousin of the hidden Markov model. An RNN can be seen as learning this kind of predict-and-update loop from data.'}
+]});
 })();

@@ -441,7 +441,7 @@ body.home .ui{opacity:0;pointer-events:none}
 <div id="contents">
   <div class="cwrap">
     <div class="chead">
-      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Twenty-seven chapters in nine topics. Each topic starts with the physics and ends with where it is used in the real world.</p></div>
+      <div><div class="ck">Contents</div><h2>Physics in three dimensions</h2><p>Thirty-one chapters in ten topics. Start with Foundations if you are new to physics; each later topic starts with the physics and ends with where it is used in the real world.</p></div>
       <button id="closeContents" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="ctools">
@@ -457,11 +457,11 @@ body.home .ui{opacity:0;pointer-events:none}
 <div id="fade"></div>
 <div id="intro">
   <div class="hero">
-    <div class="bar"><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i></div>
+    <div class="bar"><i style="background:#b8c2d6;animation-delay:0s"></i><i style="background:#F0AC5F;animation-delay:0.08s"></i><i style="background:#5CD0B3;animation-delay:0.16s"></i><i style="background:#9A72AC;animation-delay:0.24s"></i><i style="background:#FFE066;animation-delay:0.32s"></i><i style="background:#58C4DD;animation-delay:0.40s"></i><i style="background:#FC6255;animation-delay:0.48s"></i><i style="background:#83C167;animation-delay:0.56s"></i><i style="background:#C55F73;animation-delay:0.64s"></i><i style="background:#D147BD;animation-delay:0.72s"></i></div>
     <h2><span>∂</span>physcx</h2>
-    <p>Twenty-seven interactive 3D simulations built around <i>The Feynman Lectures on Physics</i>, each topic paired with the real machines that use it.</p>
+    <p>Thirty-one interactive 3D simulations built around <i>The Feynman Lectures on Physics</i>, from the basics of vectors and forces to the real machines that use them.</p>
     <div class="hbtns">
-      <button class="primary" id="startBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Start from chapter 1.1</button>
+      <button class="primary" id="startBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Start with the basics (0.1)</button>
       <button class="ghost" id="continueBtn" hidden></button>
     </div>
     <div class="progline" id="hprog" style="margin-top:20px"></div>
@@ -471,6 +471,7 @@ body.home .ui{opacity:0;pointer-events:none}
 </div>
 <div id="err"></div>
 
+<script src="js/lessons-0.js"></script>
 <script src="js/lessons-a.js"></script>
 <script src="js/lessons-b.js"></script>
 <script src="js/lessons-c.js"></script>
@@ -4226,7 +4227,507 @@ Waves.ref   = {label:'Vol. I · Ch. 29', title:'Interference', url:FL + 'I_29.ht
 EField.ref  = {label:'Vol. II · Ch. 4', title:'Electrostatics', url:FL + 'II_04.html', related:true};
 Lorentz.ref = {label:'Vol. II · Ch. 29', title:'The Motion of Charges in Electric and Magnetic Fields', url:FL + 'II_29.html', related:true};
 
+/* =====================================================================
+   0 · Foundations — vectors, motion, forces, energy & momentum
+   ===================================================================== */
+function makeDash(color, op=.6, dash=.14, gap=.1){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+  g.setAttribute('lineDistance', new THREE.BufferAttribute(new Float32Array(2), 1));
+  const l = new THREE.Line(g, new THREE.LineDashedMaterial({color, dashSize:dash, gapSize:gap, transparent:true, opacity:op}));
+  l.frustumCulled = false;
+  l.userData.set = (a, b) => {
+    const p = g.attributes.position.array;
+    p[0] = a.x; p[1] = a.y; p[2] = a.z; p[3] = b.x; p[4] = b.y; p[5] = b.z;
+    g.attributes.position.needsUpdate = true;
+    g.attributes.lineDistance.array[1] = a.distanceTo(b); g.attributes.lineDistance.needsUpdate = true;
+    l.visible = a.distanceToSquared(b) > 1e-6;
+  };
+  return l;
+}
+function setTex(lbl, s){ if (lbl.userData.s !== s){ lbl.userData.s = s; lbl.element.innerHTML = tex(s); } }
+const vfmt = v => `(${v.x.toFixed(1)}, ${v.y.toFixed(1)}, ${v.z.toFixed(1)})`;
+const UP = (k=0.3) => new V3(0, k, 0);
+
+/* ---------------------------------------------------------------- 0.1 Vectors */
+const FVectors = {
+  id:'vectors', bloom:0.22, title:'Vectors', sub:'Arrows with a size and a direction, and how to combine them', accent:C.blue,
+  ref:{label:'Vol. I · Ch. 11', title:'Vectors', url:FLURL + 'I_11.html'},
+  cam:{pos:[7.5, 5.4, 9.8], target:[0.4, 1, 0]}, portrait:1.35,
+  eq:String.raw`\begin{aligned} |\vec a| &= \sqrt{a_x^2 + a_y^2 + a_z^2}\\[2pt] \vec a + \vec b &= (a_x{+}b_x,\; a_y{+}b_y,\; a_z{+}b_z)\\[2pt] \vec a\cdot\vec b &= |\vec a|\,|\vec b|\cos\theta\\[2pt] |\vec a\times\vec b| &= |\vec a|\,|\vec b|\sin\theta \end{aligned}`,
+  params:[
+    {key:'op', label:'show', type:'select', value:'comp', options:[{label:'Parts', value:'comp'}, {label:'a+b', value:'add'}, {label:'a−b', value:'sub'}, {label:'k·a', value:'scale'}, {label:'a·b', value:'dot'}, {label:'a×b', value:'cross'}]},
+    {key:'ax', tex:'a_x', label:'x part of a', min:-3, max:3, step:0.1, value:2.5},
+    {key:'ay', tex:'a_y', label:'y part of a (up)', min:-3, max:3, step:0.1, value:1.5},
+    {key:'az', tex:'a_z', label:'z part of a', min:-3, max:3, step:0.1, value:0.8},
+    {key:'bx', tex:'b_x', label:'x part of b', min:-3, max:3, step:0.1, value:0.6},
+    {key:'by', tex:'b_y', label:'y part of b (up)', min:-3, max:3, step:0.1, value:1.4},
+    {key:'bz', tex:'b_z', label:'z part of b', min:-3, max:3, step:0.1, value:-2},
+    {key:'k', tex:'k', label:'scale factor', min:-2, max:3, step:0.1, value:2},
+  ],
+  steps:[{text:'Vectors.'}],
+  init(c){
+    const d = c.data;
+    c.group.add(makeAxes(4));
+    const grid = new THREE.GridHelper(8, 8, 0x2a3348, 0x1a2030); grid.material.transparent = true; grid.material.opacity = .6; c.group.add(grid);
+    d.A = makeArrow(C.blue, 0.045); d.B = makeArrow(C.pink, 0.045); d.B2 = makeArrow(C.pink, 0.035, 0.4);
+    d.R = makeArrow(C.yellow, 0.06);
+    d.CX = makeArrow(C.red, 0.03); d.CY = makeArrow(C.green, 0.03); d.CZ = makeArrow(C.purple, 0.03);
+    c.group.add(d.A, d.B, d.B2, d.R, d.CX, d.CY, d.CZ);
+    d.dash = [0, 1, 2].map(() => { const l = makeDash(0x9aa3b5, .6); c.group.add(l); return l; });
+    d.La = texLabel('\\vec a', C.blue, 21); d.Lb = texLabel('\\vec b', C.pink, 21); d.Lr = texLabel('', C.yellow, 17);
+    d.Lx = texLabel('a_x', C.red, 15); d.Ly = texLabel('a_y', C.green, 15); d.Lz = texLabel('a_z', C.purple, 15); d.Lt = texLabel('\\theta', 0xcfd6e4, 15);
+    c.group.add(d.La, d.Lb, d.Lr, d.Lx, d.Ly, d.Lz, d.Lt);
+    const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(18), 3));
+    d.par = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({color:C.yellow, transparent:true, opacity:.15, side:THREE.DoubleSide, depthWrite:false}));
+    d.par.frustumCulled = false; c.group.add(d.par);
+    const ag = new THREE.BufferGeometry(); ag.setAttribute('position', new THREE.BufferAttribute(new Float32Array(33*3), 3));
+    d.arc = new THREE.Line(ag, new THREE.LineBasicMaterial({color:0xcfd6e4, transparent:true, opacity:.8})); d.arc.frustumCulled = false; c.group.add(d.arc);
+  },
+  reset(){},
+  vecs(c){ const P = c.params; return [new V3(P.ax, P.ay, P.az), new V3(P.bx, P.by, P.bz)]; },
+  update(dt, c){
+    const d = c.data, P = c.params, op = P.op, [a, b] = this.vecs(c), O = new V3();
+    [d.B, d.B2, d.R, d.CX, d.CY, d.CZ, d.Lb, d.Lr, d.Lx, d.Ly, d.Lz, d.Lt, d.par, d.arc, ...d.dash].forEach(x => x.visible = false);
+    d.A.userData.arrow.set(O, a);
+    d.La.visible = a.length() > 0.05; d.La.position.copy(a).multiplyScalar(1.07).add(UP(0.28));
+    d.R.userData.arrow.mat.opacity = 1;
+    const showB = () => { d.B.userData.arrow.set(O, b); d.Lb.visible = b.length() > 0.05; d.Lb.position.copy(b).multiplyScalar(1.07).add(UP(0.28)); };
+    const label = (at, s) => { setTex(d.Lr, s); d.Lr.visible = true; d.Lr.position.copy(at).add(UP(0.42)); };
+    const arc = () => {
+      const la = a.length(), lb = b.length(); if (la < 0.05 || lb < 0.05) return;
+      const ua = a.clone().divideScalar(la), ub = b.clone().divideScalar(lb), n = ua.clone().cross(ub);
+      if (n.length() < 1e-3) return;
+      n.normalize(); const th = Math.acos(Math.max(-1, Math.min(1, ua.dot(ub)))), r = Math.min(0.8, 0.45*Math.min(la, lb));
+      const p = d.arc.geometry.attributes.position.array, v = new V3();
+      for (let i = 0; i <= 32; i++){ v.copy(ua).applyAxisAngle(n, th*i/32).multiplyScalar(r); p[i*3] = v.x; p[i*3+1] = v.y; p[i*3+2] = v.z; }
+      d.arc.geometry.attributes.position.needsUpdate = true; d.arc.visible = true;
+      d.Lt.visible = true; d.Lt.position.copy(ua).applyAxisAngle(n, th/2).multiplyScalar(r + 0.32);
+    };
+    if (op === 'comp'){
+      const px = new V3(a.x, 0, 0), pxz = new V3(a.x, 0, a.z);
+      d.CX.userData.arrow.set(O, px); d.CZ.userData.arrow.set(px, new V3(0, 0, a.z)); d.CY.userData.arrow.set(pxz, new V3(0, a.y, 0));
+      d.Lx.visible = Math.abs(a.x) > .25; d.Lx.position.set(a.x/2, -0.32, 0);
+      d.Lz.visible = Math.abs(a.z) > .25; d.Lz.position.set(a.x + 0.35, -0.2, a.z/2);
+      d.Ly.visible = Math.abs(a.y) > .25; d.Ly.position.set(a.x + 0.38, a.y/2, a.z);
+      d.dash[0].userData.set(O, pxz);
+    } else if (op === 'add'){
+      showB(); d.B2.userData.arrow.set(a, b);
+      const s = a.clone().add(b); d.R.userData.arrow.set(O, s);
+      d.dash[0].userData.set(b, s);
+      label(s, '\\vec a + \\vec b');
+    } else if (op === 'sub'){
+      showB(); const s = a.clone().sub(b); d.R.userData.arrow.set(b, s);
+      label(b.clone().add(s.clone().multiplyScalar(0.5)), '\\vec a - \\vec b');
+    } else if (op === 'scale'){
+      const s = a.clone().multiplyScalar(P.k); d.R.userData.arrow.set(O, s); d.R.userData.arrow.mat.opacity = .5;
+      label(s.clone().add(UP(0.1)), 'k\\,\\vec a');
+    } else if (op === 'dot'){
+      showB(); arc();
+      const la2 = a.lengthSq();
+      if (la2 > 1e-4){
+        const foot = a.clone().multiplyScalar(a.dot(b)/la2);
+        d.R.userData.arrow.set(O, foot); d.R.userData.arrow.mat.opacity = .55;
+        d.dash[0].userData.set(b, foot);
+        label(foot.clone().multiplyScalar(0.5).add(new V3(0, -0.55, 0)), '|\\vec b|\\cos\\theta');
+      }
+    } else if (op === 'cross'){
+      showB(); arc();
+      const cr = a.clone().cross(b), half = cr.clone().multiplyScalar(0.5);
+      d.R.userData.arrow.set(O, half); label(half, '\\tfrac12\\,(\\vec a\\times\\vec b)');
+      const s = a.clone().add(b), p = d.par.geometry.attributes.position.array;
+      [O, a, s, O, s, b].forEach((v, i) => { p[i*3] = v.x; p[i*3+1] = v.y; p[i*3+2] = v.z; });
+      d.par.geometry.attributes.position.needsUpdate = true; d.par.visible = true;
+      d.dash[0].userData.set(a, s); d.dash[1].userData.set(b, s);
+    }
+  },
+  readouts(c){
+    const P = c.params, [a, b] = this.vecs(c), la = a.length(), lb = b.length();
+    const cs = la > 1e-6 && lb > 1e-6 ? Math.max(-1, Math.min(1, a.dot(b)/(la*lb))) : 1, th = Math.acos(cs)*180/Math.PI;
+    const r = [['$\\vec a$', vfmt(a)], ['length $|\\vec a|$', la.toFixed(2)]];
+    if (P.op !== 'comp' && P.op !== 'scale') r.push(['$\\vec b$', vfmt(b)], ['length $|\\vec b|$', lb.toFixed(2)], ['angle $\\theta$ between them', th.toFixed(0) + '°']);
+    if (P.op === 'comp') r.push(['floor diagonal $\\sqrt{a_x^2 + a_z^2}$', Math.hypot(a.x, a.z).toFixed(2)]);
+    if (P.op === 'add'){ const s = a.clone().add(b); r.push(['$\\vec a + \\vec b$', vfmt(s)], ['length', s.length().toFixed(2)]); }
+    if (P.op === 'sub'){ const s = a.clone().sub(b); r.push(['$\\vec a - \\vec b$', vfmt(s)], ['length', s.length().toFixed(2)]); }
+    if (P.op === 'scale'){ const s = a.clone().multiplyScalar(P.k); r.push(['$k\\,\\vec a$', vfmt(s)], ['length $|k|\\,|\\vec a|$', s.length().toFixed(2)]); }
+    if (P.op === 'dot') r.push(['$a_xb_x + a_yb_y + a_zb_z$', a.dot(b).toFixed(2)], ['$|\\vec a|\\,|\\vec b|\\cos\\theta$', (la*lb*cs).toFixed(2)]);
+    if (P.op === 'cross'){ const cr = a.clone().cross(b); r.push(['$\\vec a\\times\\vec b$', vfmt(cr)], ['area $|\\vec a\\times\\vec b|$', cr.length().toFixed(2)]); }
+    return r;
+  },
+};
+
+/* ---------------------------------------------------------------- 0.2 Motion */
+const FMotion = {
+  id:'motion', bloom:0.55, title:'Position, Velocity, Acceleration', sub:'Describing motion with arrows that change in time', accent:C.green,
+  ref:{label:'Vol. I · Ch. 8', title:'Motion', url:FLURL + 'I_08.html'},
+  cam:{pos:[0.4, 3.9, 12.5], target:[0, 2.4, 0]}, portrait:1.6,
+  eq:String.raw`\begin{aligned} \vec v &= \frac{d\vec r}{dt}, \qquad \vec a = \frac{d\vec v}{dt}\\[2pt] x &= v_0\cos\alpha\,t, \quad y = v_0\sin\alpha\,t - \tfrac12 g t^2\\[2pt] \text{circle: } |\vec a| &= v^2/r \end{aligned}`,
+  params:[
+    {key:'mode', label:'motion', type:'select', value:'throw', reset:true, options:[{label:'Thrown ball', value:'throw'}, {label:'Circle', value:'circle'}]},
+    {key:'v0', tex:'v_0', label:'speed (m/s)', min:2, max:16, step:0.1, value:11, reset:true},
+    {key:'ang', tex:'\\alpha', label:'launch angle (°)', min:0, max:90, step:1, value:55, reset:true},
+    {key:'g', tex:'g', label:'gravity (m/s²)', min:1.6, max:25, step:0.1, value:9.8},
+    {key:'r', tex:'r', label:'circle radius (m)', min:1, max:6, step:0.1, value:4, reset:true},
+    {key:'snap', label:'snapshots every 0.2 s', type:'select', value:1, options:[{label:'On', value:1}, {label:'Off', value:0}]},
+  ],
+  steps:[{text:'Motion.'}],
+  init(c){
+    const d = c.data;
+    c.group.add(new THREE.GridHelper(40, 40, 0x2a3348, 0x161b27));
+    d.ball = new THREE.Mesh(new THREE.SphereGeometry(0.22, 28, 18), new THREE.MeshStandardMaterial({color:0xf2f4f8, emissive:0x2a3140, roughness:.4}));
+    c.group.add(d.ball);
+    d.trail = new Trail(700, C.green, 1.1); c.group.add(d.trail.line);
+    d.V = makeArrow(C.green, 0.04); d.Vx = makeArrow(C.green, 0.022, 0.4); d.Vy = makeArrow(C.green, 0.022, 0.4);
+    d.A = makeArrow(C.red, 0.04); d.Rv = makeArrow(C.blue, 0.026, 0.75);
+    c.group.add(d.V, d.Vx, d.Vy, d.A, d.Rv);
+    d.Lv = texLabel('\\vec v', C.green, 20); d.La = texLabel('\\vec a', C.red, 20); d.Lr = texLabel('\\vec r', C.blue, 18); d.Lo = texLabel('O', 0x9aa3b5, 15);
+    c.group.add(d.Lv, d.La, d.Lr, d.Lo);
+    d.origin = glowDot(0x9aa3b5, 0.07); c.group.add(d.origin);
+    const gm = new THREE.MeshBasicMaterial({color:0xcfd6e4, transparent:true, opacity:.32}), gg = new THREE.SphereGeometry(0.11, 12, 8);
+    d.ghosts = []; for (let i = 0; i < 80; i++){ const m = new THREE.Mesh(gg, gm); m.visible = false; c.group.add(m); d.ghosts.push(m); }
+    const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(129*3), 3));
+    d.ring = new THREE.Line(rg, new THREE.LineBasicMaterial({color:0x3a4256})); d.ring.frustumCulled = false; c.group.add(d.ring);
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    d.t = 0; d.wait = 0; d.nG = 0; d.tSnap = 0; d.trail.clear(); d.ghosts.forEach(g => g.visible = false);
+    if (P.mode === 'throw'){
+      const al = P.ang*Math.PI/180, v0 = P.v0, g = P.g;
+      d.R = v0*v0*Math.sin(2*al)/g; d.H = v0*v0*Math.sin(al)**2/(2*g);
+      d.s = Math.min(0.6, 13/Math.max(d.R, 1), 6.2/Math.max(d.H, 0.5));
+      d.O = new V3(-Math.max(d.R, 0)*d.s/2, 0, 0);
+      d.x = 0; d.y = 0; d.vx = v0*Math.cos(al); d.vy = v0*Math.sin(al);
+      d.ring.visible = false;
+    } else {
+      d.s = 0.62; d.O = new V3(0, 4.2, 0); d.ph = -Math.PI/2;
+      const p = d.ring.geometry.attributes.position.array, R = P.r*d.s;
+      for (let i = 0; i <= 128; i++){ const t = i/128*2*Math.PI; p[i*3] = R*Math.cos(t); p[i*3+1] = 4.2 + R*Math.sin(t); p[i*3+2] = 0; }
+      d.ring.geometry.attributes.position.needsUpdate = true; d.ring.visible = true;
+    }
+  },
+  state(c){
+    const d = c.data, P = c.params, s = d.s;
+    if (P.mode === 'throw') return {pos:d.O.clone().add(new V3(d.x*s, d.y*s, 0)), v:new V3(d.vx, d.vy, 0), a:new V3(0, -P.g, 0)};
+    const ca = Math.cos(d.ph), sa = Math.sin(d.ph), v = P.v0, ac = v*v/P.r;
+    return {pos:d.O.clone().add(new V3(P.r*ca*s, P.r*sa*s, 0)), v:new V3(-sa*v, ca*v, 0), a:new V3(-ca*ac, -sa*ac, 0)};
+  },
+  update(dt, c){
+    const d = c.data, P = c.params;
+    if (dt > 0){
+      const T = dt*0.8;
+      if (d.wait > 0){ d.wait -= dt; if (d.wait <= 0) this.reset(c); }
+      else {
+        const n = Math.max(1, Math.ceil(T/0.004)), h = T/n;
+        for (let i = 0; i < n; i++){
+          if (P.mode === 'throw'){
+            d.x += d.vx*h; d.y += d.vy*h - 0.5*P.g*h*h; d.vy -= P.g*h;
+            if (d.y <= 0 && d.vy < 0){ d.y = 0; d.wait = 1.4; }
+          } else d.ph += P.v0/P.r*h;
+          d.t += h; d.tSnap += h;
+          if (d.tSnap >= 0.2){
+            d.tSnap -= 0.2;
+            const g = d.ghosts[d.nG % d.ghosts.length]; g.position.copy(this.state(c).pos); g.visible = !!P.snap; d.nG++;
+          }
+          if (d.wait > 0) break;
+        }
+      }
+    }
+    const {pos, v, a} = this.state(c), kv = 0.17;
+    let ka = 0.12; if (a.length()*ka > 3.4) ka = 3.4/a.length();
+    d.ball.position.copy(pos);
+    if (dt > 0 && d.wait <= 0) d.trail.push(pos.x, pos.y, pos.z);
+    d.ghosts.forEach(g => { if (!P.snap) g.visible = false; });
+    const vv = v.clone().multiplyScalar(kv), av = a.clone().multiplyScalar(ka);
+    d.V.userData.arrow.set(pos, vv); d.A.userData.arrow.set(pos, av);
+    const thr = P.mode === 'throw';
+    d.Vx.visible = d.Vy.visible = thr;
+    if (thr){ d.Vx.userData.arrow.set(pos, new V3(vv.x, 0, 0)); d.Vy.userData.arrow.set(pos, new V3(0, vv.y, 0)); }
+    d.Rv.userData.arrow.set(d.O, pos.clone().sub(d.O));
+    d.origin.position.copy(d.O); d.Lo.position.copy(d.O).add(new V3(-0.3, -0.35, 0));
+    d.Lv.visible = vv.length() > 0.2; d.Lv.position.copy(pos).add(vv.clone().multiplyScalar(1.12)).add(UP(0.25));
+    d.La.position.copy(pos).add(av.clone().multiplyScalar(1.12)).add(new V3(0.32, 0, 0));
+    d.Lr.position.copy(d.O).lerp(pos, 0.5).add(new V3(0, -0.35, 0));
+  },
+  readouts(c){
+    const d = c.data, P = c.params, {v, a} = this.state(c);
+    if (P.mode === 'throw') return [
+      ['time $t$', d.t.toFixed(2) + ' s'],
+      ['position $(x,\\,y)$', `(${d.x.toFixed(1)}, ${d.y.toFixed(1)}) m`],
+      ['velocity $(v_x,\\,v_y)$', `(${d.vx.toFixed(1)}, ${d.vy.toFixed(1)}) m/s`],
+      ['speed $|\\vec v|$', v.length().toFixed(1) + ' m/s'],
+      ['acceleration $|\\vec a|$', a.length().toFixed(1) + ' m/s²'],
+      ['range $v_0^2\\sin 2\\alpha/g$', d.R.toFixed(1) + ' m'],
+      ['peak height', d.H.toFixed(1) + ' m'],
+    ];
+    return [
+      ['time $t$', d.t.toFixed(2) + ' s'],
+      ['speed $|\\vec v|$', v.length().toFixed(1) + ' m/s'],
+      ['acceleration $v^2/r$', a.length().toFixed(1) + ' m/s²'],
+      ['angle between $\\vec v$ and $\\vec a$', '90°'],
+      ['one lap $2\\pi r/v$', (2*Math.PI*P.r/P.v0).toFixed(2) + ' s'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------- 0.3 Forces */
+const FForces = {
+  id:'forces', bloom:0.4, title:'Forces and Newton’s Laws', sub:'Pushes and pulls, and how they change motion', accent:C.red,
+  ref:{label:'Vol. I · Ch. 12', title:'Characteristics of Force', url:FLURL + 'I_12.html'},
+  cam:{pos:[1.2, 4.4, 13.5], target:[0.6, 1.9, 0]}, portrait:1.5,
+  eq:String.raw`\begin{aligned} \textstyle\sum\vec F &= m\vec a\\[2pt] N &= mg\cos\theta, \quad F_\parallel = mg\sin\theta\\[2pt] f &\le \mu N \end{aligned}`,
+  params:[
+    {key:'th', tex:'\\theta', label:'slope angle (°)', min:0, max:50, step:0.5, value:25},
+    {key:'m', tex:'m', label:'mass (kg)', min:1, max:10, step:0.1, value:4},
+    {key:'mu', tex:'\\mu', label:'friction coefficient', min:0, max:1, step:0.01, value:0.5},
+    {key:'F', tex:'F', label:'push up the slope (N)', min:-60, max:60, step:1, value:0},
+    {key:'view', label:'weight drawn as', type:'select', value:'whole', options:[{label:'One arrow', value:'whole'}, {label:'Two parts', value:'split'}]},
+  ],
+  steps:[{text:'Forces.'}],
+  L:9, XB:4.6, G:9.8, KF:0.035,
+  init(c){
+    const d = c.data;
+    const ground = new THREE.GridHelper(30, 30, 0x2a3348, 0x161b27); ground.position.y = -0.2; c.group.add(ground);
+    d.wmat = new THREE.MeshStandardMaterial({color:0x2c3446, roughness:.85, metalness:.1});
+    d.block = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({color:0xd8a35a, roughness:.55, metalness:.15}));
+    c.group.add(d.block);
+    d.W = makeArrow(C.red, .042); d.N = makeArrow(C.blue, .042); d.f = makeArrow(C.gold, .042); d.Fa = makeArrow(C.green, .042); d.net = makeArrow(C.white, .05);
+    d.W1 = makeArrow(C.red, .03, .55); d.W2 = makeArrow(C.red, .03, .55);
+    c.group.add(d.W, d.N, d.f, d.Fa, d.net, d.W1, d.W2);
+    [d.W, d.N, d.f, d.Fa, d.net, d.W1, d.W2].forEach(a => { a.renderOrder = 10; a.traverse(o => { if (o.material){ o.material.depthTest = false; o.material.transparent = true; } }); });
+    d.LW = texLabel('m\\vec g', C.red, 18); d.LN = texLabel('\\vec N', C.blue, 18); d.Lf = texLabel('\\vec f', C.gold, 18); d.LF = texLabel('\\vec F', C.green, 18);
+    d.Lnet = texLabel('', C.white, 17); d.LW1 = texLabel('mg\\sin\\theta', C.red, 14); d.LW2 = texLabel('mg\\cos\\theta', C.red, 14); d.Lth = texLabel('\\theta', 0xcfd6e4, 16);
+    c.group.add(d.LW, d.LN, d.Lf, d.LF, d.Lnet, d.LW1, d.LW2, d.Lth);
+    this.build(c); this.reset(c);
+  },
+  build(c){
+    const d = c.data, th = c.params.th*Math.PI/180, L = this.L, xb = this.XB, xt = xb - L*Math.cos(th), yt = L*Math.sin(th);
+    if (d.wedge){ c.group.remove(d.wedge); d.wedge.geometry.dispose(); }
+    const sh = new THREE.Shape([new THREE.Vector2(xb, -0.2), new THREE.Vector2(xt, -0.2), new THREE.Vector2(xt, yt), new THREE.Vector2(xb, 0)]);
+    const geo = new THREE.ExtrudeGeometry(sh, {depth:2.6, bevelEnabled:false}); geo.translate(0, 0, -1.3);
+    d.wedge = new THREE.Mesh(geo, d.wmat); c.group.add(d.wedge);
+    d.u = new V3(-Math.cos(th), Math.sin(th), 0); d.n = new V3(Math.sin(th), Math.cos(th), 0); d.bot = new V3(xb, 0, 0);
+    d.Lth.position.set(xb - 1.55, 0.2, 1.4); d.Lth.visible = th > 0.05;
+  },
+  onParam(key, c){ if (key === 'th') this.build(c); },
+  reset(c){ const d = c.data; d.s = this.L*0.55; d.v = 0; d.wait = 0; },
+  forces(c){
+    const d = c.data, P = c.params, th = P.th*Math.PI/180, g = this.G, m = P.m;
+    const N = m*g*Math.cos(th), D = P.F - m*g*Math.sin(th), fmax = P.mu*N;
+    let fr, stat = false;
+    if (Math.abs(d.v) < 1e-4){ if (Math.abs(D) <= fmax){ fr = -D; stat = true; } else fr = -Math.sign(D)*fmax; }
+    else fr = -Math.sign(d.v)*fmax;
+    return {N, D, fmax, fr, stat, net:D + fr, m, g, th};
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, side = 0.62 + 0.09*P.m, hh = side*0.8, L = this.L;
+    if (dt > 0){
+      if (d.wait > 0){ d.wait -= dt; if (d.wait <= 0) this.reset(c); }
+      else {
+        const n = Math.max(1, Math.ceil(dt/0.005)), h = dt/n;
+        for (let i = 0; i < n; i++){
+          const F = this.forces(c);
+          if (F.stat){ d.v = 0; continue; }
+          const v0 = d.v; d.v += F.net/F.m*h;
+          if (v0 !== 0 && Math.sign(d.v) !== Math.sign(v0)) d.v = 0;   // friction can stop the block, never push it backwards
+          d.s += d.v*h;
+        }
+        const lo = side/2 + 0.05, hi = L - side/2 - 0.05;
+        if (d.s < lo || d.s > hi){
+          if (P.th < 1) d.s = d.s < lo ? hi : lo;                       // flat: an endless table
+          else { d.s = Math.max(lo, Math.min(hi, d.s)); d.v = 0; d.wait = 1.1; }
+        }
+      }
+    }
+    const F = this.forces(c), k = this.KF, u = d.u, nn = d.n;
+    const ctr = d.bot.clone().add(u.clone().multiplyScalar(d.s)).add(nn.clone().multiplyScalar(hh/2));
+    d.block.position.copy(ctr); d.block.rotation.z = -F.th; d.block.scale.set(side, hh, 1.0);
+    const W = new V3(0, -F.m*F.g*k, 0);
+    d.W.userData.arrow.set(ctr, W); d.W.userData.arrow.mat.opacity = P.view === 'split' ? 0.28 : 1;
+    d.LW.position.copy(ctr).add(W).add(new V3(0.45, -0.1, 0));
+    const Nv = nn.clone().multiplyScalar(F.N*k); d.N.userData.arrow.set(ctr, Nv); d.LN.position.copy(ctr).add(Nv).add(UP(0.25)); d.LN.visible = F.N > 0.5;
+    const foot = d.bot.clone().add(u.clone().multiplyScalar(d.s)).add(nn.clone().multiplyScalar(0.06));
+    const fv = u.clone().multiplyScalar(F.fr*k); d.f.userData.arrow.set(foot, fv);
+    d.Lf.visible = Math.abs(F.fr) > 0.5; d.Lf.position.copy(foot).add(fv).add(nn.clone().multiplyScalar(-0.35));
+    const sg = Math.sign(P.F) || 1, Fv = u.clone().multiplyScalar(P.F*k);
+    d.Fa.userData.arrow.set(ctr.clone().sub(u.clone().multiplyScalar(sg*(side/2 + Math.abs(P.F)*k))), Fv);
+    d.Fa.visible = d.LF.visible = Math.abs(P.F) > 0.5;
+    d.LF.position.copy(ctr).sub(u.clone().multiplyScalar(sg*(side/2 + Math.abs(P.F)*k*0.5))).add(nn.clone().multiplyScalar(0.4));
+    const top = ctr.clone().add(nn.clone().multiplyScalar(hh/2 + 0.55)), nv = u.clone().multiplyScalar(F.net*k);
+    if (Math.abs(F.net) > 0.3){ d.net.userData.arrow.set(top, nv); setTex(d.Lnet, '\\textstyle\\sum\\vec F'); d.Lnet.position.copy(top).add(nv).add(UP(0.3)); }
+    else { d.net.visible = false; setTex(d.Lnet, '\\textstyle\\sum\\vec F = 0'); d.Lnet.position.copy(ctr).add(u.clone().multiplyScalar(side/2 + 0.9)).add(nn.clone().multiplyScalar(hh/2 + 0.6)); }
+    const split = P.view === 'split';
+    [d.W1, d.W2, d.LW1, d.LW2].forEach(x => x.visible = split);
+    if (split){
+      const w1 = u.clone().multiplyScalar(-F.m*F.g*Math.sin(F.th)*k), w2 = nn.clone().multiplyScalar(-F.m*F.g*Math.cos(F.th)*k);
+      d.W1.userData.arrow.set(ctr, w1); d.W2.userData.arrow.set(ctr, w2);
+      d.W1.visible = d.LW1.visible = w1.length() > 0.02;
+      d.LW1.position.copy(ctr).add(w1).add(new V3(0, -0.3, 0)); d.LW2.position.copy(ctr).add(w2).add(new V3(0.2, -0.3, 0));
+    }
+  },
+  readouts(c){
+    const d = c.data, F = this.forces(c);
+    return [
+      ['weight $mg$', (F.m*F.g).toFixed(1) + ' N'],
+      ['normal force $N = mg\\cos\\theta$', F.N.toFixed(1) + ' N'],
+      ['friction $f$', Math.abs(F.fr).toFixed(1) + ' N ' + (F.stat ? '(holding)' : '(sliding)')],
+      ['most friction can give $\\mu N$', F.fmax.toFixed(1) + ' N'],
+      ['net force $\\sum F$', Math.abs(F.net).toFixed(1) + ' N'],
+      ['acceleration $a = \\sum F/m$', (Math.abs(F.net)/F.m).toFixed(2) + ' m/s²'],
+      ['speed', Math.abs(d.v).toFixed(2) + ' m/s'],
+    ];
+  },
+};
+
+/* ---------------------------------------------------------------- 0.4 Energy & momentum */
+const FEnergy = {
+  id:'energy', bloom:0.5, title:'Energy and Momentum', sub:'The two quantities nature never loses', accent:C.yellow,
+  ref:{label:'Vol. I · Ch. 4', title:'Conservation of Energy', url:FLURL + 'I_04.html'},
+  cam:{pos:[1.2, 5.2, 16.5], target:[1.2, 2, -0.6]}, portrait:1.6,
+  eq:String.raw`\begin{aligned} K &= \tfrac12 mv^2, \quad U = mgh, \quad K + U = \text{const}\\[2pt] \vec p &= m\vec v, \quad m_1\vec v_1 + m_2\vec v_2 = \text{const} \end{aligned}`,
+  params:[
+    {key:'mode', label:'experiment', type:'select', value:'pipe', reset:true, options:[{label:'Half-pipe', value:'pipe'}, {label:'Collision', value:'hit'}]},
+    {key:'h0', tex:'h_0', label:'release height (m)', min:0.5, max:4.5, step:0.1, value:3.5, reset:true},
+    {key:'mu', tex:'\\mu', label:'friction on the half-pipe', min:0, max:0.3, step:0.01, value:0},
+    {key:'m1', tex:'m_1', label:'cart 1 mass (kg)', min:0.5, max:5, step:0.1, value:2, reset:true},
+    {key:'m2', tex:'m_2', label:'cart 2 mass (kg)', min:0.5, max:5, step:0.1, value:2, reset:true},
+    {key:'v1', tex:'v_1', label:'cart 1 velocity (m/s)', min:-4, max:4, step:0.1, value:3, reset:true},
+    {key:'v2', tex:'v_2', label:'cart 2 velocity (m/s)', min:-4, max:4, step:0.1, value:0, reset:true},
+    {key:'e', tex:'e', label:'bounciness (1 elastic, 0 sticky)', min:0, max:1, step:0.05, value:1, reset:true},
+  ],
+  steps:[{text:'Energy.'}],
+  K:1/8, G:9.8,
+  init(c){
+    const d = c.data, K = this.K;
+    const gr = new THREE.GridHelper(40, 40, 0x2a3348, 0x161b27); gr.position.y = -0.6; c.group.add(gr);
+    // half-pipe y = x²/8
+    d.pipe = new THREE.Group(); c.group.add(d.pipe);
+    const pos = [], idx = [], NX = 121;
+    for (let i = 0; i < NX; i++){ const x = -6 + 12*i/(NX - 1), y = K*x*x; pos.push(x, y, -1.2, x, y, 1.2); if (i){ const a = 2*(i - 1); idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
+    const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); pg.setIndex(idx); pg.computeVertexNormals();
+    d.pipe.add(new THREE.Mesh(pg, new THREE.MeshStandardMaterial({color:0x2c3446, roughness:.7, metalness:.2, side:THREE.DoubleSide})));
+    for (const z of [-1.2, 1.2]){
+      const pts = []; for (let i = 0; i < NX; i++){ const x = -6 + 12*i/(NX - 1); pts.push(new V3(x, K*x*x, z)); }
+      d.pipe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:C.blue, transparent:true, opacity:.55})));
+    }
+    d.ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 28, 18), new THREE.MeshStandardMaterial({color:0xffd770, emissive:0x5a4510, roughness:.35}));
+    d.pipe.add(d.ball);
+    d.hLine = makeDash(0x9aa3b5, .5); d.pipe.add(d.hLine); d.Lh = texLabel('h_0', 0x9aa3b5, 15); d.pipe.add(d.Lh);
+    // collision track
+    d.hit = new THREE.Group(); c.group.add(d.hit);
+    const track = new THREE.Mesh(new THREE.BoxGeometry(22, 0.12, 1.4), new THREE.MeshStandardMaterial({color:0x2c3446, roughness:.8}));
+    track.position.y = -0.06; d.hit.add(track);
+    d.cart = [C.blue, C.pink].map(col => {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({color:col, roughness:.45, metalness:.2}));
+      g.add(body); d.hit.add(g); g.userData.body = body; return g;
+    });
+    d.P1 = makeArrow(C.blue, .04); d.P2 = makeArrow(C.pink, .04); d.Pt = makeArrow(C.yellow, .05);
+    d.hit.add(d.P1, d.P2, d.Pt);
+    d.Lp1 = texLabel('\\vec p_1', C.blue, 17); d.Lp2 = texLabel('\\vec p_2', C.pink, 17); d.Lpt = texLabel('\\textstyle\\sum\\vec p', C.yellow, 18);
+    d.hit.add(d.Lp1, d.Lp2, d.Lpt);
+    // energy bars
+    d.bars = [C.green, C.blue, C.red].map((col, i) => {
+      const geo = new THREE.BoxGeometry(0.7, 1, 0.7); geo.translate(0, 0.5, 0);
+      const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:col, emissive:col, emissiveIntensity:.35, roughness:.5}));
+      m.position.set(6.9 + i*0.95, 0, -3); c.group.add(m); return m;
+    });
+    d.barL = ['K', 'U', '\\text{heat}'].map((s, i) => { const l = texLabel(s, [C.green, C.blue, C.red][i], 15); l.position.set(6.9 + i*0.95, -0.45, -3); c.group.add(l); return l; });
+    d.tot = makeDash(C.yellow, .8, .12, .08); c.group.add(d.tot);
+    d.Ltot = texLabel('E_{\\text{total}}', C.yellow, 14); c.group.add(d.Ltot);
+    this.reset(c);
+  },
+  reset(c){
+    const d = c.data, P = c.params;
+    d.t = 0; d.wait = 0; d.heat = 0;
+    d.x = -Math.sqrt(P.h0/this.K); d.vx = 0;
+    d.w1 = 0.4 + 0.12*P.m1; d.w2 = 0.4 + 0.12*P.m2;
+    d.x1 = -6; d.x2 = 1.5; d.u1 = P.v1; d.u2 = P.v2; d.hitDone = false;
+    d.E0 = 0.5*P.m1*P.v1*P.v1 + 0.5*P.m2*P.v2*P.v2;
+    d.kb = 3/Math.max(d.E0, 0.5);
+    d.kp = Math.min(0.5, 3/Math.max(Math.abs(P.m1*P.v1), Math.abs(P.m2*P.v2), 0.5));
+  },
+  update(dt, c){
+    const d = c.data, P = c.params, K = this.K, g = this.G, pipe = P.mode === 'pipe';
+    d.pipe.visible = pipe; d.hit.visible = !pipe; d.bars[1].visible = d.barL[1].visible = pipe;
+    d.Lh.visible = pipe; d.Lp1.visible = d.Lp2.visible = d.Lpt.visible = !pipe;
+    if (dt > 0){
+      if (d.wait > 0){ d.wait -= dt; if (d.wait <= 0) this.reset(c); }
+      else if (pipe){
+        const n = Math.max(1, Math.ceil(dt/0.002)), h = dt/n;
+        for (let i = 0; i < n; i++){
+          const yp = 2*K*d.x, ypp = 2*K, q = 1 + yp*yp, sq = Math.sqrt(q);
+          let ax = -yp*(g + ypp*d.vx*d.vx)/q;
+          const sp = Math.abs(d.vx)*sq;
+          if (P.mu > 0 && sp > 1e-4){
+            const kap = ypp/Math.pow(q, 1.5), at = P.mu*(g/sq + sp*sp*kap);
+            ax -= Math.sign(d.vx)*at/sq; d.heat += at*sp*h;
+          }
+          d.vx += ax*h; d.x += d.vx*h; d.t += h;
+          if (P.mu > 0 && Math.abs(d.vx) < 0.03 && Math.abs(d.x) < 0.06){ d.heat += 0.5*d.vx*d.vx*q; d.vx = 0; }
+        }
+      } else {
+        d.t += dt;
+        d.x1 += d.u1*dt; d.x2 += d.u2*dt;
+        if (!d.hitDone && d.x2 - d.x1 <= d.w1 + d.w2 && d.u1 > d.u2){
+          const m1 = P.m1, m2 = P.m2, Pt = m1*d.u1 + m2*d.u2, e = P.e;
+          const n1 = (Pt + m2*e*(d.u2 - d.u1))/(m1 + m2), n2 = (Pt + m1*e*(d.u1 - d.u2))/(m1 + m2);
+          const before = 0.5*m1*d.u1*d.u1 + 0.5*m2*d.u2*d.u2;
+          d.u1 = n1; d.u2 = n2; d.heat = before - (0.5*m1*n1*n1 + 0.5*m2*n2*n2); d.hitDone = true;
+          d.x1 = Math.min(d.x1, d.x2 - d.w1 - d.w2);
+        }
+        if (Math.abs(d.x1) > 11.5 || Math.abs(d.x2) > 11.5 || d.t > 9) d.wait = 1.0;
+      }
+    }
+    if (pipe){
+      const yp = 2*K*d.x, q = Math.sqrt(1 + yp*yp), y = K*d.x*d.x;
+      d.ball.position.set(d.x - yp/q*0.3, y + 0.3/q, 0);
+      d.hLine.userData.set(new V3(-6.6, P.h0, 0), new V3(6.6, P.h0, 0)); d.Lh.position.set(-7, P.h0, 0);
+      const v2 = d.vx*d.vx*(1 + yp*yp), Ke = 0.5*v2, U = g*y;
+      const hs = [Ke/g, U/g, d.heat/g], E = (Ke + U + d.heat)/g;
+      d.bars.forEach((b, i) => b.scale.y = Math.max(hs[i], 1e-3));
+      d.tot.userData.set(new V3(6.4, P.h0, -3), new V3(9.25, P.h0, -3)); d.Ltot.position.set(7.85, P.h0 + 0.4, -3);
+      d.Etot = E;
+    } else {
+      const ht = [0.55 + 0.25*P.m1, 0.55 + 0.25*P.m2];
+      [[d.x1, d.w1], [d.x2, d.w2]].forEach(([x, w], i) => { const g2 = d.cart[i]; g2.position.set(x, ht[i]/2, 0); g2.userData.body.scale.set(2*w, ht[i], 1.1); });
+      const p1 = P.m1*d.u1, p2 = P.m2*d.u2, kp = d.kp;
+      d.P1.userData.arrow.set(new V3(d.x1, ht[0] + 0.45, 0), new V3(p1*kp, 0, 0)); d.Lp1.position.set(d.x1 + p1*kp/2, ht[0] + 0.85, 0); d.Lp1.visible = Math.abs(p1) > 0.05;
+      d.P2.userData.arrow.set(new V3(d.x2, ht[1] + 0.45, 0), new V3(p2*kp, 0, 0)); d.Lp2.position.set(d.x2 + p2*kp/2, ht[1] + 0.85, 0); d.Lp2.visible = Math.abs(p2) > 0.05;
+      const pt = p1 + p2; d.Pt.userData.arrow.set(new V3(-pt*kp/2, 3.6, 0), new V3(pt*kp, 0, 0)); d.Lpt.position.set(0, 4.15, 0); d.Lpt.visible = true;
+      const Ke = 0.5*P.m1*d.u1*d.u1 + 0.5*P.m2*d.u2*d.u2, kb = d.kb;
+      d.bars[0].scale.y = Math.max(Ke*kb, 1e-3); d.bars[2].scale.y = Math.max(d.heat*kb, 1e-3);
+      d.tot.userData.set(new V3(6.4, d.E0*kb, -3), new V3(9.25, d.E0*kb, -3)); d.Ltot.position.set(7.85, d.E0*kb + 0.4, -3);
+    }
+  },
+  readouts(c){
+    const d = c.data, P = c.params, g = this.G;
+    if (P.mode === 'pipe'){
+      const yp = 2*this.K*d.x, y = this.K*d.x*d.x, v = Math.abs(d.vx)*Math.sqrt(1 + yp*yp);
+      return [
+        ['height $h$', y.toFixed(2) + ' m'],
+        ['speed $v$', v.toFixed(2) + ' m/s'],
+        ['kinetic $\\tfrac12mv^2$ (1 kg ball)', (0.5*v*v).toFixed(1) + ' J'],
+        ['potential $mgh$', (g*y).toFixed(1) + ' J'],
+        ['heat from friction', d.heat.toFixed(1) + ' J'],
+        ['total', (0.5*v*v + g*y + d.heat).toFixed(1) + ' J'],
+        ['top speed $\\sqrt{2gh_0}$', Math.sqrt(2*g*P.h0).toFixed(2) + ' m/s'],
+      ];
+    }
+    const p1 = P.m1*d.u1, p2 = P.m2*d.u2, Ke = 0.5*P.m1*d.u1*d.u1 + 0.5*P.m2*d.u2*d.u2;
+    return [
+      ['cart 1 $m_1v_1$', p1.toFixed(2) + ' kg·m/s'],
+      ['cart 2 $m_2v_2$', p2.toFixed(2) + ' kg·m/s'],
+      ['total momentum', (p1 + p2).toFixed(2) + ' kg·m/s'],
+      ['velocities', `${d.u1.toFixed(2)}, ${d.u2.toFixed(2)} m/s`],
+      ['kinetic energy', Ke.toFixed(2) + ' J'],
+      ['lost to heat and sound', d.heat.toFixed(2) + ' J'],
+    ];
+  },
+};
+
 const TOPICS = [
+  {id:'basics',  name:'Foundations',      color:0xb8c2d6, blurb:'Vectors, motion, forces and energy: start here', chapters:[FVectors, FMotion, FForces, FEnergy]},
   {id:'mech',    name:'Mechanics',        color:C.gold,   blurb:'Forces, orbits, and the paths nature chooses', chapters:[FeynOrbit, Gravity, FeynAction, Lorenz, AppSatellites]},
   {id:'rot',     name:'Rotation',         color:C.teal,   blurb:'Torque, angular momentum, tumbling bodies',     chapters:[FeynTop, Rigid, AppWheel]},
   {id:'osc',     name:'Oscillations',     color:C.purple, blurb:'Natural frequencies and driven motion',          chapters:[FeynResonance, AppDamper]},
@@ -4238,7 +4739,7 @@ const TOPICS = [
   {id:'quantum', name:'Quantum',          color:C.pink,   blurb:'Amplitudes, interference, and measurement',       chapters:[FeynQuantum, AppSTM]},
 ];
 const CHAPTERS = [];
-TOPICS.forEach((t, ti) => t.chapters.forEach((ch, k) => { ch.topic = t; ch.num = `${ti+1}.${k+1}`; CHAPTERS.push(ch); }));
+TOPICS.forEach((t, ti) => t.chapters.forEach((ch, k) => { ch.topic = t; ch.num = `${ti}.${k+1}`; CHAPTERS.push(ch); }));
 const chapLabel = i => CHAPTERS[i].num;
 const appsFor = ch => CHAPTERS.filter(a => a.builtOn && a.builtOn.includes(ch));
 const PHX = window.PHX || {};
@@ -4376,7 +4877,7 @@ function buildNav(){
   const grid = $('topicGrid');
   TOPICS.forEach((t, ti) => {
     const sec = document.createElement('section'); sec.className = 'topic'; sec.style.setProperty('--tc', hexCss(t.color));
-    sec.innerHTML = `<div class="th"><span class="tn">${ti+1}</span><h3>${t.name}</h3></div><div class="tb">${t.blurb}</div>`;
+    sec.innerHTML = `<div class="th"><span class="tn">${ti}</span><h3>${t.name}</h3></div><div class="tb">${t.blurb}</div>`;
     t.chapters.forEach(ch => {
       const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
       b.className = 'cc'; b.dataset.i = i;
@@ -4389,7 +4890,7 @@ function buildNav(){
     // home page list
     const hl = $('homeTopics'), head = document.createElement('div');
     head.className = 'ht'; head.style.setProperty('--tc', hexCss(t.color));
-    head.innerHTML = `<span class="tn">${ti+1}</span><h3>${t.name}</h3><span class="cnt">${t.chapters.length} chapter${t.chapters.length > 1 ? 's' : ''}</span>`;
+    head.innerHTML = `<span class="tn">${ti}</span><h3>${t.name}</h3><span class="cnt">${t.chapters.length} chapter${t.chapters.length > 1 ? 's' : ''}</span>`;
     hl.appendChild(head);
     const hb = document.createElement('div'); hb.className = 'hb'; hb.textContent = t.blurb; hl.appendChild(hb);
     t.chapters.forEach(ch => {
@@ -4407,7 +4908,7 @@ function buildToc(){
   const toc = $('toc');
   TOPICS.forEach((t, ti) => {
     const g = document.createElement('div'); g.className = 'tg'; g.style.setProperty('--tc', hexCss(t.color));
-    g.innerHTML = `<i></i>${ti+1} · ${t.name}`; toc.appendChild(g);
+    g.innerHTML = `<i></i>${ti} · ${t.name}`; toc.appendChild(g);
     t.chapters.forEach(ch => {
       const i = CHAPTERS.indexOf(ch), b = document.createElement('button');
       b.dataset.i = i; b.style.setProperty('--tc', hexCss(t.color));
@@ -4615,7 +5116,7 @@ addEventListener('keydown', e => {
   if (k === ' '){ e.preventDefault(); togglePlay(); }
   else if (k === 'ArrowRight'){ nextStep(); }
   else if (k === 'ArrowLeft'){ prevStep(); }
-  else if (k.length === 1 && k >= '0' && k <= '9'){ const t = TOPICS[k === '0' ? 9 : +k - 1]; if (t) goScene(CHAPTERS.indexOf(t.chapters[0])); }
+  else if (k.length === 1 && k >= '0' && k <= '9'){ const t = TOPICS[+k]; if (t) goScene(CHAPTERS.indexOf(t.chapters[0])); }
   else if (k === 'm' || k === 'M'){ openContents(); }
   else if (k === 'l' || k === 'L'){ document.body.classList.toggle('side-collapsed'); }
   else if (k === ']' || k === 'PageDown'){ goScene((state.idx + 1) % CHAPTERS.length); }

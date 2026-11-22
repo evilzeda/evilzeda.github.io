@@ -1,15 +1,21 @@
 # physcx — physics in three dimensions
 
 An interactive, narrated 3D physics explorer in the spirit of 3Blue1Brown, built around *The Feynman Lectures on Physics*.
-The simulations live in `index.html`; the written lessons live in `js/lessons-a.js`, `js/lessons-b.js` and `js/lessons-c.js`. Open `index.html` in Chrome or Edge (needs an internet connection to load three.js, KaTeX and fonts from a CDN).
+The simulations live in `index.html`; the written lessons live in `js/lessons-0.js`, `js/lessons-a.js`, `js/lessons-b.js` and `js/lessons-c.js`. Open `index.html` in Chrome or Edge (needs an internet connection to load three.js, KaTeX and fonts from a CDN).
 
-## Contents — 27 chapters in 9 topics
+## Contents — 31 chapters in 10 topics
 
-Each topic starts with the physics (built on a Feynman lecture) and ends with an **applied** chapter showing a real machine that uses it.
+New to physics? Start with **0 · Foundations**: vectors, motion, forces and energy, the basics every later chapter uses.
+Each later topic starts with the physics (built on a Feynman lecture) and ends with an **applied** chapter showing a real machine that uses it.
 Every theory chapter also has an "In the real world" card and a closing narration step; applied chapters link back to "The physics behind it".
 
 | # | Chapter | Feynman Lectures |
 |---|---|---|
+| **0** | **Foundations** | |
+| 0.1 | Vectors — components, adding, dot and cross products | Vol. I, Ch. 11 |
+| 0.2 | Position, Velocity, Acceleration — throws, parabolas, circular motion | Vol. I, Ch. 8 |
+| 0.3 | Forces and Newton's Laws — free-body diagrams, a block on a slope, friction | Vol. I, Ch. 12 |
+| 0.4 | Energy and Momentum — a half-pipe, colliding carts | Vol. I, Ch. 4 |
 | **1** | **Mechanics** | |
 | 1.1 | Planetary Motion by Hand | Vol. I, Ch. 9 |
 | 1.2 | Orbits in a Gravity Well | Vol. I, Ch. 7 (related) |
@@ -65,7 +71,7 @@ Every chapter is a full lesson of 7–9 steps, each tagged by kind: **Setup**, *
 | Contents (all chapters by topic) | `M` or the Contents button |
 | Search chapters, ideas, formulas | `/` or `Ctrl K` |
 | Previous / next chapter | `[` / `]` (or the « » buttons) |
-| Jump to a topic | `1` – `9` |
+| Jump to a topic | `0` – `9` |
 | Next / previous narration step | `→` / `←` |
 | Orbit / zoom / pan | drag · scroll · right-drag |
 | Play / pause | `Space` |
@@ -81,7 +87,7 @@ Every chapter is a full lesson of 7–9 steps, each tagged by kind: **Setup**, *
 Each chapter is a plain object in `index.html` with `params`, `init(ctx)`, `reset(ctx)`, `update(dt, ctx)` and `readouts(ctx)` (optional `ref` for a Feynman lecture link).
 Write one and add it to a topic's `chapters` list in `TOPICS`.
 
-Its lesson goes in one of the `js/lessons-*.js` files under the chapter's `id`:
+Its lesson goes in one of the `js/lessons-*.js` files (also loaded with a `<script>` tag in `index.html`) under the chapter's `id`:
 
 ```js
 PHX['my-id'] = {level:'Beginner', min:8,

@@ -1,4 +1,4 @@
-/* Machine Learning & LLMs, step by step: course engine + 2D SVG scene kit.
+/* Beyond Curve (ML & LLM step by step): course engine + 2D SVG scene kit.
    Lessons register themselves with ML.add({...}) from js/lessons-XX.js.
    A lesson provides draw(si,g) -> static SVG for step si, and optionally anim(si,t,g,ord,k) -> SVG overlay redrawn every frame. */
 (function(){
@@ -11,7 +11,7 @@ const MODULES = [
   {id:'trees',num:'03',title:'Trees & Ensembles',c:'yellow',lessons:['decision-trees','random-forest','gradient-boosting']},
   {id:'unsupervised',num:'04',title:'Unsupervised Learning',c:'purple',lessons:['k-means','dbscan-hierarchical','gmm-em','pca','tsne-umap']},
   {id:'neural',num:'05',title:'Neural Networks',c:'blue',lessons:['perceptron-mlp','backpropagation','training-tricks','cnn','rnn-lstm']},
-  {id:'beyond',num:'06',title:'Beyond Labels',c:'orange',lessons:['reinforcement-learning','autoencoders-vae','gans-diffusion']},
+  {id:'beyond',num:'06',title:'Beyond Labels',c:'orange',lessons:['reinforcement-learning','autoencoders-vae','gans-diffusion','kalman-filter']},
   {id:'llm-read',num:'07',title:'How LLMs Read',c:'pink',lessons:['tokenization','embeddings','attention','multi-head','positional-encoding']},
   {id:'transformer',num:'08',title:'Inside the Transformer',c:'red',lessons:['transformer-block','gpt-decoder','sampling','context-window','scaling-laws']},
   {id:'llm-use',num:'09',title:'Making LLMs Useful',c:'gray',lessons:['pretraining','alignment','lora-quantization','rag','agents']}
@@ -215,7 +215,7 @@ function shell(){
   document.body.innerHTML=`
   <header class="top">
     <button class="tb menu-b" id="menuB" aria-label="Lessons">${icon('list',18)}</button>
-    <a class="brand" href="#/"><span class="logo">${icon('brain',18)}</span><span>ML <mark>&amp; LLMs</mark></span></a>
+    <a class="brand" href="#/"><span class="logo">${icon('brain',18)}</span><span>Beyond <mark>Curve</mark></span></a>
     <nav class="tabs"><a href="#/" id="tabHome">${icon('home',15)}Home</a><a href="#/" id="tabLearn">${icon('book',15)}Learn</a><a href="#/cheatsheet" id="tabCheat">${icon('doc',15)}Cheatsheet</a></nav>
     <div class="sp"></div>
     <label class="search">${icon('search',15)}<input id="q" placeholder="Search lessons…" autocomplete="off"><kbd>Ctrl K</kbd></label>
@@ -377,7 +377,7 @@ function homeView(){
     <div class="h-hero">
       <div class="h-bar">${MODULES.map((m,i)=>`<i style="background:var(--${m.c});animation-delay:${(i*0.07).toFixed(2)}s"></i>`).join('')}</div>
       <div class="h-kick">Machine learning &amp; large language models · ${MODULES.length} modules · ${ORDER.length} lessons · ${total} animated steps · ${papers.size} sources</div>
-      <h1 class="h-title">ML &amp; <mark>LLMs</mark>, step by step</h1>
+      <h1 class="h-title">Beyond <mark>Curve</mark></h1><p class="h-sub">ML &amp; LLM step by step</p>
       <p class="h-tag">From fitting a straight line to how a chatbot picks its next word. Every classic algorithm and every piece of a large language model (tokens, attention, transformers, context windows) is drawn and animated, and every lesson links to the original papers for the full reading.</p>
       <div class="h-btns">
         <button class="btn pri" id="startB">${icon('play',13)}<span>Start from lesson 1</span></button>
@@ -423,9 +423,9 @@ function route(){
   $('#tabHome').classList.toggle('on',isHome);$('#tabCheat').classList.toggle('on',isCheat);$('#tabLearn').classList.toggle('on',!isHome&&!isCheat);
   document.body.classList.toggle('home',isHome);document.body.classList.toggle('wide',isCheat);
   S.home=isHome;S.homeId=null;
-  if(isHome){S.lesson=null;buildTree();homeView();document.title='Machine Learning & LLMs, step by step · evilzeda';window.scrollTo(0,0);return}
+  if(isHome){S.lesson=null;buildTree();homeView();document.title='Beyond Curve · ML & LLM step by step · evilzeda';window.scrollTo(0,0);return}
   $('#home').innerHTML='';
-  if(isCheat){S.lesson=null;buildTree();cheatView();document.title='Cheatsheet · ML & LLMs';window.scrollTo(0,0);return}
+  if(isCheat){S.lesson=null;buildTree();cheatView();document.title='Cheatsheet · Beyond Curve';window.scrollTo(0,0);return}
   const m=h.match(/^#\/([\w-]+)\/?(\d+)?/);
   const id=m&&LESSONS[m[1]]?m[1]:ORDER[0].id;
   const L=LESSONS[id];
@@ -433,7 +433,7 @@ function route(){
   if(!m||m[1]!==id)history.replaceState(null,'',`#/${id}/${si+1}`);
   store.set('ml-last',id);
   if(!S.lesson||S.lesson.id!==id){S.lesson=L;lessonView(L);buildTree();window.scrollTo(0,0)}
-  S.si=si;document.title=`${L.title} · ML & LLMs`;
+  S.si=si;document.title=`${L.title} · Beyond Curve`;
   renderStep();
 }
 
