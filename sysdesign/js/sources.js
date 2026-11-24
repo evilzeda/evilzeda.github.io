@@ -138,6 +138,12 @@ SD.src={
   'design-news-feed':[
     PRIMER,
     W('News feed','News_feed')],
+  'design-content-check':[
+    ['How Content ID works','https://support.google.com/youtube/answer/2797370','YouTube Help'],
+    ['Learn about Content ID claims (block, monetise, track)','https://support.google.com/youtube/answer/6013276','YouTube Help'],
+    ['An Industrial-Strength Audio Search Algorithm (Shazam paper)','https://www.princeton.edu/~cuff/ele201/files/Wang03-shazam.pdf','Avery Wang · ISMIR 2003'],
+    W('Acoustic fingerprint','Acoustic_fingerprint'),
+    ['PDQ & TMK+PDQF: open-source image and video hashing','https://github.com/facebook/ThreatExchange','Meta · GitHub']],
   'design-chat':[
     ['The WebSocket API','https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API','MDN Web Docs'],
     W('Instant messaging','Instant_messaging'),

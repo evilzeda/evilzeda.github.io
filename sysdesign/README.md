@@ -1,6 +1,6 @@
 # System Design, step by step
 
-An interactive system design course with 40 lessons in 9 modules, each a step-by-step story told with animated isometric diagrams. It uses Notion's colour palette (light and dark) and is plain HTML/JS with no build step.
+An interactive system design course with 41 lessons in 9 modules, each a step-by-step story told with animated isometric diagrams. It uses Notion's colour palette (light and dark) and is plain HTML/JS with no build step.
 
 - `index.html`: layout and styles
 - `js/engine.js`: course catalog, isometric renderer, step player, cheatsheet, progress

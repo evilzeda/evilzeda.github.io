@@ -13,7 +13,7 @@ const MODULES = [
   {id:'architecture',num:'06',title:'Architecture',c:'yellow',lessons:['microservices','service-discovery','sagas','batch-stream']},
   {id:'security',num:'07',title:'Security',c:'red',lessons:['authentication','authorization','encryption']},
   {id:'shipping',num:'08',title:'Shipping',c:'pink',lessons:['testing','cicd']},
-  {id:'design',num:'09',title:'Whole Systems',c:'gray',lessons:['hld-lld','design-url-shortener','design-news-feed','design-chat']}
+  {id:'design',num:'09',title:'Whole Systems',c:'gray',lessons:['hld-lld','design-url-shortener','design-news-feed','design-chat','design-content-check']}
 ];
 const KINDS = {setup:['Setup','gray'],problem:['Problem','red'],solution:['Solution','green'],technique:['Technique','blue'],tradeoff:['Trade-off','yellow'],insight:['Insight','purple'],recap:['Recap','brown']};
 const LESSONS = {};
@@ -306,7 +306,7 @@ function stageSVG(){return `<svg id="scene" preserveAspectRatio="xMidYMid meet">
 
 /* ------------------------------------------------------------------ sources */
 const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return ''}};
-function sources(L){return [['Original lesson (designed-to-scale)',`https://designed-to-scale.vercel.app/#/${L.id}/1`,'Dilum Sanjaya · interactive'],...((SD.src&&SD.src[L.id])||[])]}
+function sources(L){return [...(L.orig===false?[]:[['Original lesson (designed-to-scale)',`https://designed-to-scale.vercel.app/#/${L.id}/1`,'Dilum Sanjaya · interactive']]),...((SD.src&&SD.src[L.id])||[])]}
 function sourcesHTML(L,compact){return `<ul class="srcs${compact?' compact':''}">${sources(L).map(([t,u,by])=>`<li><a href="${u}" target="_blank" rel="noopener" title="${esc(u)}">${compact?'':icon('link',13)}<span><b>${esc(t)}</b>${compact?'':`<small>${esc(by||host(u))}</small>`}</span>${icon('arrow',12,'ext')}</a></li>`).join('')}</ul>`}
 
 /* ------------------------------------------------------------------ lesson view */
