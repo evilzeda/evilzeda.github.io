@@ -11,7 +11,9 @@ const MODULES = [
   {id:'money',num:'03',title:'Money, Banks & Money Supply',c:'blue',lessons:['what-is-money','bank-money','money-supply','quantity-theory','bonds-yields','yield-curve']},
   {id:'rates',num:'04',title:'Interest Rates & the Central Bank',c:'orange',lessons:['policy-rate','real-rates','inflation','deflation','taylor-rule','asset-prices','zero-bound']},
   {id:'cycles',num:'05',title:'Core Forces & Cycles',c:'purple',lessons:['productivity','short-cycle','recession','long-cycle','debt-burden','bubble','debt-peak']},
-  {id:'delev',num:'06',title:'Deleveraging & Policy Levers',c:'red',lessons:['deleveraging','austerity','debt-reduction','redistribution','printing','beautiful','growth-vs-rate','lost-decade','three-rules']}
+  {id:'delev',num:'06',title:'Deleveraging & Policy Levers',c:'red',lessons:['deleveraging','austerity','debt-reduction','redistribution','printing','beautiful','growth-vs-rate','lost-decade','three-rules']},
+  {id:'history',num:'07',title:'Financial Crises Through History',c:'yellow',lessons:['crisis-timeline','first-crisis','tulip-mania','south-sea','bank-panics','great-depression','em-crises','gfc-2008','crisis-pattern']},
+  {id:'dollar',num:'08',title:'The Dollar & the World',c:'pink',lessons:['reserve-currency','rise-of-dollar','bretton-woods','petrodollar','why-dollar','exorbitant-privilege']}
 ];
 const KINDS = {setup:['Setup','gray'],problem:['Problem','red'],solution:['Solution','green'],technique:['Technique','blue'],tradeoff:['Trade-off','yellow'],insight:['Insight','purple'],recap:['Recap','brown'],math:['Math','pink'],policy:['Policy','orange'],history:['History','brown']};
 const LESSONS = {};
@@ -381,7 +383,7 @@ function homeView(){
       <div class="h-bar">${MODULES.map((m,i)=>`<i style="background:var(--${m.c});animation-delay:${(i*0.07).toFixed(2)}s"></i>`).join('')}</div>
       <div class="h-kick">Macroeconomics · ${MODULES.length} modules · ${ORDER.length} lessons · ${total} animated steps · ${papers.size} sources</div>
       <h1 class="h-title">Money <mark>Machine</mark>, how the economy works step by step</h1>
-      <p class="h-tag">Inspired by Ray Dalio’s <i>How the Economic Machine Works</i>. Follow one fictional island economy, Nusa, from a single transaction to credit, banks, money supply, interest rates, the short and long debt cycles and a deleveraging. Every chart is computed live from the same small models, the Lab lets you run the central bank yourself, and every lesson links to the video timestamp, central-bank explainers and classic papers.</p>
+      <p class="h-tag">Inspired by Ray Dalio’s <i>How the Economic Machine Works</i>. Follow one fictional island economy, Nusa, from a single transaction to credit, banks, money supply, interest rates, the short and long debt cycles and a deleveraging, then through 2,000 years of financial crises and the rise of the dollar. Every chart is computed live from the same small models, the Lab lets you run the central bank yourself, and every lesson links to the video timestamp, central-bank explainers and classic papers.</p>
       <div class="h-btns">
         <button class="btn pri" id="startB">${icon('play',13)}<span>Start from lesson 1</span></button>
         <button class="btn" id="llmB">${icon('trend',13)}<span>Long-term debt cycle</span></button><a class="btn" href="#/lab">${icon('sparkle',13)}<span>Open the Lab</span></a>
